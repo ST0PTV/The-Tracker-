@@ -15,7 +15,7 @@ Schrittweises Zusammenführen. Die Ursprungs-Apps bleiben in ihren Repos; einget
 ## Phasen
 
 1. **Gerüst** – Hülle, Router, Speicher, gemeinsames Profil, Design, Tests. ✅ (0.1.0)
-2. **Tracking** – Schritt 1 erledigt: Journal, Lebensmittelsuche (BLS), Mengen-Dialog mit Portionen, Favoriten, Zuletzt, Vortag übernehmen. Schritt 2 erledigt: Barcode-Scanner (Open Food Facts), Foto der Nährwerttabelle (Texterkennung auf dem Gerät), eigene Lebensmittel. Offen: Wasser, Koffein, Alkohol, Supplements, Gewichtsziel, Analyse. Ergänzungen aus dem Calorie-Tracker (Insights, Mikronährstoffe, Magen-Modell u. a.), ohne Level-System.
+2. **Tracking** – Schritt 1 erledigt: Journal, Lebensmittelsuche (BLS), Mengen-Dialog mit Portionen, Favoriten, Zuletzt, Vortag übernehmen. Schritt 2 erledigt: Barcode-Scanner (Open Food Facts), Foto der Nährwerttabelle (Texterkennung auf dem Gerät), eigene Lebensmittel. Schritt 3: Wasser, Koffein (Verlauf, Heatmap, Vorschau), Supplements (0.1.4). Offen: Alkohol, Gewichtsziel, Analyse. Ergänzungen aus dem Calorie-Tracker (Insights, Mikronährstoffe, Magen-Modell u. a.), ohne Level-System.
 3. **Rezepte** – Rezepte, Wochenplan, Einkauf/Vorrat, Zyklus; Planung liest die Ziele aus dem Profil; Gekochtes landet im Journal.
 4. **Training** – Workout-Tracker als eigener Bereich; Körpergewicht aus dem Profil; große Daten erst beim Öffnen laden.
 5. **Aufräumen** – ein Backup für alles, eine Einstellungsseite, eine Quellen-Seite; danach Themes und Level-System.

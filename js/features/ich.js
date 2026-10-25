@@ -12,7 +12,12 @@ import { VERSION } from '../core/version.js';
 import { isoDate, addDays } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
 import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
-import { generateDemo, DEMO_GOAL } from './dev/demo.js';
+import { generateDemo, generateDemoDrinks, DEMO_GOAL } from './dev/demo.js';
+import { loadDemoWater, removeDemoWater } from './drinks/water.js';
+import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS } from './drinks/caffeine.js';
+import { drinksSettingsView } from './drinks/drinks-settings.js';
+import { suppSettingsView } from './supp/supp-card.js';
+import { suppSettings } from './supp/supplements.js';
 
 const fmt = (n) => Math.round(n).toLocaleString('de-DE');
 
@@ -25,7 +30,9 @@ function ichView(rerender) {
   return h('div', {},
     pageHead('Ich'),
     h('section', { class: 'card list' },
-      row('#/ich/ziel', 'Tagesziel', g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt')),
+      row('#/ich/ziel', 'Tagesziel', g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt'),
+      row('#/ich/getraenke', 'Getränke', 'Wasser und Koffein'),
+      row('#/ich/supplements', 'Supplements', suppSettings().items.length ? `${suppSettings().items.length} angelegt` : 'noch keine')),
     h('section', { class: 'card' },
       h('h2', {}, 'Darstellung'),
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Darstellung' },
@@ -49,6 +56,9 @@ function devCard(rerender) {
     if (foodsState() !== 'ready' || !foods.length) { toast('Lebensmitteldaten nicht geladen. Bitte online öffnen.', { error: true }); rerender(); return; }
     const today = isoDate();
     const count = loadDemo(generateDemo({ today, days: 30, foods }));
+    const drinks = generateDemoDrinks({ today, days: 30 });
+    loadDemoWater(drinks.water);
+    loadDemoCaffeine(drinks.caff);
     // Ohne eigenes Ziel ein Beispielziel ab dem ersten Beispieltag (Gewicht nur im Ziel, nicht im Profil)
     if (!getGoals()) setGoal({ from: addDays(today, -29), goal: DEMO_GOAL, preset: 'dge', weight: 75 });
     toast(`${count} Beispiel-Einträge für 30 Tage geladen`);
@@ -58,10 +68,10 @@ function devCard(rerender) {
     h('h2', {}, 'Entwicklung'),
     h('p', { class: 'muted small' }, n
       ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
-      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
+      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser und Kaffee. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
     h('div', { class: 'btn-row' },
       h('button', { class: 'btn', type: 'button', onclick: (e) => load(e.currentTarget) }, n ? 'Neu erzeugen' : 'Beispieldaten laden'),
-      n ? h('button', { class: 'btn', type: 'button', onclick: () => { const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
+      n ? h('button', { class: 'btn', type: 'button', onclick: () => { removeDemoWater(); removeDemoCaffeine(); const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
 function zielView() {
@@ -133,6 +143,9 @@ const CREDITS = [
   ['Open Food Facts', 'Produktdaten zum Barcode. Nur die Barcode-Nummer wird gesendet; gefundene Produkte werden auf dem Gerät gespeichert.', 'Open Database License (ODbL) 1.0, Inhalte Database Contents License (DbCL) 1.0', 'https://world.openfoodfacts.org'],
   ['ZXing für JavaScript', 'Erkennt Barcodes im Kamerabild (vendor/zxing.min.js).', 'ZXing-Autoren · Apache License 2.0 (vendor/ZXING-LICENSE)', 'https://github.com/zxing-js/library'],
   ['tesseract.js mit Tesseract OCR', 'Liest die Zahlen vom Foto der Nährwerttabelle, auf dem Handy (vendor/tesseract/). Deutsches Sprachmodell aus tessdata.', 'tesseract.js 5.1.1 und tesseract.js-core · Apache License 2.0; Sprachdaten Apache 2.0, Paket @tesseract.js-data/deu MIT; mitgebündelte Bibliotheken siehe vendor/tesseract/README.md', 'https://github.com/naptha/tesseract.js'],
+  ['Koffein-Modell und Richtwerte', 'Ein-Kompartiment-Modell mit Aufnahme und Abbau erster Ordnung; Richtwerte 400 mg/Tag und 200 mg je Einzeldosis (EFSA). Pegel sind Schätzungen.', CAFF_REFS.map(([t]) => t.split('.')[0]).join(' · '), CAFF_REFS[0][1]],
+  ['Wasser-Richtwert', 'Standardziel 1,5 l Getränke pro Tag (DGE); Gesamtwasser 2,0/2,5 l inkl. Lebensmittel (EFSA 2010).', 'DGE · EFSA NDA Panel 2010', 'https://doi.org/10.2903/j.efsa.2010.1459'],
+  ['Supplement-Katalog', '30 Supplements mit Studienlage, BfR-Höchstmengen und Quellen je Eintrag (ⓘ). Information, keine Empfehlung. Texte aus Rezeptbuch und Calorie-Tracker.', 'BfR, NIH ODS, Cochrane, EMA, ISSN u. a. – je Supplement im ⓘ', 'https://www.bfr.bund.de/cm/343/hoechstmengenempfehlungen-des-bfr.pdf'],
   ['Standardportionen (LARN)', 'Portions-Schnellwahl im Mengen-Dialog. Rohgewicht, essbarer Anteil; gegarte Lebensmittel umgerechnet (Schätzung).', 'SINU (2024), LARN V Revisione, Porzioni standard (Werte über ATS Brescia 2025)', 'https://www.ats-brescia.it/documents/3432658/78612060/Porzioni+standard+degli+alimenti+per+la+popolazione+adulta.pdf/2ce817e7-0713-bbe6-56c7-767285a575dd']
 ];
 
@@ -145,4 +158,4 @@ function quellenView() {
       h('a', { class: 'link', href: link, target: '_blank', rel: 'noopener' }, 'Repository öffnen'))));
 }
 
-export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView };
+export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/getraenke': drinksSettingsView, '/ich/supplements': suppSettingsView };

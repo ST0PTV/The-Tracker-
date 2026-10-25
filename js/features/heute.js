@@ -1,6 +1,6 @@
 // Reiter „Heute“: Tag wählen, Kalorien-Karte, Mahlzeiten mit Einträgen.
 // Aufbau nach renderDiary im Kalorien-Tracker bzw. der Startseite im Rezeptbuch (ST0PTV/JuliaKelp, MIT).
-// Phase 2 ergänzt Scanner, Wasser, Koffein, Supplements und Analyse.
+// Reihenfolge: Kalorien, Supplements (abhaken), Mahlzeiten, Wasser, Koffein.
 import { h } from '../core/util.js';
 import { comingSoon, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
@@ -10,6 +10,10 @@ import { MEALS, entriesOf, entryTotals, sumEntries, copyEntries } from './journa
 import { dayCard } from './journal/day-card.js';
 import { openAdd } from './journal/add-sheet.js';
 import { openAmount } from './journal/amount-sheet.js';
+import { waterCard } from './drinks/water-card.js';
+import { caffCard, openCaffeine } from './drinks/caffeine-card.js';
+import { caffEntries } from './drinks/caffeine.js';
+import { suppCard } from './supp/supp-card.js';
 
 let day = null;       // gewählter Tag (nur für diese Sitzung)
 let dayAnchor = null; // Datum, an dem „day“ gesetzt wurde: neuer Kalendertag → zurück auf heute
@@ -51,7 +55,11 @@ function mealCard(iso, meal, entries, prevEntries, rerender) {
     h('button', { class: 'add-btn', type: 'button', 'aria-label': `${meal.label} hinzufügen`, onclick: () => { openMeals.add(meal.id); openAdd(iso, meal.id); } }, icon('plus', { size: 22 })));
 
   const rows = open && list.length ? h('div', { class: 'entries' }, ...list.map((e) => h('button', {
-    class: 'entry', type: 'button', onclick: () => openAmount(e, { iso, edit: true })
+    class: 'entry', type: 'button',
+    // Verknüpfte Einträge (kcal eines Koffein-Getränks) im Koffein-Sheet ändern
+    onclick: () => (e.link && e.link.startsWith('caff:')
+      ? openCaffeine(iso, caffEntries(iso).find((x) => 'caff:' + x.id === e.link))
+      : openAmount(e, { iso, edit: true }))
   },
   h('span', { class: 't' }, h('b', {}, e.n), h('small', {}, `${r1(e.grams)} ${unitOf(e)}`)),
   h('span', { class: 'kc' }, `${fmt(entryTotals(e).k)} kcal`)))) : null;
@@ -78,7 +86,10 @@ export function heuteView(rerender) {
   return h('div', {},
     dayNav(iso, today, rerender),
     dayCard(iso, today),
+    suppCard(iso, today),
     ...MEALS.map((m) => mealCard(iso, m, entries, prevEntries, rerender)),
     copyDay,
-    comingSoon('Scanner, Wasser, Koffein & Supplements', 2));
+    waterCard(iso, today),
+    caffCard(iso, today),
+    comingSoon('Analyse, Alkohol & Gewichtsziel', 2));
 }

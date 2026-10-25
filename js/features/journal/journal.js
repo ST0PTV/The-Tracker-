@@ -43,11 +43,25 @@ export function foodSnap(food) {
   return { src: food.src, id: food.ref || food.id, n: food.n, brand: food.brand || '', serving: food.serving || null, liq: isLiq(food), ...nutrientsOf(food) };
 }
 
+/* Zusatzfelder eines Eintrags (optional):
+   water: true  – Flüssigkeit zählt zum Wasserzähler
+   cf: Zahl     – Koffein in mg pro 100 g/ml (der Koffein-Tracker rechnet daraus; Ausnahme: verknüpfte Einträge)
+   t: 'HH:MM'   – abweichende Uhrzeit (für Koffein)
+   link: Text   – Eintrag gehört zu einem anderen Tracker (z. B. 'caff:<id>'); wird dort angelegt und gelöscht */
+const EXTRA = ['water', 'cf', 't'];
+function extras(o = {}) {
+  const x = {};
+  if (o.water) x.water = true;
+  if (o.cf > 0 && o.cf <= 1000) x.cf = Math.round(o.cf * 10) / 10;
+  if (/^\d{2}:\d{2}$/.test(o.t || '')) x.t = o.t;
+  return x;
+}
+
 /** Neuer Eintrag aus einem Lebensmittel. Wirft bei unsinniger Menge oder Mahlzeit. */
-export function makeEntry(food, grams, meal) {
+export function makeEntry(food, grams, meal, more = {}) {
   if (!(grams > 0 && grams <= MAX_GRAMS)) throw new Error(`Menge muss zwischen 0 und ${MAX_GRAMS} liegen.`);
   if (!MEALS.some((m) => m.id === meal)) throw new Error(`Unbekannte Mahlzeit: ${meal}`);
-  return { id: uuid(), meal, grams, ref: food.ref || food.id, src: food.src, n: food.n, brand: food.brand || '', liq: isLiq(food), ...nutrientsOf(food) };
+  return { id: uuid(), meal, grams, ref: food.ref || food.id, src: food.src, n: food.n, brand: food.brand || '', liq: isLiq(food), ...nutrientsOf(food), ...extras(more) };
 }
 
 // ---------- Zugriff ----------
@@ -67,19 +81,38 @@ function writeDay(iso, fn) {
 }
 
 /** Trägt ein Lebensmittel ein und merkt es unter „Zuletzt“ mit der Menge. Gibt den Eintrag zurück. */
-export function addEntry(iso, food, grams, meal) {
-  const entry = makeEntry(food, grams, meal);
+export function addEntry(iso, food, grams, meal, more = {}) {
+  const entry = makeEntry(food, grams, meal, more);
   writeDay(iso, (list) => list.concat([entry]));
   const id = entry.ref;
   store.update('recent', (r) => [{ ...foodSnap(food), lastGrams: grams }].concat(r.filter((x) => x.id !== id)).slice(0, RECENT_MAX));
   return entry;
 }
 
-/** Ändert Menge oder Mahlzeit eines Eintrags. */
-export function updateEntry(iso, id, { grams, meal }) {
+/** Ändert Menge, Mahlzeit und (wenn angegeben) Zusatzfelder eines Eintrags. */
+export function updateEntry(iso, id, { grams, meal, ...more }) {
   if (grams != null && !(grams > 0 && grams <= MAX_GRAMS)) throw new Error('Ungültige Menge.');
   if (meal != null && !MEALS.some((m) => m.id === meal)) throw new Error('Ungültige Mahlzeit.');
-  return writeDay(iso, (list) => list.map((e) => (e.id === id ? { ...e, ...(grams != null ? { grams } : {}), ...(meal ? { meal } : {}) } : e)));
+  const touch = EXTRA.filter((k) => k in more);
+  return writeDay(iso, (list) => list.map((e) => {
+    if (e.id !== id) return e;
+    const n = { ...e, ...(grams != null ? { grams } : {}), ...(meal ? { meal } : {}) };
+    for (const k of touch) delete n[k];
+    return { ...n, ...extras(Object.fromEntries(touch.map((k) => [k, more[k]]))) };
+  }));
+}
+
+/**
+ * Verknüpfter Eintrag eines anderen Trackers (z. B. kcal eines Koffein-Getränks): anlegen, ersetzen oder (entry = null)
+ * entfernen. link identifiziert ihn ('caff:<id>'). Zählt nicht unter „Zuletzt“.
+ */
+export function setLinkedEntry(iso, link, entry) {
+  return writeDay(iso, (list) => {
+    const rest = list.filter((e) => e.link !== link);
+    if (!entry) return rest;
+    const old = list.find((e) => e.link === link);
+    return rest.concat([{ ...entry, id: old ? old.id : uuid(), link }]);
+  });
 }
 
 /** Löscht einen Eintrag; gibt ihn zurück (für „Rückgängig“). */
@@ -96,7 +129,7 @@ export function restoreEntry(iso, entry) {
 
 /** Übernimmt Einträge eines anderen Tages (optional nur eine Mahlzeit) als neue Einträge. Gibt die Anzahl zurück. */
 export function copyEntries(fromIso, toIso, meal = null) {
-  const src = entriesOf(fromIso).filter((e) => !meal || e.meal === meal);
+  const src = entriesOf(fromIso).filter((e) => (!meal || e.meal === meal) && !e.link);
   if (!src.length) return 0;
   writeDay(toIso, (list) => list.concat(src.map((e) => ({ ...e, id: uuid() }))));
   return src.length;
