@@ -9,6 +9,10 @@ import { getGoals, getProfile, setProfile, setGoal, macrosFrom, fatCheck, kcalFl
 import { getSettings, setSettings } from '../core/settings.js';
 import { applyTheme, APPEARANCES } from '../core/theme.js';
 import { VERSION } from '../core/version.js';
+import { isoDate, addDays } from '../core/format.js';
+import { loadFoods, foodsState } from './food/foods.js';
+import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
+import { generateDemo, DEMO_GOAL } from './dev/demo.js';
 
 const fmt = (n) => Math.round(n).toLocaleString('de-DE');
 
@@ -32,7 +36,32 @@ function ichView(rerender) {
       h('p', { class: 'muted small' }, 'Weitere Themes kommen später.')),
     h('section', { class: 'card list' },
       row('#/ich/quellen', 'Quellen & Lizenzen')),
+    devCard(rerender),
     h('p', { class: 'muted small center' }, `The Tracker ${VERSION} · ${store.usageKB()} KB lokal gespeichert`));
+}
+
+// Entwicklung: Beispieldaten für einen Monat (erfunden, auf dem Gerät erzeugt, als demo markiert)
+function devCard(rerender) {
+  const n = demoCount();
+  const load = async (btn) => {
+    btn.disabled = true; btn.textContent = 'Lade Lebensmitteldaten …';
+    const foods = await loadFoods();
+    if (foodsState() !== 'ready' || !foods.length) { toast('Lebensmitteldaten nicht geladen. Bitte online öffnen.', { error: true }); rerender(); return; }
+    const today = isoDate();
+    const count = loadDemo(generateDemo({ today, days: 30, foods }));
+    // Ohne eigenes Ziel ein Beispielziel ab dem ersten Beispieltag (Gewicht nur im Ziel, nicht im Profil)
+    if (!getGoals()) setGoal({ from: addDays(today, -29), goal: DEMO_GOAL, preset: 'dge', weight: 75 });
+    toast(`${count} Beispiel-Einträge für 30 Tage geladen`);
+    rerender();
+  };
+  return h('section', { class: 'card' },
+    h('h2', {}, 'Entwicklung'),
+    h('p', { class: 'muted small' }, n
+      ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
+      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
+    h('div', { class: 'btn-row' },
+      h('button', { class: 'btn', type: 'button', onclick: (e) => load(e.currentTarget) }, n ? 'Neu erzeugen' : 'Beispieldaten laden'),
+      n ? h('button', { class: 'btn', type: 'button', onclick: () => { const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
 function zielView() {
