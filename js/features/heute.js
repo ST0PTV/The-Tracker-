@@ -79,7 +79,7 @@ export function heuteView(rerender) {
   const prevEntries = entriesOf(addDays(iso, -1));
 
   const copyDay = !entries.length && prevEntries.length ? h('button', {
-    class: 'btn block', type: 'button',
+    class: 'btn block copy-day', type: 'button',
     onclick: () => { const n = copyEntries(addDays(iso, -1), iso); toast(`${n} Einträge übernommen`); }
   }, `Ganzen Vortag übernehmen (${fmt(sumEntries(prevEntries).k)} kcal)`) : null;
 

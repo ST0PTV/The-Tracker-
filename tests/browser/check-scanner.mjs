@@ -92,6 +92,7 @@ for (const appearance of ['dark', 'light']) {
   ok(await p.evaluate(() => !document.querySelector('video')), `${appearance}: Sheet zu, keine Kamera mehr`);
 
   // Journal: 2 × Packungsportion 25 g Kekse (113 kcal) + 300 g Suppe (285 kcal)
+  await p.waitForFunction(() => /[23] Einträge/.test(document.body.innerText), null, { timeout: 5000 }).catch(() => {});
   t = await text();
   ok(t.includes('3 Einträge') || t.includes('2 Einträge'), `${appearance}: Einträge im Frühstück`);
   ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
