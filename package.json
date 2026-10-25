@@ -1,0 +1,12 @@
+{
+  "name": "the-tracker",
+  "private": true,
+  "type": "module",
+  "description": "The Tracker PWA – package.json nur für Tests und Syntaxprüfung, keine Build-Abhängigkeiten.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node scripts/check-syntax.mjs",
+    "privacy": "sh scripts/privacy-scan.sh"
+  }
+}
