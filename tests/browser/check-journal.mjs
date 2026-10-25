@@ -56,6 +56,8 @@ for (const appearance of ['dark', 'light']) {
   ok(t.includes('209 kcal'), `${appearance}: Frühstück zeigt 209 kcal`);
   ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
   ok(await p.locator('.meal-toggle:has-text("Frühstück")').getAttribute('aria-expanded') === 'true', `${appearance}: Mahlzeit nach dem Eintragen aufgeklappt`);
+  const fit = await p.evaluate(() => { const c = document.querySelector('.ring-c small').getBoundingClientRect(), r = document.querySelector('.ring').getBoundingClientRect(); const cx = r.x + r.width / 2, cy = r.y + r.height / 2, rad = r.width / 2 - 14; const pts = [[c.left, c.top], [c.right, c.top], [c.left, c.bottom], [c.right, c.bottom]]; return pts.every(([x, y]) => Math.hypot(x - cx, y - cy) <= rad); });
+  ok(fit, `${appearance}: Ring-Beschriftung liegt innerhalb des Rings`);
   await shot('4-journal');
 
   // Bearbeiten: 100 g → 348 kcal; dann löschen und rückgängig

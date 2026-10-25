@@ -48,6 +48,8 @@ for (const appearance of ['dark', 'light']) {
   await p.fill('.sheet input[aria-label="Uhrzeit"]', '08:00'); await p.dispatchEvent('.sheet input[aria-label="Uhrzeit"]', 'change'); await p.waitForTimeout(150);
   ok(await p.locator('.sheet .caf-prev svg').count() === 1, `${appearance}: Vorschau-Kurve sichtbar`);
   ok(/Zur Bettzeit .* mg/.test(await p.innerText('.sheet .caf-prev')), `${appearance}: Vorschau nennt Pegel zur Bettzeit`);
+  const lock = await p.evaluate(() => { const sb = document.querySelector('.sheet-body'), sh = document.querySelector('.sheet'); return [getComputedStyle(sb).overflowX, getComputedStyle(sh).touchAction, sb.scrollWidth <= sb.clientWidth]; });
+  ok(lock[0] === 'hidden' && lock[1] === 'pan-y' && lock[2], `${appearance}: Koffein-Sheet seitlich gesperrt (${lock})`);
   await shot('2-koffein-sheet');
   const mgSaved = await p.inputValue('.sheet input[aria-label="Koffein in mg"]');
   const mlSaved = Number(await p.inputValue('.sheet input[aria-label="Menge in ml"]'));
@@ -108,6 +110,9 @@ for (const appearance of ['dark', 'light']) {
   await p.fill('input[aria-label="Halbwertszeit"]', '20'); await p.dispatchEvent('input[aria-label="Halbwertszeit"]', 'change'); await p.waitForTimeout(100);
   const cs = await p.evaluate(() => [JSON.parse(localStorage.getItem('tt_water')).goal, JSON.parse(localStorage.getItem('tt_caffeine')).halfLife]);
   ok(cs[0] === 2000 && cs[1] === 5, `${appearance}: Ziel gespeichert, ungültige Halbwertszeit abgelehnt (${cs})`);
+  const fit = await p.evaluate(() => [...document.querySelectorAll('.card')].every((c) => { const r = c.getBoundingClientRect(); return [...c.querySelectorAll('input')].every((i) => { const q = i.getBoundingClientRect(); return q.left >= r.left && q.right <= r.right + 0.5; }); }));
+  const cols = await p.evaluate(() => [...document.querySelectorAll('.two')].every((g) => { const k = [...g.children].map((c) => Math.round(c.getBoundingClientRect().width)); return Math.abs(k[0] - k[1]) <= 1; }));
+  ok(fit && cols, `${appearance}: Felder in „Getränke“ liegen in der Karte, Spalten gleich breit`);
   await shot('7-getraenke');
   await p.uncheck('input[aria-label="Koffein-Karte anzeigen"]');
   await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(250);
