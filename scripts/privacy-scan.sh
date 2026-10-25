@@ -2,11 +2,12 @@
 # Scannt das Repo vor einem Push nach persönlichen Strings.
 # 1) Generische Muster: E-Mail-Adressen, Telefonnummern, Backup-Dateien.
 # 2) Eigene Begriffe (Namen, Orte, ...) in .privacy-terms.local, ein Begriff pro Zeile.
+# vendor/ ist ausgenommen: dort liegen nur unveränderte Fremdbibliotheken (minifiziert, sonst Fehlalarme).
 #    Diese Datei ist per .gitignore ausgeschlossen und gehört nie ins Repo.
 cd "$(dirname "$0")/.." || exit 2
 status=0
 FILES=$(find . -type f \
-  -not -path './.git/*' -not -path './node_modules/*' -not -path './icons/*' \
+  -not -path './.git/*' -not -path './node_modules/*' -not -path './icons/*' -not -path './vendor/*' \
   -not -name '.privacy-terms.local' -not -name 'privacy-scan.sh')
 
 echo "== Backup-Dateien =="

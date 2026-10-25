@@ -45,9 +45,9 @@ function chromiumPath() {
   return exe && existsSync(exe) ? exe : undefined;
 }
 
-export async function launch() {
+export async function launch(args = []) {
   const { chromium } = await loadPlaywright();
-  return chromium.launch({ executablePath: chromiumPath() });
+  return chromium.launch({ executablePath: chromiumPath(), args });
 }
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png' };
