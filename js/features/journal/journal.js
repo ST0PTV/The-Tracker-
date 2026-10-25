@@ -117,3 +117,38 @@ export function toggleFav(food) {
   changed();
   return on;
 }
+
+// ---------- Beispieldaten (Entwicklung) ----------
+
+/** Anzahl der Beispiel-Einträge (demo: true) über alle Tage. */
+export function demoCount() {
+  return Object.values(store.get('days')).reduce((a, list) => a + list.filter((e) => e.demo).length, 0);
+}
+
+/** Entfernt alle Beispiel-Einträge; echte Einträge bleiben. Gibt die Anzahl zurück. */
+export function removeDemo() {
+  let n = 0;
+  store.update('days', (days) => {
+    for (const iso of Object.keys(days)) {
+      const keep = days[iso].filter((e) => !e.demo);
+      n += days[iso].length - keep.length;
+      if (keep.length) days[iso] = keep; else delete days[iso];
+    }
+  });
+  changed();
+  return n;
+}
+
+/** Ersetzt vorhandene Beispiel-Einträge durch neue ({ iso: [Eintrag] }); echte Einträge bleiben. */
+export function loadDemo(map) {
+  removeDemo();
+  let n = 0;
+  const ok = store.update('days', (days) => {
+    for (const [iso, list] of Object.entries(map)) {
+      days[iso] = (days[iso] || []).concat(list.map((e) => ({ ...e, demo: true })));
+      n += list.length;
+    }
+  });
+  changed();
+  return ok ? n : 0;
+}

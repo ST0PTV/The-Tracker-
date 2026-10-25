@@ -2,7 +2,7 @@
    Bei jeder Änderung an den Dateien CACHE_VERSION erhöhen (und js/core/version.js abgleichen).
    Strategie wie im Rezeptbuch: erst Netz (immer neueste Version), offline aus dem Cache.
    Wichtig: Die Origin st0ptv.github.io teilen sich mehrere Apps. Beim Aufräumen nur EIGENE Caches (tt-cache-…) löschen. */
-const CACHE_VERSION = 2;
+const CACHE_VERSION = 3;
 const CACHE = `tt-cache-v${CACHE_VERSION}`;
 
 const PRECACHE = [
@@ -27,6 +27,7 @@ const PRECACHE = [
   'js/features/journal/day-card.js',
   'js/features/journal/add-sheet.js',
   'js/features/journal/amount-sheet.js',
+  'js/features/dev/demo.js',
   'js/features/heute.js',
   'js/features/rezepte.js',
   'js/features/training.js',

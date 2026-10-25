@@ -14,6 +14,8 @@ Entsteht schrittweise aus drei bestehenden Apps, die in ihren eigenen Repos weit
 
 **Phase 2 – Tracking** (in Arbeit; Schritt 1 in Version 0.1.1): Journal mit vier Mahlzeiten, Kalorien-Ring und Makros, Suche im Bundeslebensmittelschlüssel, Mengen-Dialog mit Standardportionen, Favoriten, „Zuletzt“, Vortag übernehmen, Untergrenzen-Hinweis beim Tagesziel. Weitere Schritte siehe [docs/ROADMAP.md](docs/ROADMAP.md).
 
+**Entwicklung:** Unter „Ich → Entwicklung“ lassen sich 30 Tage Beispieldaten erzeugen und wieder entfernen. Sie sind erfunden, entstehen auf dem Gerät aus BLS-Lebensmitteln und sind markiert; echte Einträge bleiben beim Entfernen erhalten.
+
 ## Lokal starten
 
 ```sh
@@ -25,7 +27,7 @@ Dann http://localhost:8000 öffnen.
 ## Prüfen
 
 ```sh
-npm test         # Node-Tests (Speicher, Profil, Suche, Portionen, Journal)
+npm test         # Node-Tests (Speicher, Profil, Suche, Portionen, Journal, Beispieldaten)
 npm run check    # Syntax aller JS-Dateien + jede App-Datei im Precache von sw.js
 npm run privacy  # Scan nach persönlichen Strings (eigene Begriffe in .privacy-terms.local)
 npm run test:browser            # Browser-Abläufe (Playwright außerhalb des Repos)
