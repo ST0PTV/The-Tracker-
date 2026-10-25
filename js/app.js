@@ -8,6 +8,7 @@ import { heuteView } from './features/heute.js';
 import { rezepteRoutes } from './features/rezepte.js';
 import { trainingView } from './features/training.js';
 import { ichRoutes } from './features/ich.js';
+import { loadFoods } from './features/food/foods.js';
 
 const boot = store.init();
 applyTheme(appearanceOf(getSettings()));
@@ -25,6 +26,12 @@ const rerender = startRouter({
 
 // Ziele geändert → offene Seite neu zeichnen (z. B. Rezepte zeigen das neue Tagesziel).
 document.addEventListener('tt-profile', () => rerender());
+// Journal geändert (Eintrag, Favorit, Anzeige) → Seite neu zeichnen
+document.addEventListener('tt-journal', () => rerender());
+
+// Lebensmitteldaten (ca. 1,4 MB) im Hintergrund laden, damit die Suche sofort bereit ist
+const idle = globalThis.requestIdleCallback || ((fn) => setTimeout(fn, 800));
+idle(() => loadFoods());
 
 if (!boot.ok) toast('Gespeicherte Daten stammen aus einer neueren Version. Bitte App neu laden.', { error: true });
 

@@ -18,7 +18,12 @@ export const PRESETS = {
 export const FIBER_MIN_G = 30;
 export const FREE_SUGAR_MAX_SHARE = 0.10;
 
-export const GOAL_KEYS = ['goal', 'preset', 'pf', 'ff', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'weight'];
+/* Untergrenze ohne fachliche Begleitung (aus dem Calorie-Tracker, dort mit Quelle Harvard Health; hier nicht neu
+   per Websuche geprüft): Frauen 1.200, Männer 1.500 kcal pro Tag; ohne Angabe gilt 1.200.
+   Schwäche: grobe Faustregel, berücksichtigt weder Körpergröße noch Aktivität. */
+export const kcalFloor = (sex) => (sex === 'm' ? 1500 : 1200);
+
+export const GOAL_KEYS =['goal', 'preset', 'pf', 'ff', 'protein', 'carbs', 'fat', 'fiber', 'sugar', 'weight'];
 
 store.define('profile', {
   sex: null, // 'f' | 'm' | null
