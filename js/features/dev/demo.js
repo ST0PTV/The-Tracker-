@@ -97,3 +97,31 @@ export function generateDemo({ today, days = 30, foods, seed = 2026, goal = DEMO
   }
   return out;
 }
+
+/**
+ * Beispiel-Getränke: Wasser (4–7 Einträge à 250–500 ml) und Kaffee/Tee (1–3 pro Tag, letzter mal früh, mal spät),
+ * damit Wasser-Karte, Koffein-Kurve und Heatmap etwas zeigen. Heute nur bis zum Vormittag. Erfunden.
+ */
+export function generateDemoDrinks({ today, days = 30, seed = 2027 }) {
+  const rand = rng(seed);
+  const water = {}, caff = {};
+  const DRINKS = [['Filterkaffee 200 ml', 90, 200, 15], ['Espresso 30 ml', 60, 30, 0], ['Schwarztee 200 ml', 50, 200, 15], ['Energy Drink 250 ml', 80, 250, 30]];
+  for (let i = days - 1; i >= 0; i--) {
+    const iso = addDays(today, -i);
+    const until = i === 0 ? 11 * 60 : 22 * 60;
+    const w = [];
+    for (let k = 0, n = 4 + Math.floor(rand() * 4); k < n; k++) {
+      const min = Math.round((7 * 60 + rand() * (until - 7 * 60)) / 5) * 5;
+      if (min <= until) w.push({ ml: [250, 250, 330, 500][Math.floor(rand() * 4)], min });
+    }
+    const c = [];
+    for (let k = 0, n = 1 + Math.floor(rand() * 3); k < n; k++) {
+      const [name, mg, ml, dur] = DRINKS[k === 0 ? 0 : Math.floor(rand() * DRINKS.length)];
+      const min = k === 0 ? 7 * 60 + Math.round(rand() * 6) * 10 : Math.round((10 * 60 + rand() * 8.5 * 60) / 10) * 10; // bis ca. 18:30
+      if (min <= until) c.push({ min, mg, n: name, dur, ml });
+    }
+    if (w.length) water[iso] = w;
+    if (c.length) caff[iso] = c;
+  }
+  return { water, caff };
+}

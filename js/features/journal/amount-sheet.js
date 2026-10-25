@@ -10,6 +10,9 @@ import { per, unitOf, allFoods } from '../food/foods.js';
 import { portionOptions } from '../food/portions.js';
 import { customById } from '../food/custom.js';
 import { openFoodForm } from './food-form.js';
+import { waterSettings, waterFoodDefault, rememberWaterFood } from '../drinks/water.js';
+import { caffSettings, caffPer100, rememberCaffFood, CAFF_SRC_HINT } from '../drinks/caffeine.js';
+import { isoDate } from '../../core/format.js';
 import { MEALS, addEntry, updateEntry, removeEntry, restoreEntry, isFav, toggleFav, lastGrams } from './journal.js';
 
 /**
@@ -69,14 +72,46 @@ export function openAmount(food, { iso, meal, edit = false, onDone = null, onClo
     toast(on ? 'Zu Favoriten hinzugefügt' : 'Aus Favoriten entfernt');
   });
 
+  // Getränke: zählt zum Wasser (gemerkt je Lebensmittel); Koffein in mg pro 100 (gemerkt, vom Produkt oder Vorschlag)
+  const liquid = U === 'ml';
+  const cafOn = caffSettings().enabled;
+  const cafInfo = !cafOn ? null : edit ? (food.cf > 0 ? { v: food.cf, src: 'entry' } : null) : caffPer100(food);
+  const waterBox = h('input', { type: 'checkbox', 'aria-label': 'Zählt zum Wasser' });
+  waterBox.checked = edit ? !!food.water : (waterFoodDefault(id) ?? true); // Standard: Getränke zählen mit
+  const cafIn = h('input', { class: 'input', type: 'text', inputmode: 'decimal', value: cafInfo && cafInfo.v > 0 ? r1(cafInfo.v) : '', 'aria-label': `Koffein in mg pro 100 ${U}` });
+  const cafMg = h('span', { class: 'small muted' });
+  const nowMin = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+  const timeIn = h('input', { class: 'input', type: 'time', value: edit ? (food.t || '') : (iso === isoDate() ? nowMin() : ''), 'aria-label': 'Uhrzeit' });
+  const cafWrap = h('div', { class: 'caf-field', hidden: !(cafInfo && cafInfo.v > 0) },
+    h('div', { class: 'two' },
+      h('label', { class: 'form-label' }, h('span', {}, `Koffein (mg pro 100 ${U})`), cafIn),
+      h('label', { class: 'form-label' }, h('span', {}, 'Uhrzeit'), timeIn)),
+    cafMg,
+    cafInfo ? h('p', { class: 'small muted' }, cafInfo.src === 'guess'
+      ? `Vorschlag: Richtwert für ${cafInfo.label}. Bitte mit der Packung abgleichen (leer oder 0 = kein Koffein).`
+      : CAFF_SRC_HINT[cafInfo.src] || '') : null);
+  const showCaf = () => { const v = num(cafIn.value), g = num(input.value) || 0; cafMg.textContent = v > 0 ? `= ${Math.round((v * g) / 100)} mg Koffein (zählt im Koffein-Tracker)` : ''; };
+  cafIn.addEventListener('input', showCaf); input.addEventListener('input', showCaf); showCaf();
+  const cafToggle = cafOn && !(cafInfo && cafInfo.v > 0)
+    ? h('button', { class: 'link', type: 'button', onclick: (e) => { cafWrap.hidden = false; e.currentTarget.remove(); cafIn.focus(); } }, 'Enthält Koffein? Wert eintragen')
+    : null;
+  const drinkBox = liquid && (waterSettings().enabled || cafOn) ? h('div', { class: 'drink-box' },
+    waterSettings().enabled ? h('label', { class: 'check-row' }, waterBox, h('span', {}, 'Zählt zum Wasser')) : null,
+    cafOn ? cafWrap : null, cafToggle) : (cafOn && cafInfo && cafInfo.v > 0 ? cafWrap : null);
+
   let sheet = null;
   const finish = () => { sheet.close(); if (onDone) onDone(); };
 
   const save = () => {
     const g = num(input.value);
     if (!(g > 0 && g <= 5000)) { toast(`Bitte eine Menge zwischen 0 und 5.000 ${U} eingeben.`, { error: true }); return; }
-    if (edit) { updateEntry(iso, food.id, { grams: g, meal: mealSel }); toast('Gespeichert'); }
-    else { addEntry(iso, food, g, mealSel); toast(`${food.n.split(',')[0]} eingetragen`); }
+    const cf = num(cafIn.value);
+    if (cf != null && !(cf >= 0 && cf <= 1000)) { toast('Koffein: bitte 0–1.000 mg pro 100 eingeben.', { error: true }); return; }
+    const more = { water: liquid && waterSettings().enabled && waterBox.checked, cf: cf || 0, t: cf > 0 ? timeIn.value : '' };
+    if (liquid && waterSettings().enabled) rememberWaterFood(id, waterBox.checked);
+    if (!edit && cafOn && (cafInfo?.v || 0) !== (cf || 0)) rememberCaffFood(id, cf || 0); // eigener Wert wird gemerkt
+    if (edit) { updateEntry(iso, food.id, { grams: g, meal: mealSel, ...more }); toast('Gespeichert'); }
+    else { addEntry(iso, food, g, mealSel, more); toast(`${food.n.split(',')[0]} eingetragen`); }
     finish();
   };
   const del = () => {
@@ -102,6 +137,7 @@ export function openAmount(food, { iso, meal, edit = false, onDone = null, onClo
     hasLarn ? h('p', { class: 'muted small' }, 'Mehrfach tippen = mehrere Portionen. Standardportionen nach LARN 2024 (Rohgewicht, essbarer Anteil).') : null,
     nutri,
     hints.length ? h('p', { class: 'small muted' }, hints.join(' ')) : null,
+    drinkBox,
     h('span', { class: 'label' }, 'Mahlzeit'), mealSeg,
     h('button', { class: 'btn primary block', type: 'button', onclick: save }, edit ? 'Speichern' : 'Eintragen'),
     edit ? h('button', { class: 'btn block danger-text', type: 'button', onclick: del }, 'Eintrag löschen') : null,

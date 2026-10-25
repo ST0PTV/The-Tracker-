@@ -50,7 +50,9 @@ export function mapOffProduct(code, data) {
   let k = num(nm['energy-kcal_100g']);
   if (k == null && num(nm.energy_100g) != null) k = num(nm.energy_100g) / 4.184; // nur kJ angegeben
   if (k == null) return null;
+  const cafG = num(nm.caffeine_100g); // Open Food Facts speichert Koffein in g pro 100 g/ml
   return {
+    ...(cafG != null && cafG >= 0 && cafG <= 5 ? { cf: Math.round(cafG * 10000) / 10 } : {}),
     src: 'off', id: 'off:' + code, barcode: code,
     n: (p.product_name_de || p.product_name || '').trim() || 'Produkt ' + code,
     brand: (p.brands || '').split(',')[0].trim(),

@@ -12,7 +12,7 @@ Entsteht schrittweise aus drei bestehenden Apps, die in ihren eigenen Repos weit
 
 **Phase 1 – Gerüst** (Version 0.1.0): App-Hülle mit Reitern Heute · Rezepte · Training · Ich, Speicherschicht, gemeinsames Profil mit Tageszielen, Design „Apple nativ“ hell/dunkel, offline nutzbar.
 
-**Phase 2 – Tracking** (in Arbeit; Schritt 1 in 0.1.1, Schritt 2 in 0.1.3): Journal mit vier Mahlzeiten, Kalorien-Ring und Makros, Suche im Bundeslebensmittelschlüssel, Mengen-Dialog mit Standardportionen, Favoriten, „Zuletzt“, Vortag übernehmen, Untergrenzen-Hinweis beim Tagesziel; Barcode-Scanner (Open Food Facts), Foto der Nährwerttabelle (Texterkennung auf dem Gerät) und eigene Lebensmittel. Weitere Schritte siehe [docs/ROADMAP.md](docs/ROADMAP.md).
+**Phase 2 – Tracking** (in Arbeit; Schritt 1 in 0.1.1, Schritt 2 in 0.1.3, Schritt 3 in 0.1.4): Journal mit vier Mahlzeiten, Kalorien-Ring und Makros, Suche im Bundeslebensmittelschlüssel, Mengen-Dialog mit Standardportionen, Favoriten, „Zuletzt“, Vortag übernehmen, Untergrenzen-Hinweis beim Tagesziel; Barcode-Scanner (Open Food Facts), Foto der Nährwerttabelle (Texterkennung auf dem Gerät) und eigene Lebensmittel; Wasserzähler, Koffein mit geschätztem Verlauf (Kurve, 30-Tage-Heatmap, Vorschau vor dem Trinken) und Supplements zum Abhaken (Katalog mit Studienlage und BfR-Höchstmengen). Weitere Schritte siehe [docs/ROADMAP.md](docs/ROADMAP.md).
 
 **Entwicklung:** Unter „Ich → Entwicklung“ lassen sich 30 Tage Beispieldaten erzeugen und wieder entfernen. Sie sind erfunden, entstehen auf dem Gerät aus BLS-Lebensmitteln und sind markiert; echte Einträge bleiben beim Entfernen erhalten.
 
@@ -27,7 +27,7 @@ Dann http://localhost:8000 öffnen.
 ## Prüfen
 
 ```sh
-npm test         # Node-Tests (Speicher, Profil, Suche, Portionen, Journal, Beispieldaten)
+npm test         # Node-Tests (Speicher, Profil, Suche, Portionen, Journal, Beispieldaten, Getränke, Supplements)
 npm run check    # Syntax aller JS-Dateien + jede App-Datei im Precache von sw.js
 npm run privacy  # Scan nach persönlichen Strings (eigene Begriffe in .privacy-terms.local)
 npm run test:browser            # Browser-Abläufe inkl. Scanner (Test-Kamera, simulierte Open-Food-Facts-Antwort) und echter Texterkennung (Playwright außerhalb des Repos)
@@ -47,7 +47,7 @@ index.html, sw.js, manifest.webmanifest
 css/app.css            Design-Tokens und Bausteine („Apple nativ“; weitere Themes später)
 js/app.js              Einstieg: Router mit allen Bereichen
 js/core/               gemeinsam: store (Speicher), profile (Ziele, Körper, Ernährung), ui, sheet, icons, theme
-js/features/           Bereiche: heute, rezepte, training, ich; food/ (BLS, Portionen), journal/ (Daten, Karte, Sheets)
+js/features/           Bereiche: heute, rezepte, training, ich; food/ (BLS, Portionen), journal/ (Daten, Karte, Sheets), drinks/ (Wasser, Koffein-Modell), supp/ (Supplements)
 data/bls.json          Auszug aus dem Bundeslebensmittelschlüssel 4.0
 tests/                 Node-Tests
 ```
@@ -60,12 +60,15 @@ Eigener Code: [MIT-Lizenz](LICENSE). Übernommene Teile behalten ihre Lizenz und
 
 - Workout-Tracker – Copyright (c) 2026 ST0PTV, MIT: Speicherschicht, Router, Sheets, Icons, Design „Apple nativ“
 - Calorie-Tracker – Copyright (c) 2026 ST0PTV, MIT: Makro-Presets und Ziel-Historie (Herleitung und Studien in dessen README)
-- Rezeptbuch – Copyright (c) 2026 JuliaKelp, MIT: Navigation; Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung (`parseNutrition`) und eigene Lebensmittel aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, dort angepasst)
+- Rezeptbuch – Copyright (c) 2026 JuliaKelp, MIT: Navigation; Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung (`parseNutrition`), eigene Lebensmittel, Wasser, Koffein-Modell und -Verlauf sowie Supplement-Tracker mit Katalog aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, dort angepasst); Farben für das dunkle Theme aus dem Calorie-Tracker
 - **Nährwerte:** Max Rubner-Institut (2025). Bundeslebensmittelschlüssel (BLS), Version 4.0. Karlsruhe. DOI [10.25826/Data20251217-134202-0](https://doi.org/10.25826/Data20251217-134202-0), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). `data/bls.json` ist verändert: Auszug (Energie, Makronährstoffe, Ballaststoffe, Zucker, acht Mineralstoffe/Vitamine je 100 g); freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.
 - **Standardportionen:** SINU (2024), LARN V Revisione, „Porzioni standard“ für Erwachsene, Werte über [ATS Brescia (2025)](https://www.ats-brescia.it/documents/3432658/78612060/Porzioni+standard+degli+alimenti+per+la+popolazione+adulta.pdf/2ce817e7-0713-bbe6-56c7-767285a575dd).
 
 - **Barcode-Daten:** [Open Food Facts](https://world.openfoodfacts.org), [Open Database License (ODbL) 1.0](https://opendatacommons.org/licenses/odbl/1-0/), Inhalte Database Contents License (DbCL) 1.0. Abfrage zur Laufzeit, nur die Barcode-Nummer wird gesendet; Ergebnisse werden nur auf dem Gerät gespeichert.
 - **Barcode-Erkennung:** [ZXing](https://github.com/zxing-js/library) (`vendor/zxing.min.js`), Apache License 2.0, siehe `vendor/ZXING-LICENSE`.
 - **Texterkennung:** [tesseract.js](https://github.com/naptha/tesseract.js) 5.1.1 und tesseract.js-core (`vendor/tesseract/`), Apache License 2.0; deutsches Sprachmodell aus tessdata (Apache 2.0, Paket @tesseract.js-data/deu MIT); Hinweise zu mitgebündelten Bibliotheken in `vendor/tesseract/README.md`. Wird erst beim ersten Foto geladen; das Foto verlässt das Gerät nicht.
+
+- **Koffein und Wasser:** Werte und Modell nach EFSA (2015), BfR, Seng et al. (2009), Drake et al. (2013), DGE und EFSA (2010); vollständige Liste und Schwächen des Modells in der App im ⓘ und unter „Quellen & Lizenzen“. Pegel sind Schätzungen.
+- **Supplements:** BfR-Höchstmengenvorschläge für Nahrungsergänzungsmittel und Studien je Eintrag (im ⓘ des Katalogs). Information, keine Empfehlung.
 
 Alle Quellen stehen auch in der App unter „Ich → Quellen & Lizenzen“.
