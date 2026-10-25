@@ -5,7 +5,7 @@ import { h } from '../core/util.js';
 import { pageHead, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import * as store from '../core/store.js';
-import { getGoals, getProfile, setProfile, setGoal, macrosFrom, fatCheck, PRESETS } from '../core/profile.js';
+import { getGoals, getProfile, setProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS } from '../core/profile.js';
 import { getSettings, setSettings } from '../core/settings.js';
 import { applyTheme, APPEARANCES } from '../core/theme.js';
 import { VERSION } from '../core/version.js';
@@ -39,6 +39,10 @@ function zielView() {
   const g = getGoals() || {};
   const p = getProfile();
   let preset = g.preset && PRESETS[g.preset] ? g.preset : 'dge';
+  let sex = p.sex || null;
+  const SEXES = [['f', 'Frau'], ['m', 'Mann'], [null, 'Keine Angabe']];
+  const sexSeg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Geschlecht' });
+  const floorNote = h('p', { class: 'warn small', hidden: true });
   const kcalIn = h('input', { class: 'input', type: 'number', inputmode: 'numeric', min: 800, max: 6000, value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
   const wIn = h('input', { class: 'input', type: 'number', inputmode: 'decimal', step: '0.1', min: 30, max: 300, value: p.weightKg ?? '', placeholder: 'z. B. 75', 'aria-label': 'Körpergewicht' });
   const preview = h('div', { class: 'stats' });
@@ -47,6 +51,13 @@ function zielView() {
 
   const num = (el) => { const v = parseFloat(String(el.value).replace(',', '.')); return Number.isFinite(v) ? v : null; };
   const update = () => {
+    sexSeg.replaceChildren(...SEXES.map(([k, label]) =>
+      h('button', { type: 'button', role: 'radio', 'aria-checked': k === sex ? 'true' : 'false', onclick: () => { sex = k; update(); } }, label)));
+    // Untergrenze: nur Hinweis, kein Sperren (Faustregel; Ziel bleibt die eigene Entscheidung)
+    const floor = kcalFloor(sex);
+    const kc = num(kcalIn);
+    floorNote.hidden = !(kc > 0 && kc < floor);
+    floorNote.textContent = `Unter ${fmt(floor)} kcal pro Tag nur mit ärztlicher oder ernährungstherapeutischer Begleitung${sex ? '' : ' (Frauen 1.200, Männer 1.500 kcal; ohne Angabe gilt 1.200)'}.`;
     seg.replaceChildren(...Object.entries(PRESETS).filter(([k]) => k !== 'custom').map(([k, P]) =>
       h('button', { type: 'button', role: 'radio', 'aria-checked': k === preset ? 'true' : 'false', onclick: () => { preset = k; update(); } }, P.label)));
     const P = PRESETS[preset];
@@ -66,7 +77,7 @@ function zielView() {
     const kcal = num(kcalIn);
     const w = num(wIn);
     if (!(kcal >= 800 && kcal <= 6000)) { toast('Bitte ein Kalorienziel zwischen 800 und 6.000 eintragen.', { error: true }); return; }
-    if (w != null) setProfile({ weightKg: w });
+    setProfile({ sex, ...(w != null ? { weightKg: w } : {}) });
     setGoal({ goal: kcal, preset, weight: w });
     toast('Ziel gespeichert');
     location.hash = '#/ich';
@@ -77,7 +88,9 @@ function zielView() {
     pageHead('Tagesziel', 'Gilt ab heute. Rezepte und Wochenplan rechnen mit diesem Ziel.'),
     h('section', { class: 'card form' },
       h('label', {}, h('span', {}, 'Kalorien pro Tag'), kcalIn),
+      floorNote,
       h('label', {}, h('span', {}, 'Körpergewicht (kg)'), wIn),
+      h('span', { class: 'label' }, 'Geschlecht (für die Untergrenze)'), sexSeg,
       h('span', { class: 'label' }, 'Makro-Verteilung'), seg, preview, note),
     h('button', { class: 'btn primary block', type: 'button', onclick: save }, 'Speichern'));
 }
@@ -86,7 +99,9 @@ function zielView() {
 const CREDITS = [
   ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons und das Design „Apple nativ“ übernommen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
   ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README).', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
-  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich); Rezepte, Wochenplan und Zyklus folgen in Phase 3.', 'JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch']
+  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog und Portionen stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). Rezepte, Wochenplan und Zyklus folgen in Phase 3.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
+  ['Bundeslebensmittelschlüssel (BLS) 4.0', 'Nährwerte je 100 g für die Lebensmittelsuche (data/bls.json). Verändert: Auszug; freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.', 'Max Rubner-Institut (2025), Karlsruhe · CC BY 4.0 · DOI 10.25826/Data20251217-134202-0', 'https://doi.org/10.25826/Data20251217-134202-0'],
+  ['Standardportionen (LARN)', 'Portions-Schnellwahl im Mengen-Dialog. Rohgewicht, essbarer Anteil; gegarte Lebensmittel umgerechnet (Schätzung).', 'SINU (2024), LARN V Revisione, Porzioni standard (Werte über ATS Brescia 2025)', 'https://www.ats-brescia.it/documents/3432658/78612060/Porzioni+standard+degli+alimenti+per+la+popolazione+adulta.pdf/2ce817e7-0713-bbe6-56c7-767285a575dd']
 ];
 
 function quellenView() {

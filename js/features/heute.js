@@ -1,34 +1,84 @@
-// Reiter „Heute“: Tagesübersicht. Phase 2 bringt das Journal (Mahlzeiten, Wasser, Koffein, Supplements).
+// Reiter „Heute“: Tag wählen, Kalorien-Karte, Mahlzeiten mit Einträgen.
+// Aufbau nach renderDiary im Kalorien-Tracker bzw. der Startseite im Rezeptbuch (ST0PTV/JuliaKelp, MIT).
+// Phase 2 ergänzt Scanner, Wasser, Koffein, Supplements und Analyse.
 import { h } from '../core/util.js';
-import { pageHead, comingSoon } from '../core/ui.js';
-import { getGoals, PRESETS } from '../core/profile.js';
+import { comingSoon, toast } from '../core/ui.js';
+import { icon } from '../core/icons.js';
+import { fmt, r1, isoDate, addDays, dayLabel } from '../core/format.js';
+import { unitOf } from './food/foods.js';
+import { MEALS, entriesOf, entryTotals, sumEntries, copyEntries } from './journal/journal.js';
+import { dayCard } from './journal/day-card.js';
+import { openAdd } from './journal/add-sheet.js';
+import { openAmount } from './journal/amount-sheet.js';
 
-const fmt = (n) => Math.round(n).toLocaleString('de-DE');
+let day = null;       // gewählter Tag (nur für diese Sitzung)
+let dayAnchor = null; // Datum, an dem „day“ gesetzt wurde: neuer Kalendertag → zurück auf heute
+const openMeals = new Set();
 
-/** Karte mit dem heute geltenden Tagesziel aus dem gemeinsamen Profil. */
-export function goalCard() {
-  const g = getGoals();
-  if (!g || !g.goal) {
-    return h('section', { class: 'card' },
-      h('h2', {}, 'Tagesziel'),
-      h('p', { class: 'muted' }, 'Noch kein Ziel festgelegt.'),
-      h('a', { class: 'btn primary block', href: '#/ich/ziel' }, 'Ziel festlegen'));
-  }
-  const macro = (label, v) => h('div', { class: 'stat' }, h('b', {}, v == null ? '–' : `${fmt(v)} g`), h('span', {}, label));
-  return h('section', { class: 'card' },
-    h('div', { class: 'card-head' },
-      h('h2', {}, 'Tagesziel'),
-      h('a', { class: 'link', href: '#/ich/ziel' }, 'Ändern')),
-    h('p', { class: 'big-num' }, `${fmt(g.goal)}`, h('small', {}, ' kcal')),
-    h('p', { class: 'muted small' }, PRESETS[g.preset]?.label || ''),
-    h('div', { class: 'stats' }, macro('Eiweiß', g.protein), macro('Kohlenhydrate', g.carbs), macro('Fett', g.fat)));
+function currentDay() {
+  const today = isoDate();
+  if (!day || dayAnchor !== today) { day = today; dayAnchor = today; }
+  return day;
 }
 
-export function heuteView() {
-  const date = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+function dayNav(iso, today, rerender) {
+  const go = (n) => { day = addDays(iso, n); openMeals.clear(); rerender(); };
+  const weekday = new Date(iso + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+  return h('header', { class: 'page-head day-head' },
+    h('div', {}, h('h1', {}, dayLabel(iso, today)), h('p', { class: 'sub' }, weekday)),
+    h('div', { class: 'day-nav' },
+      iso !== today ? h('button', { class: 'btn small-btn', type: 'button', onclick: () => { day = today; openMeals.clear(); rerender(); } }, 'Heute') : null,
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Vorheriger Tag', onclick: () => go(-1) }, icon('chevron', { size: 20, cls: 'flip' })),
+      h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Nächster Tag', onclick: () => go(1) }, icon('chevron', { size: 20 }))));
+}
+
+function mealCard(iso, meal, entries, prevEntries, rerender) {
+  const list = entries.filter((e) => e.meal === meal.id);
+  const prev = prevEntries.filter((e) => e.meal === meal.id);
+  const kcal = sumEntries(list).k;
+  const open = openMeals.has(meal.id);
+  const sub = list.length
+    ? (list.length === 1 ? `${list[0].n.split(',')[0]} · ${fmt(kcal)} kcal` : `${list.length} Einträge · ${fmt(kcal)} kcal`)
+    : 'Noch leer';
+
+  const head = h('div', { class: 'meal-head' },
+    h('button', {
+      class: 'meal-toggle', type: 'button', disabled: !list.length, 'aria-expanded': list.length ? String(open) : false,
+      onclick: () => { if (open) openMeals.delete(meal.id); else openMeals.add(meal.id); rerender(); }
+    },
+    h('b', {}, meal.label, list.length ? icon(open ? 'up' : 'down', { size: 16, cls: 'chev' }) : null),
+    h('small', {}, sub)),
+    h('button', { class: 'add-btn', type: 'button', 'aria-label': `${meal.label} hinzufügen`, onclick: () => { openMeals.add(meal.id); openAdd(iso, meal.id); } }, icon('plus', { size: 22 })));
+
+  const rows = open && list.length ? h('div', { class: 'entries' }, ...list.map((e) => h('button', {
+    class: 'entry', type: 'button', onclick: () => openAmount(e, { iso, edit: true })
+  },
+  h('span', { class: 't' }, h('b', {}, e.n), h('small', {}, `${r1(e.grams)} ${unitOf(e)}`)),
+  h('span', { class: 'kc' }, `${fmt(entryTotals(e).k)} kcal`)))) : null;
+
+  const copy = !list.length && prev.length ? h('button', {
+    class: 'link copy-btn', type: 'button',
+    onclick: () => { const n = copyEntries(addDays(iso, -1), iso, meal.id); openMeals.add(meal.id); toast(`${n} vom Vortag übernommen`); }
+  }, `Wie am Vortag (${fmt(sumEntries(prev).k)} kcal)`) : null;
+
+  return h('section', { class: `card meal${list.length ? '' : ' is-empty'}` }, head, rows, copy);
+}
+
+export function heuteView(rerender) {
+  const today = isoDate();
+  const iso = currentDay();
+  const entries = entriesOf(iso);
+  const prevEntries = entriesOf(addDays(iso, -1));
+
+  const copyDay = !entries.length && prevEntries.length ? h('button', {
+    class: 'btn block', type: 'button',
+    onclick: () => { const n = copyEntries(addDays(iso, -1), iso); toast(`${n} Einträge übernommen`); }
+  }, `Ganzen Vortag übernehmen (${fmt(sumEntries(prevEntries).k)} kcal)`) : null;
+
   return h('div', {},
-    pageHead('Heute', date),
-    goalCard(),
-    comingSoon('Journal', 2),
-    comingSoon('Wasser, Koffein & Supplements', 2));
+    dayNav(iso, today, rerender),
+    dayCard(iso, today),
+    ...MEALS.map((m) => mealCard(iso, m, entries, prevEntries, rerender)),
+    copyDay,
+    comingSoon('Scanner, Wasser, Koffein & Supplements', 2));
 }

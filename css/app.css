@@ -42,6 +42,8 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --tabbar-h: 78px;
+  /* Makro-Farben: Stufen der einen Akzentfarbe (Anthrazit) statt bunter Palette, passend zu „Apple nativ“.
+     Unterscheidbar über die Helligkeit, daher auch ohne Farbsehen lesbar. Werte in :root unten (beide Erscheinungen). */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
 }
 :root[data-theme="light"] {
@@ -87,6 +89,13 @@
   --glass-strong: var(--surface-2);
   --glass-border: var(--line);
   --chip-bg: var(--fill);
+}
+:root {
+  --m-p: var(--accent);
+  --m-c: color-mix(in srgb, var(--accent) 66%, var(--surface));
+  --m-f: color-mix(in srgb, var(--accent) 42%, var(--surface));
+  --m-o: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  --ring-track: var(--surface-2);
 }
 /* Im Sheet liegt alles eine Ebene höher (dunkel: Karten heller als der Sheet-Grund) */
 .sheet { --surface: var(--sheet-surface); --surface-2: var(--sheet-surface-2); }
@@ -225,7 +234,9 @@ body.sheet-open { overflow: hidden; }
 .savebar { position: fixed; z-index: 30; left: 12px; right: 12px; top: calc(var(--safe-top) + 8px); margin: 0 auto; max-width: 616px;
   padding: 12px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; background: color-mix(in srgb, var(--danger) 22%, var(--surface)); border: 1px solid var(--danger); }
 .savebar[hidden] { display: none; }
-.toast-act { margin-left: 12px; background: none; border: 0; color: var(--accent); font-weight: 600; cursor: pointer; }
+.toast.has-act { pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; width: max-content; }
+.toast.has-act > span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.toast-act { flex: none; min-height: 40px; padding: 0 14px; border-radius: 10px; border: 0; background: var(--fill); color: var(--accent); font-weight: 700; cursor: pointer; }
 
 /* ---------- Eigene Bausteine der vereinten App ---------- */
 .page-head { margin-bottom: 8px; }
@@ -241,3 +252,90 @@ body.sheet-open { overflow: hidden; }
 .flip { transform: scaleX(-1); }
 .center { text-align: center; }
 a.btn { text-decoration: none; }
+
+/* Icons (aus dem Workout-Tracker): Linien in Textfarbe */
+.icon { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; display: block; }
+.sheet-close { color: var(--text); display: inline-flex; align-items: center; justify-content: center; }
+
+/* ---------- Phase 2: Journal ---------- */
+.icon-btn { width: var(--tap-s); height: var(--tap-s); border-radius: 50%; border: 0; background: var(--fill); color: var(--accent);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.icon-btn .icon, .add-btn .icon, .search .icon, .entry .icon { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn[aria-pressed="true"] .icon { fill: currentColor; }
+.small-btn { min-height: 36px; padding: 0 14px; font-size: 15px; }
+.danger-text { background: transparent; color: var(--danger); margin-top: 8px; }
+
+.day-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.day-head h1 { margin-bottom: 0; }
+.day-head .sub { margin-bottom: 4px; }
+.day-nav { display: flex; gap: 8px; align-items: center; padding-bottom: 8px; }
+
+.seg-mini { width: 168px; margin: 0 0 8px auto; }
+.day-body { display: grid; grid-template-columns: 116px 1fr; gap: 14px; align-items: center; }
+.ring-wrap { text-align: center; }
+.ring { position: relative; width: 116px; height: 116px; margin: 0 auto; }
+.ring-svg { width: 100%; height: 100%; display: block; }
+.ring-track { fill: none; stroke: var(--ring-track); stroke-width: 11; }
+.ring-seg { fill: none; stroke-width: 11; }
+.ring-seg.m-p { stroke: var(--m-p); } .ring-seg.m-c { stroke: var(--m-c); } .ring-seg.m-f { stroke: var(--m-f); } .ring-seg.m-o { stroke: var(--m-o); }
+.ring-c { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-c b { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.ring-c small { font-size: 12px; color: var(--muted); }
+.ring-foot { margin-top: 6px; }
+.macros { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.mrow-h { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; font-size: 14px; }
+.mrow-h > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.mrow-h b { font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mrow-h small { color: var(--muted); font-weight: 500; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.dot.m-p, .mbar .m-p { background: var(--m-p); } .dot.m-c, .mbar .m-c { background: var(--m-c); } .dot.m-f, .mbar .m-f { background: var(--m-f); }
+.mbar { height: 6px; border-radius: 3px; background: var(--ring-track); overflow: hidden; margin-top: 5px; }
+.mbar span { display: block; height: 100%; border-radius: 3px; }
+.day-card .btn { margin-top: 14px; }
+@media (max-width: 360px) { .day-body { grid-template-columns: 1fr; justify-items: center; } .macros { width: 100%; } }
+
+.card.meal { padding: 0; overflow: hidden; }
+.meal-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 0; }
+.meal-toggle { flex: 1; min-width: 0; text-align: left; background: none; border: 0; padding: 10px 16px; min-height: 56px; cursor: pointer; color: var(--text); }
+.meal-toggle:disabled { cursor: default; }
+.meal-toggle b { display: flex; align-items: center; gap: 4px; font-size: 17px; font-weight: 600; }
+.meal-toggle small { display: block; font-size: 14px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meal-toggle .chev { stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.meal.is-empty .meal-toggle b { color: var(--muted); }
+.add-btn { width: var(--tap); height: var(--tap); border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.add-btn .icon { stroke-width: 2.2; }
+.entries { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.entry { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 16px; min-height: 52px; background: none; border: 0;
+  text-align: left; cursor: pointer; color: var(--text); }
+.entry + .entry { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.entry:active { background: color-mix(in srgb, var(--text) 5%, transparent); }
+.entry .t { flex: 1; min-width: 0; }
+.entry b { display: block; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.entry small { display: block; font-size: 13px; color: var(--muted); }
+.entry .kc { font-size: 15px; font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.copy-btn { display: block; padding: 0 16px 14px; }
+
+/* Suche und Listen im Sheet */
+.search { display: flex; align-items: center; gap: 8px; height: var(--tap-s); border-radius: 10px; padding: 0 12px; margin-bottom: 12px;
+  background: var(--fill); color: var(--muted); }
+.search-input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 17px; }
+.search-input::placeholder { color: var(--faint); }
+.results .card.list { margin-bottom: 12px; }
+.fav-mark { color: var(--warn); }
+
+/* Mengen-Dialog */
+.amount-top { display: flex; align-items: flex-start; gap: 12px; justify-content: space-between; margin-bottom: 8px; }
+.amount-top p { margin: 0; line-height: 1.4; }
+.form-label { display: block; margin-bottom: 10px; }
+.form-label > span { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 4px; }
+.big-input { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.chip { min-height: 40px; padding: 0 14px; border-radius: 999px; font-size: 15px; cursor: pointer; border: 0;
+  background: var(--fill); color: var(--text); display: inline-flex; align-items: center; }
+.chip.on { background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.nutri { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 16px; }
+.nutri > div { background: var(--fill); border-radius: 10px; padding: 8px 6px; text-align: center; }
+.nutri b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.nutri span { font-size: 12px; color: var(--muted); }
+.amount .label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 4px; }
