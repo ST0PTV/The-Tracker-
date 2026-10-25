@@ -339,3 +339,35 @@ a.btn { text-decoration: none; }
 .nutri b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
 .nutri span { font-size: 12px; color: var(--muted); }
 .amount .label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 4px; }
+
+/* ---------- Phase 2: Scanner, eigene Lebensmittel ---------- */
+.add > .seg { margin-bottom: 12px; }
+.tag { font-size: 11px; font-weight: 500; padding: 2px 7px; border-radius: 6px; background: var(--fill); color: var(--muted); margin-left: 6px; vertical-align: 2px; }
+.scanner { position: relative; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 4 / 3; margin-bottom: 10px; }
+.scanner video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.scanner .frame { position: absolute; left: 12%; right: 12%; top: 30%; bottom: 30%; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 12px;
+  box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.25); pointer-events: none; }
+.scanner .torch { position: absolute; right: 10px; bottom: 10px; background: rgba(0, 0, 0, 0.55); color: #fff; }
+.scanner .torch.on { background: #fff; color: #000; }
+.code-row { display: flex; gap: 8px; margin: 10px 0; }
+.code-row .input { flex: 1; min-width: 0; }
+.scan-out:empty { display: none; }
+.scan-miss b { display: block; margin-bottom: 4px; }
+.scan-miss .chips { margin: 10px 0 0; }
+.food-form .note, .food-form > p { line-height: 1.4; }
+.food-form > .btn { margin-bottom: 8px; }
+.check-row { display: flex; align-items: center; gap: 10px; min-height: var(--tap-s); margin: 4px 0 12px; font-size: 16px; }
+.check-row input { width: 22px; height: 22px; accent-color: var(--accent); flex: none; }
+.nut-form { background: var(--surface); border-radius: var(--radius); overflow: hidden; margin-bottom: 14px; }
+.nut-row { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 14px; min-height: 52px; }
+.nut-row + .nut-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.nut-l { flex: 1; font-size: 15px; min-width: 0; }
+.nut-l small { color: var(--warn); font-size: 12px; }
+.nut-row.flag { background: color-mix(in srgb, var(--warn) 10%, transparent); }
+.nut-v { display: flex; align-items: center; gap: 6px; flex: none; }
+.nut-v .input { width: 96px; height: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+.nut-v i { font-style: normal; color: var(--muted); font-size: 13px; width: 30px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.subtle-btn { background: transparent; color: var(--muted); margin-top: 4px; }
+p.warn { color: var(--warn); }
+.btn.block { white-space: normal; text-align: center; line-height: 1.25; padding-top: 8px; padding-bottom: 8px; }
