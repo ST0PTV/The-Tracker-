@@ -6,6 +6,7 @@ import { openSheet } from '../../core/sheet.js';
 import { icon } from '../../core/icons.js';
 import { toast } from '../../core/ui.js';
 import { openInfo, infoBtn } from '../../core/info.js';
+import { trackerCard, openTrackerDetails } from '../../core/tracker-card.js';
 import { num, isoDate, addDays } from '../../core/format.js';
 import { getProfile } from '../../core/profile.js';
 import { keOf, level, clearTime, bedWake, absHours, fmtHours, hmToMin, minToHm } from './caffeine-model.js';
@@ -34,7 +35,7 @@ export function caffInfo() {
   });
 }
 
-/** Karte für einen Tag (null, wenn der Koffein-Tracker aus ist). */
+/** Karte für einen Tag (null, wenn der Koffein-Tracker aus ist): ohne Eintrag groß mit „+“, sonst kompakt mit Kurve. */
 export function caffCard(iso, today) {
   const c = caffSettings();
   if (!c.enabled) return null;
@@ -44,45 +45,55 @@ export function caffCard(iso, today) {
   const nowH = isToday ? Date.now() / 36e5 : null;
   const { bed, wake } = bedWake(iso, c.bed, c.wake);
   const rows = caffRows(iso);
-  const total = caffSum(iso);
-  const over = total > c.limit;
-  const big = isToday ? r0(level(doses, nowH, ke)) : r0(total);
-  let pill = null;
-  if (isToday) {
+  const big = isToday ? r0(level(doses, nowH, ke)) : r0(caffSum(iso));
+  const filled = rows.length > 0 || big >= 1;
+  let pill = null, late = false;
+  if (filled && isToday) {
     const clr = clearTime(doses, nowH, thr, ke);
-    pill = clr <= nowH + 1 / 12
-      ? h('span', { class: 'pill ok' }, `unter ${r0(thr)} mg`)
-      : h('span', { class: `pill ${clr <= bed ? 'ok' : 'late'}` }, `unter ${r0(thr)} mg ab `, h('b', {}, fmtHours(clr, iso)));
-  }
-  const add = h('button', { class: 'add-btn', type: 'button', 'aria-label': 'Koffein-Getränk hinzufügen', onclick: () => openCaffeine(iso) }, icon('plus', { size: 22 }));
-  const head = h('div', { class: 'tk-head' },
-    h('div', {}, h('span', { class: 'tk-label' }, 'Koffein', infoBtn('Koffein', caffInfo)),
-      h('div', { class: 'tk-big' }, String(big), h('small', {}, ' mg')),
-      h('div', { class: 'tk-sub' }, isToday ? 'jetzt im Körper' : 'aufgenommen')),
-    pill, add);
-  if (!rows.length && big < 1) {
-    return h('section', { class: 'card tk caf is-empty' }, head, h('p', { class: 'small muted' }, `Noch nichts. Richtwert ${r0(c.limit)} mg pro Tag.`));
-  }
-  const bedLvl = level(doses, bed, ke);
-  const list = h('div', { class: 'tk-rows' }, ...rows.map((e) => {
-    const left = isToday ? level([{ t: absHours(iso, e.min), mg: e.mg, dur: (e.dur || 0) / 60 }], nowH, ke) : null;
-    const future = isToday && absHours(iso, e.min) > nowH;
-    return h('button', {
-      class: 'tk-row', type: 'button',
-      onclick: () => (e.fromJournal ? toast('Kommt aus dem Journal – dort ändern.') : openCaffeine(iso, caffEntries(iso).find((x) => x.id === e.id)))
-    },
-    h('span', { class: 'tk-time' }, minToHm(e.min)),
-    h('span', { class: 't' }, h('b', {}, e.n), e.fromJournal ? h('small', {}, 'aus dem Journal') : null),
-    h('span', { class: 'tk-v' }, h('b', {}, `${r0(e.mg)} mg`), h('small', {}, future ? 'geplant' : left != null ? `noch ${r0(left)}` : '')));
-  }));
-  return h('section', { class: 'card tk caf' }, head,
-    svgBox(chartSvg({ iso, doses, nowH, ke, thr, bed, wake })),
-    h('div', { class: 'tk-stats' },
-      h('div', {}, h('span', {}, isToday ? 'Heute aufgenommen' : 'Aufgenommen'), h('b', { class: over ? 'warn' : '' }, `${r0(total)} / ${r0(c.limit)} mg`)),
-      h('div', {}, h('span', {}, `Zur Bettzeit (${c.bed})`), h('b', { class: bedLvl >= thr ? 'warn' : '' }, `${r0(bedLvl)} mg`))),
-    over ? h('p', { class: 'small warn' }, `${r0(total - c.limit)} mg über deinem Richtwert.`) : null,
-    list,
-    h('button', { class: 'link', type: 'button', onclick: () => openCaffHistory(today) }, 'Verlauf (30 Tage)'));
+    if (clr <= nowH + 1 / 12) pill = `unter ${r0(thr)} mg`;
+    else { pill = `unter ${r0(thr)} mg ab ${fmtHours(clr, iso)}`; late = clr > bed; }
+  } else if (filled) pill = 'aufgenommen';
+  return trackerCard({
+    kind: 'caf', cls: 'caf', label: 'Koffein', value: big, unit: 'mg', filled, pill, pillLate: late,
+    body: filled ? svgBox(chartSvg({ iso, doses, nowH, ke, thr, bed, wake, h: 84 })) : null,
+    addLabel: 'Koffein-Getränk hinzufügen', onAdd: () => openCaffeine(iso), onOpen: () => openCaffDetails(iso, today)
+  });
+}
+
+/** Details: Kurve, Tageswerte, Einträge, Verlauf. */
+export function openCaffDetails(iso, today = isoDate()) {
+  return openTrackerDetails({ kind: 'caf', title: 'Koffein', render: () => {
+    const c = caffSettings(), ke = keOf(c.halfLife), thr = c.threshold;
+    const isToday = iso === today;
+    const doses = caffDoses(iso);
+    const nowH = isToday ? Date.now() / 36e5 : null;
+    const { bed, wake } = bedWake(iso, c.bed, c.wake);
+    const rows = caffRows(iso);
+    const total = caffSum(iso);
+    const over = total > c.limit;
+    const bedLvl = level(doses, bed, ke);
+    const list = rows.length ? h('div', { class: 'tk-rows' }, ...rows.map((e) => {
+      const left = isToday ? level([{ t: absHours(iso, e.min), mg: e.mg, dur: (e.dur || 0) / 60 }], nowH, ke) : null;
+      const future = isToday && absHours(iso, e.min) > nowH;
+      return h('button', {
+        class: 'tk-row', type: 'button',
+        onclick: () => (e.fromJournal ? toast('Kommt aus dem Journal – dort ändern.') : openCaffeine(iso, caffEntries(iso).find((x) => x.id === e.id)))
+      },
+      h('span', { class: 'tk-time' }, minToHm(e.min)),
+      h('span', { class: 't' }, h('b', {}, e.n), e.fromJournal ? h('small', {}, 'aus dem Journal') : null),
+      h('span', { class: 'tk-v' }, h('b', {}, `${r0(e.mg)} mg`), h('small', {}, future ? 'geplant' : left != null ? `noch ${r0(left)}` : '')));
+    })) : h('p', { class: 'small muted' }, `Noch nichts. Richtwert ${r0(c.limit)} mg pro Tag.`);
+    return [
+      h('div', { class: 'trk-sum' }, h('b', {}, String(isToday ? r0(level(doses, nowH, ke)) : r0(total))), h('span', {}, isToday ? 'mg jetzt im Körper' : 'mg aufgenommen'), infoBtn('Koffein', caffInfo)),
+      svgBox(chartSvg({ iso, doses, nowH, ke, thr, bed, wake })),
+      h('div', { class: 'tk-stats' },
+        h('div', {}, h('span', {}, isToday ? 'Heute aufgenommen' : 'Aufgenommen'), h('b', { class: over ? 'warn' : '' }, `${r0(total)} / ${r0(c.limit)} mg`)),
+        h('div', {}, h('span', {}, `Zur Bettzeit (${c.bed})`), h('b', { class: bedLvl >= thr ? 'warn' : '' }, `${r0(bedLvl)} mg`))),
+      over ? h('p', { class: 'small warn' }, `${r0(total - c.limit)} mg über deinem Richtwert.`) : null,
+      h('div', { class: 'trk-acts' }, h('button', { class: 'chip', type: 'button', onclick: () => openCaffeine(iso) }, '+ Getränk'),
+        h('button', { class: 'chip', type: 'button', onclick: () => openCaffHistory(today) }, 'Verlauf (30 Tage)')),
+      list];
+  } });
 }
 
 /** Eingabe: Getränk wählen oder eigene Werte, Uhrzeit, Trinkdauer; Vorschau mit Bettzeit-Pegel. */

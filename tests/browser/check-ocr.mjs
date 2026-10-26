@@ -1,7 +1,7 @@
 // Foto der Nährwerttabelle im Browser: Etikett als Bild erzeugen (Screenshot einer Tabelle), über die Datei-Auswahl
 // einreichen, tesseract.js aus vendor/ lesen lassen, Werte im Formular prüfen, Häkchen-Pflicht, speichern.
 // Läuft offline; dauert wegen der Texterkennung etwa 20–60 s. Aufruf: node tests/browser/check-ocr.mjs
-import { launch, startServer, checker, outDir } from './lib.mjs';
+import { launch, startServer, checker, outDir, viaPlus } from './lib.mjs';
 import { join } from 'node:path';
 
 const LABEL = `<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff;font:28px Arial,sans-serif;color:#000">
@@ -36,7 +36,7 @@ p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(srv.url + '/index.html');
 await p.evaluate(() => localStorage.clear());
 await p.reload(); await p.waitForTimeout(300);
-await p.click('button[aria-label="Snacks hinzufügen"]'); await p.waitForTimeout(300);
+await viaPlus(p, 'Lebensmittel', 'Snacks');
 await p.click('.sheet .seg button:has-text("Neu")'); await p.waitForTimeout(200);
 const chooser = p.waitForEvent('filechooser');
 await p.click('.sheet button.row:has-text("Nährwerttabelle fotografieren")');

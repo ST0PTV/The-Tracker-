@@ -1,7 +1,7 @@
 // Getränke und Supplements im Browser: Wasser „+“ und Löschen mit Rückgängig, Koffein-Getränk mit Vorschau,
 // Verlauf mit Beispieldaten, Supplement anlegen und abhaken (Farbe je Theme). Prüft Konsolenfehler und fremde Keys.
 // Aufruf: node tests/browser/check-drinks.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -23,23 +23,44 @@ for (const appearance of ['dark', 'light']) {
   await p.reload(); await p.waitForTimeout(300);
   const shot = (name, full = false) => p.screenshot({ path: join(out, `${appearance}-${name}.png`), fullPage: full });
   const text = () => p.evaluate(() => document.body.innerText);
-  const bar = () => p.getAttribute('.water .w-bar', 'aria-label');
+  const bar = (sel = '.trk.water') => p.getAttribute(`${sel} .trk-bar`, 'aria-label');
+  const closeSheet = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300); } };
 
-  // Wasser: 2 × „+“ (250 ml) und „+ 500 ml“ = 1.000 ml
-  await p.click('button[aria-label="250 ml Wasser eintragen"]');
-  await p.click('button[aria-label="250 ml Wasser eintragen"]');
-  await p.click('.water .chip:has-text("+ 500 ml")'); await p.waitForTimeout(150);
-  ok((await bar()) === '1.000 von 1.500 ml', `${appearance}: Wasser 1.000 von 1.500 ml (${await bar()})`);
-  ok((await text()).includes('noch 0,50 l'), `${appearance}: „noch 0,50 l“`);
-  await p.click('.water button[aria-label="500 ml Wasser löschen"]'); await p.waitForTimeout(150);
-  ok((await bar()) === '500 von 1.500 ml', `${appearance}: nach Löschen 500 ml`);
-  await p.click('.toast button:has-text("Rückgängig")'); await p.waitForTimeout(150);
-  ok((await bar()) === '1.000 von 1.500 ml', `${appearance}: Rückgängig stellt 500 ml wieder her`);
-  await p.click('.water .chip:has-text("Andere Menge")');
-  await p.fill('input[aria-label="Andere Menge in ml"]', '5');
-  await p.click('.water .code-row button:has-text("Eintragen")'); await p.waitForTimeout(150);
-  ok(await p.locator('.toast.error, .toast.is-error, .toast[data-error]').count() + ((await text()).includes('10–3.000') ? 1 : 0) > 0, `${appearance}: 5 ml wird abgelehnt`);
-  await p.waitForTimeout(2500);
+  // Leere Karte (Entwurf V1): große Zahl, „+“ auf der Linie, nicht antippbar
+  ok(await p.locator('.trk.water:not(.on) .trk-div .trk-plus').count() === 1 && (await p.innerText('.trk.water .trk-big')).startsWith('0,00'), `${appearance}: Wasser leer mit „+“ auf der Linie`);
+  const tcol = await p.evaluate(() => ['water', 'caf', 'wt'].map((k) => getComputedStyle(document.querySelector(`.trk.k-${k} .trk-plus`)).backgroundColor));
+  ok(new Set(tcol).size === 3, `${appearance}: eigene Farbe je Tracker (${tcol.join(' / ')})`);
+  await shot('0-leer', true);
+
+  // Wasser: 2 × „+“ (250 ml) auf der Karte, dann Details: „+ 500 ml“ = 1.000 ml
+  await p.click('.trk.water button[aria-label="250 ml Wasser eintragen"]'); await p.waitForTimeout(150);
+  ok(await p.locator('.toast .toast-act').count() === 1, `${appearance}: „+“ trägt sofort ein, mit Rückgängig`);
+  await p.click('.trk.water button[aria-label="250 ml Wasser eintragen"]'); await p.waitForTimeout(150);
+  ok(await p.locator('.trk.water.on').count() === 1 && (await bar()) === '500 von 1.500 ml', `${appearance}: mit Eintrag kompakt mit Balken (${await bar()})`);
+  await p.click('.trk.water'); await p.waitForTimeout(300);
+  ok(await p.locator('.sheet .trk-sheet.k-water').count() === 1, `${appearance}: Tipp auf die Karte öffnet die Details`);
+  await p.click('.sheet .chip:has-text("+ 500 ml")'); await p.waitForTimeout(200);
+  ok((await bar('.sheet')) === '1.000 von 1.500 ml', `${appearance}: Details aktualisieren sich (${await bar('.sheet')})`);
+  await p.click('.sheet button[aria-label="500 ml Wasser löschen"]'); await p.waitForTimeout(200);
+  ok((await bar('.sheet')) === '500 von 1.500 ml', `${appearance}: nach Löschen 500 ml`);
+  await p.click('.toast button:has-text("Rückgängig")'); await p.waitForTimeout(200);
+  ok((await bar('.sheet')) === '1.000 von 1.500 ml', `${appearance}: Rückgängig stellt 500 ml wieder her`);
+  await p.click('.sheet .chip:has-text("Andere Menge")');
+  await p.fill('.sheet input[aria-label="Andere Menge in ml"]', '5');
+  await p.click('.sheet .code-row button:has-text("Eintragen")'); await p.waitForTimeout(150);
+  ok((await text()).includes('10–3.000'), `${appearance}: 5 ml wird abgelehnt`);
+  await shot('1b-wasser-details');
+  await closeSheet();
+  ok((await p.innerText('.trk.water .trk-pill')) === 'noch 0,50 l', `${appearance}: Hinweis „noch 0,50 l“`);
+  // „+“-Menü: Wasser-Knopf trägt direkt ein
+  await p.click('.tab-plus'); await p.waitForTimeout(300);
+  await p.click('.qa-quick'); await p.waitForTimeout(200);
+  ok((await p.innerText('.qa-row:has-text("Wasser") small')) === 'heute 1,25 l', `${appearance}: „+ 250 ml“ im Menü trägt ein (${await p.innerText('.qa-row:has-text("Wasser") small')})`);
+  await closeSheet();
+  await p.click('.trk.water'); await p.waitForTimeout(300);
+  await p.click('.sheet button[aria-label="250 ml Wasser löschen"] >> nth=-1'); await p.waitForTimeout(200);
+  await closeSheet();
+  await p.waitForTimeout(2600);
 
   // Koffein: Filterkaffee aus der Liste, 08:00, eintragen
   await p.click('button[aria-label="Koffein-Getränk hinzufügen"]'); await p.waitForTimeout(250);
@@ -59,11 +80,13 @@ for (const appearance of ['dark', 'light']) {
   const day = Object.values(st.log)[0] || [];
   ok(day.length === 1 && String(day[0].mg) === mgSaved.replace(',', '.') && day[0].min === 480, `${appearance}: Getränk gespeichert (${mgSaved} mg, 08:00)`);
   ok((await bar()) === `${(1000 + mlSaved).toLocaleString('de-DE')} von 1.500 ml`, `${appearance}: Kaffee zählt zum Wasser (${await bar()})`);
-  ok(await p.locator('.card.tk:has-text("Koffein") .chart-box svg').count() === 1, `${appearance}: Kurve auf der Karte`);
-  let t = await text();
-  ok(t.includes('jetzt im Körper') && !t.includes('(geschätzt)'), `${appearance}: Pegel ohne „(geschätzt)“`);
-  ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
+  ok(await p.locator('.trk.caf.on .chart-box svg').count() === 1, `${appearance}: Kurve erscheint auf der Karte nach dem Eintrag`);
   await shot('1-heute', true);
+  await p.click('.trk.caf'); await p.waitForTimeout(300);
+  let t = await text();
+  ok(t.includes('jetzt im Körper') && !t.includes('(geschätzt)') && t.includes('Heute aufgenommen'), `${appearance}: Details mit Tageswerten, ohne „(geschätzt)“`);
+  ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
+  await shot('1c-koffein-details');
 
   // Verlauf mit Beispieldaten
   await p.evaluate(async () => {
@@ -75,16 +98,15 @@ for (const appearance of ['dark', 'light']) {
     loadDemoWater(d.water); loadDemoCaffeine(d.caff);
   });
   await p.waitForTimeout(200);
-  await p.click('button:has-text("Verlauf (30 Tage)")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Verlauf (30 Tage)")'); await p.waitForTimeout(400);
   ok(await p.locator('.sheet .heat-box svg .hc').count() >= 30 * 12, `${appearance}: Heatmap mit 30 Tagen`);
   const before = await p.innerText('.sheet .heat-detail');
   await p.locator('.sheet .heat-box svg .hit').nth(3).click(); await p.waitForTimeout(150);
   ok((await p.innerText('.sheet .heat-detail')) !== before, `${appearance}: Tippen auf einen Tag wechselt die Details`);
-  t = await p.innerText('.sheet');
+  t = await p.locator('.sheet').last().innerText();
   ok(t.includes('Ø Pegel zur Bettzeit') && !BAD_TEXT.test(t), `${appearance}: Durchschnitte ohne null/NaN`);
   await shot('3-verlauf');
-  await p.keyboard.press('Escape'); await p.waitForTimeout(150);
-  if (await p.locator('.sheet').count()) { await p.locator('.sheet button[aria-label="Schließen"]').first().click(); await p.waitForTimeout(200); }
+  await closeSheet();
 
   // Supplements: leer → anlegen → Vitamin D3 → abhaken
   ok((await text()).includes('Noch keine angelegt.'), `${appearance}: Supplements starten leer`);

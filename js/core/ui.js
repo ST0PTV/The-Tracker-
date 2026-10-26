@@ -23,13 +23,16 @@ export function tabOf(path) {
   return TABS.some((t) => t.path === first) ? first : '/';
 }
 
+// „+“ in der Mitte der Tab-Leiste (öffnet das Eintragen-Menü); wird von app.js gesetzt, damit ui.js keine Bereiche kennt.
+let tabAction = null;
+export function setTabAction(fn) { tabAction = fn; }
+
 export function renderTabbar(container, path) {
   const active = tabOf(path);
-  container.replaceChildren(
-    ...TABS.map((tab) =>
-      h('a', { class: 'tab', href: `#${tab.path}`, 'aria-current': tab.path === active ? 'page' : false }, icon(tab.icon, { size: 24 }), tab.label)
-    )
-  );
+  const tabs = TABS.map((tab) =>
+    h('a', { class: 'tab', href: `#${tab.path}`, 'aria-current': tab.path === active ? 'page' : false }, icon(tab.icon, { size: 24 }), tab.label));
+  if (tabAction) tabs.splice(2, 0, h('button', { class: 'tab-plus', type: 'button', 'aria-label': 'Eintragen', onclick: () => tabAction(path) }, icon('plus', { size: 26 })));
+  container.replaceChildren(...tabs);
 }
 
 let toastTimer = null;

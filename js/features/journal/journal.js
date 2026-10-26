@@ -11,6 +11,15 @@ export const MEALS = [
   { id: 'dinner', label: 'Abendessen' },
   { id: 'snack', label: 'Snacks' }
 ];
+// Standard-Uhrzeit je Mahlzeit, wenn ein Eintrag keine eigene hat (grobe Annahme; „Unverified 0.1.4“)
+export const MEAL_MIN = { breakfast: 8 * 60, lunch: 12 * 60 + 30, dinner: 18 * 60 + 30, snack: 15 * 60 + 30 };
+/** Minuten seit 0 Uhr eines Eintrags: eigene Uhrzeit (t, "HH:MM") oder Standard der Mahlzeit. */
+export function entryMin(e) {
+  if (e.t && /^\d{2}:\d{2}$/.test(e.t)) return Number(e.t.slice(0, 2)) * 60 + Number(e.t.slice(3, 5));
+  return MEAL_MIN[e.meal] ?? 720;
+}
+/** Mahlzeit passend zur Uhrzeit (für Vorauswahl im „+“-Menü und verknüpfte Einträge). */
+export const mealByMin = (min) => (min < 10 * 60 + 30 ? 'breakfast' : min < 14 * 60 + 30 ? 'lunch' : min < 17 * 60 + 30 ? 'snack' : 'dinner');
 export const mealLabel = (id) => (MEALS.find((m) => m.id === id) || MEALS[3]).label;
 
 store.define('days', {});       // { 'JJJJ-MM-TT': [Eintrag, …] }
@@ -88,6 +97,27 @@ export function addEntry(iso, food, grams, meal, more = {}) {
   store.update('recent', (r) => [{ ...foodSnap(food), lastGrams: grams }].concat(r.filter((x) => x.id !== id)).slice(0, RECENT_MAX));
   return entry;
 }
+
+/**
+ * „Schnell – nur kcal“ (wie im Calorie-Tracker): Eintrag ohne Lebensmittel, nur Energie. Makros fehlen und erscheinen
+ * im Kalorien-Ring grau als Rest. Gespeichert als 100 „g“ mit k = kcal; erscheint nicht unter „Zuletzt“.
+ */
+export function quickFood(kcal, name = '') {
+  if (!(kcal >= 1 && kcal <= 5000)) throw new Error('Bitte zwischen 1 und 5.000 kcal eingeben.');
+  return { src: 'quick', id: 'quick', n: String(name).trim() || 'Schnell eingetragen', brand: '', liq: false,
+    k: Math.round(kcal), p: 0, c: 0, f: 0, fi: 0, su: 0, fs: 0 };
+}
+export function addQuick(iso, kcal, meal, name = '') {
+  const entry = makeEntry(quickFood(kcal, name), 100, meal);
+  writeDay(iso, (list) => list.concat([entry]));
+  return entry;
+}
+export function updateQuick(iso, id, { kcal, name, meal }) {
+  const f = quickFood(kcal, name);
+  if (!MEALS.some((m) => m.id === meal)) throw new Error('Ungültige Mahlzeit.');
+  return writeDay(iso, (list) => list.map((e) => (e.id === id ? { ...e, meal, n: f.n, k: f.k } : e)));
+}
+export const isQuick = (e) => e.src === 'quick';
 
 /** Ändert Menge, Mahlzeit und (wenn angegeben) Zusatzfelder eines Eintrags. */
 export function updateEntry(iso, id, { grams, meal, ...more }) {

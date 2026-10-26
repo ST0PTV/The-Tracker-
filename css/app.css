@@ -25,6 +25,12 @@
   --tint-bg: color-mix(in srgb, var(--accent) 14%, var(--surface));
   --warn: #FF9F0A;
   --danger: #FF453A;
+  /* Tracker-Farben (Heute, „+“-Menü); geprüft ≥ 4,9:1 gegen die Karte (WCAG AA) */
+  --c-water: #64B2FF;
+  --c-caf: #E6B566;
+  --c-alc: #C69CF4;
+  --c-wt: #4FD1AE;
+  --c-supp: #8E9AAF;
   /* Figuren: Piktogramme, Muskelkarte, Animation, 3D-Figur */
   --fig-base: #3A3F45;
   --fig-body: #30353B;
@@ -65,6 +71,11 @@
   --on-accent: #FFFFFF;
   --warn: #B25000;
   --danger: #D70015;
+  --c-water: #0B6BD0;
+  --c-caf: #9A5F0E;
+  --c-alc: #7F3DBF;
+  --c-wt: #0E7F64;
+  --c-supp: #5B6478;
   --fig-base: #D5D9DE;
   --fig-body: #FFFFFF;
   --fig-rest: #E6E9ED;
@@ -182,7 +193,7 @@ h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
-  transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 20;
+  transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 40; /* über Sheets (31), damit „Rückgängig“ dort antippbar ist */
   max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 14px; font-size: 15px;
   background: var(--surface-3); color: var(--text); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   transition: opacity 0.2s, transform 0.2s;
@@ -516,3 +527,59 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .small .link, p.small a.link { font-size: inherit; padding: 0; }
 .wspark .lab { fill: var(--muted); font-size: 10px; font-family: var(--font); }
 .card.tk.is-empty > p.small { margin-top: 8px; }
+
+/* ---------- Tracker-Karten (Heute): ohne Eintrag groß mit „+“ auf der Linie, mit Eintrag kompakt ---------- */
+.trk { --c: var(--accent); }
+.k-water { --c: var(--c-water); } .k-caf { --c: var(--c-caf); } .k-alc { --c: var(--c-alc); } .k-wt { --c: var(--c-wt); } .k-supp { --c: var(--c-supp); } .k-food { --c: var(--accent); }
+.trk .trk-lbl { font-size: 15px; color: var(--muted); }
+.trk .trk-big { font-size: 40px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; color: var(--c); font-variant-numeric: tabular-nums; }
+.trk .trk-big small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 3px; letter-spacing: 0; }
+.trk-plus { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 0; background: var(--c); color: var(--surface); display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--c) 35%, transparent); -webkit-tap-highlight-color: transparent; }
+.trk-plus .icon { stroke-width: 2.2; }
+.trk .trk-div { display: flex; align-items: center; gap: 12px; margin: 10px 0 0; }
+.trk .trk-div::before, .trk .trk-div::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--text) 10%, transparent); }
+.trk.on { padding: 12px 14px 12px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.trk.on .trk-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.trk.on .trk-lbl { font-size: 13px; }
+.trk.on .trk-big { font-size: 30px; }
+.trk.on .trk-big small { font-size: 14px; }
+.trk.on .trk-right { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.trk.on .trk-plus { width: 36px; height: 36px; }
+.trk .trk-pill { font-size: 12px; padding: 4px 9px; border-radius: 999px; background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--text); white-space: nowrap; }
+.trk .trk-pill.late { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.trk .trk-body .chart-box { margin: 6px -4px -2px; }
+.trk .cchart .line, .trk-sheet .cchart .line { stroke: var(--c); }
+.trk .cchart .area, .trk-sheet .cchart .area { fill: color-mix(in srgb, var(--c) 16%, transparent); }
+.trk .cchart .dot, .trk-sheet .cchart .dot { fill: var(--c); }
+.trk-bar { height: 5px; border-radius: 3px; background: var(--ring-track); overflow: hidden; margin: 8px 0 2px; display: flex; }
+.trk-bar i { display: block; height: 100%; background: var(--c); }
+.trk-bar i + i { opacity: 0.55; } .trk-bar i + i + i { opacity: 0.3; }
+.trk .wspark .line, .trk-sheet .wspark .line { stroke: var(--c); } .trk-sheet .wspark .dot { fill: var(--c); }
+
+.trk-sheet .trk-sum { display: flex; align-items: baseline; gap: 6px; margin: 0 0 10px; }
+.trk-sheet .trk-sum b { font-size: 34px; font-weight: 300; color: var(--c); font-variant-numeric: tabular-nums; }
+.trk-sheet .trk-sum span { color: var(--muted); }
+.trk-sheet .trk-acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
+
+/* ---------- „+“-Menü (Entwurf M2) und „+“ in der Tab-Leiste ---------- */
+.tab-plus { flex: none; width: 50px; height: 50px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); margin: 0 4px; -webkit-tap-highlight-color: transparent; }
+.tab-plus .icon { stroke-width: 2.2; }
+.qa .qa-meal { margin-bottom: 6px; }
+.qa .sec { margin: 14px 4px 8px; }
+.qa-grp { margin-bottom: 4px; }
+.qa-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; padding: 8px 14px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; font: inherit; }
+.qa-row + .qa-row { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+.qa-row .t { flex: 1; min-width: 0; }
+.qa-row b { display: block; font-size: 16px; font-weight: 500; }
+.qa-row small { display: block; font-size: 13px; color: var(--muted); }
+.qa-badge { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
+.qa-row.k-food .qa-badge { background: var(--fill); color: var(--text); }
+.qa-chev { color: var(--muted); display: inline-flex; }
+.qa-quick { border: 0; border-radius: 999px; padding: 8px 12px; font: 600 14px var(--font); background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); cursor: pointer; white-space: nowrap; }
+.qa-supp { display: flex; align-items: center; gap: 12px; }
+.qa-supp.taken .t b { color: var(--muted); }
+.qa-tick { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; box-sizing: border-box; }
+.qa-tick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.heute-hint { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0 16px; }

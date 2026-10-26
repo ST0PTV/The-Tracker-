@@ -1,12 +1,13 @@
 // Reiter „Heute“: Tag wählen, Kalorien-Karte, Mahlzeiten mit Einträgen.
 // Aufbau nach renderDiary im Kalorien-Tracker bzw. der Startseite im Rezeptbuch (ST0PTV/JuliaKelp, MIT).
-// Reihenfolge: Kalorien, Supplements (abhaken), Mahlzeiten, Wasser, Koffein, Gewicht.
+// Reihenfolge: Kalorien, Supplements (abhaken), Mahlzeiten (nur mit Einträgen), Wasser, Koffein, Alkohol (nur mit Eintrag),
+// Gewicht. Eintragen über das „+“ in der Tab-Leiste (quick-add.js) oder das „+“ der Karten.
 import { h } from '../core/util.js';
 import { comingSoon, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import { fmt, r1, isoDate, addDays, dayLabel } from '../core/format.js';
 import { unitOf } from './food/foods.js';
-import { MEALS, entriesOf, entryTotals, sumEntries, copyEntries } from './journal/journal.js';
+import { MEALS, entriesOf, entryTotals, sumEntries, copyEntries, isQuick } from './journal/journal.js';
 import { dayCard } from './journal/day-card.js';
 import { openAdd } from './journal/add-sheet.js';
 import { openAmount } from './journal/amount-sheet.js';
@@ -15,10 +16,17 @@ import { caffCard, openCaffeine } from './drinks/caffeine-card.js';
 import { caffEntries } from './drinks/caffeine.js';
 import { suppCard } from './supp/supp-card.js';
 import { weightCard } from './goal/weight-card.js';
+import { alcCard, openAlcohol } from './drinks/alcohol-card.js';
+import { alcEntries } from './drinks/alcohol.js';
+import { openQuick } from './quick-add.js';
 
 let day = null;       // gewählter Tag (nur für diese Sitzung)
 let dayAnchor = null; // Datum, an dem „day“ gesetzt wurde: neuer Kalendertag → zurück auf heute
 const openMeals = new Set();
+if (typeof document !== 'undefined') document.addEventListener('tt-open-meal', (e) => openMeals.add(e.detail));
+
+/** Gewählter Tag auf „Heute“ (für das „+“ in der Tab-Leiste). */
+export const heuteDay = () => currentDay();
 
 function currentDay() {
   const today = isoDate();
@@ -39,7 +47,7 @@ function dayNav(iso, today, rerender) {
 
 function mealCard(iso, meal, entries, prevEntries, rerender) {
   const list = entries.filter((e) => e.meal === meal.id);
-  const prev = prevEntries.filter((e) => e.meal === meal.id);
+  if (!list.length) return null; // leere Mahlzeiten erscheinen nicht (Nutzerentscheidung 2026-10-26)
   const kcal = sumEntries(list).k;
   const open = openMeals.has(meal.id);
   const sub = list.length
@@ -60,17 +68,14 @@ function mealCard(iso, meal, entries, prevEntries, rerender) {
     // Verknüpfte Einträge (kcal eines Koffein-Getränks) im Koffein-Sheet ändern
     onclick: () => (e.link && e.link.startsWith('caff:')
       ? openCaffeine(iso, caffEntries(iso).find((x) => 'caff:' + x.id === e.link))
-      : openAmount(e, { iso, edit: true }))
+      : e.link && e.link.startsWith('alc:')
+        ? openAlcohol(iso, alcEntries(iso).find((x) => 'alc:' + x.id === e.link))
+        : isQuick(e) ? openQuick(iso, e.meal, e) : openAmount(e, { iso, edit: true }))
   },
-  h('span', { class: 't' }, h('b', {}, e.n), h('small', {}, `${r1(e.grams)} ${unitOf(e)}`)),
+  h('span', { class: 't' }, h('b', {}, e.n), h('small', {}, isQuick(e) ? 'nur kcal' : `${r1(e.grams)} ${unitOf(e)}`)),
   h('span', { class: 'kc' }, `${fmt(entryTotals(e).k)} kcal`)))) : null;
 
-  const copy = !list.length && prev.length ? h('button', {
-    class: 'link copy-btn', type: 'button',
-    onclick: () => { const n = copyEntries(addDays(iso, -1), iso, meal.id); openMeals.add(meal.id); toast(`${n} vom Vortag übernommen`); }
-  }, `Wie am Vortag (${fmt(sumEntries(prev).k)} kcal)`) : null;
-
-  return h('section', { class: `card meal${list.length ? '' : ' is-empty'}` }, head, rows, copy);
+  return h('section', { class: `card meal${list.length ? '' : ' is-empty'}` }, head, rows);
 }
 
 export function heuteView(rerender) {
@@ -84,14 +89,17 @@ export function heuteView(rerender) {
     onclick: () => { const n = copyEntries(addDays(iso, -1), iso); toast(`${n} Einträge übernommen`); }
   }, `Ganzen Vortag übernehmen (${fmt(sumEntries(prevEntries).k)} kcal)`) : null;
 
+  const hint = !entries.length ? h('p', { class: 'heute-hint' }, 'Noch nichts gegessen – Mahlzeiten erscheinen mit dem ersten Eintrag über „+“.') : null;
   return h('div', {},
     dayNav(iso, today, rerender),
     dayCard(iso, today),
     suppCard(iso, today),
     ...MEALS.map((m) => mealCard(iso, m, entries, prevEntries, rerender)),
+    hint,
     copyDay,
     waterCard(iso, today),
     caffCard(iso, today),
+    alcCard(iso, today),
     weightCard(iso, today),
-    comingSoon('Alkohol & Analyse', 2));
+    comingSoon('Analyse', 2));
 }

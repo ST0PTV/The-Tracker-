@@ -1,10 +1,11 @@
 // Einstieg: Speicher prüfen, Erscheinung setzen, Router mit allen Bereichen starten.
 import * as store from './core/store.js';
-import { startRouter, toast } from './core/ui.js';
+import { startRouter, toast, setTabAction } from './core/ui.js';
 import { getSettings } from './core/settings.js';
 import { applyTheme, appearanceOf } from './core/theme.js';
 import './core/profile.js';
-import { heuteView } from './features/heute.js';
+import { heuteView, heuteDay } from './features/heute.js';
+import { openQuickAdd } from './features/quick-add.js';
 import { rezepteRoutes } from './features/rezepte.js';
 import { trainingView } from './features/training.js';
 import { ichRoutes } from './features/ich.js';
@@ -16,6 +17,9 @@ applyTheme(appearanceOf(getSettings()));
 // Schlägt ein Speichern fehl, bleibt oben ein Banner, bis das nächste Speichern klappt.
 const saveBar = document.getElementById('savebar');
 store.onWriteResult((ok) => { if (saveBar) saveBar.hidden = ok; });
+
+// „+“ in der Tab-Leiste: auf „Heute“ für den gewählten Tag, sonst für heute
+setTabAction((path) => openQuickAdd(path === '/' ? heuteDay() : undefined));
 
 const rerender = startRouter({
   '/': heuteView,

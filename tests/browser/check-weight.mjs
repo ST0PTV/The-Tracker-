@@ -1,7 +1,7 @@
 // Gewicht und Gewichtsziel im Browser: Gewicht eintragen, Ziel mit Bedarf von der Uhr übernehmen, Tempo-Grenze,
 // Untergrenze, Schätzung aus Körperdaten, automatische Anpassung, Beispieldaten mit Verlauf. Hell und dunkel.
 // Aufruf: node tests/browser/check-weight.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -25,8 +25,8 @@ for (const appearance of ['dark', 'light']) {
   const inside = () => p.evaluate(() => [...document.querySelectorAll('.card')].every((c) => { const r = c.getBoundingClientRect(); return [...c.querySelectorAll('input, .seg, .chips')].every((i) => { const q = i.getBoundingClientRect(); return q.left >= r.left - 0.5 && q.right <= r.right + 0.5; }); }));
 
   // 1. Leere Karte, Gewicht eintragen
-  ok((await text()).includes('Noch kein Gewicht eingetragen.'), `${appearance}: Karte ohne Gewicht`);
-  await p.click('button[aria-label="Gewicht eintragen"]'); await p.waitForTimeout(250);
+  ok(await p.locator('.trk.weight:not(.on)').count() === 1 && (await p.innerText('.trk.weight .trk-big')).startsWith('–'), `${appearance}: Karte ohne Gewicht (groß mit „+“)`);
+  await p.click('.trk.weight button[aria-label="Gewicht eintragen"]'); await p.waitForTimeout(250);
   await p.fill('.sheet input[aria-label="Gewicht in kg"]', '25');
   await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(150);
   ok(await p.locator('.sheet').count() === 1 && (await text()).includes('30 und 300'), `${appearance}: 25 kg abgelehnt, Sheet bleibt offen`);
@@ -34,7 +34,7 @@ for (const appearance of ['dark', 'light']) {
   await shot('1-sheet');
   await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(300);
   let t = await text();
-  ok(await p.locator('.sheet').count() === 0 && t.includes('80,4') && t.includes('heute gewogen'), `${appearance}: 80,4 kg auf der Karte`);
+  ok(await p.locator('.sheet').count() === 0 && (await p.innerText('.trk.weight .trk-big')).startsWith('80,4') && (await p.innerText('.trk.weight .trk-pill')) === 'heute gewogen', `${appearance}: 80,4 kg auf der kompakten Karte`);
 
   // 2. Gewichtsziel mit Gesamtverbrauch von der Uhr
   await p.goto(srv.url + '/index.html#/ich/gewichtsziel'); await p.waitForTimeout(250);
@@ -81,8 +81,10 @@ for (const appearance of ['dark', 'light']) {
 
   // 7. Neues Gewicht für heute → automatisch neu gerechnet
   await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(200);
-  ok((await text()).includes('Ziel 72 kg'), `${appearance}: Karte zeigt das Ziel`);
-  await p.click('button[aria-label="Gewicht eintragen"]'); await p.waitForTimeout(250);
+  await p.click('.trk.weight'); await p.waitForTimeout(300);
+  ok((await p.locator('.sheet').last().innerText()).includes('Ziel 72 kg'), `${appearance}: Details zeigen das Ziel`);
+  await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300);
+  await viaPlus(p, 'Gewicht');
   await p.fill('.sheet input[aria-label="Gewicht in kg"]', '79,6');
   await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(300);
   ok((await text()).includes('Kalorienziel ab heute'), `${appearance}: Toast meldet das neue Kalorienziel`);
@@ -92,13 +94,14 @@ for (const appearance of ['dark', 'light']) {
   await p.goto(srv.url + '/index.html#/ich'); await p.waitForTimeout(200);
   await p.click('button:has-text("Beispieldaten laden")');
   await p.waitForFunction(() => /Beispiel-Einträge vorhanden/.test(document.body.innerText), null, { timeout: 15000 });
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(300);
-  ok(await p.locator('.weight .wspark path.line').count() === 1, `${appearance}: Verlauf als Linie`);
-  ok(/zur Vorwoche[\s\S]*[+−±]\d/.test(await p.innerText('.weight')), `${appearance}: Trend zur Vorwoche`);
+  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(3200);
+  await p.click('.trk.weight'); await p.waitForTimeout(300);
+  ok(await p.locator('.sheet .wspark path.line').count() === 1, `${appearance}: Verlauf als Linie in den Details`);
+  ok(/zur Vorwoche[\s\S]*[+−±]\d/.test(await p.locator('.sheet').last().innerText()), `${appearance}: Trend zur Vorwoche`);
   t = await text();
   ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
-  await p.locator('.weight').scrollIntoViewIfNeeded();
-  await shot('5-karte');
+  await shot('5-details');
+  await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300);
   await p.goto(srv.url + '/index.html#/ich'); await p.waitForTimeout(200);
   await p.click('button:has-text("Entfernen")'); await p.waitForTimeout(300);
   const left = await p.evaluate(() => Object.values(JSON.parse(localStorage.getItem('tt_weight'))).filter((v) => v.demo).length);

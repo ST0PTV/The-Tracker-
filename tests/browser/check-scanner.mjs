@@ -2,7 +2,7 @@
 // unbekannter Barcode → Abtippen → eigenes Lebensmittel → eintragen → in der Suche auffindbar.
 // Kamera und Foto-Erkennung selbst lassen sich hier nicht echt prüfen (iPhone-Checkliste).
 // Aufruf: node tests/browser/check-scanner.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
 import { join } from 'node:path';
 
 const KNOWN = '4001234567890';
@@ -35,7 +35,7 @@ for (const appearance of ['dark', 'light']) {
   const text = () => p.evaluate(() => document.body.innerText);
 
   // Reiter Scannen: Kamera startet (Test-Kamera), keine Fehlermeldung
-  await p.click('button[aria-label="Frühstück hinzufügen"]'); await p.waitForTimeout(300);
+  await viaPlus(p, 'Lebensmittel', 'Frühstück');
   await p.click('.sheet .seg button:has-text("Scannen")'); await p.waitForTimeout(1500);
   const camOk = await p.evaluate(() => { const v = document.querySelector('.scanner video'); return !!v && v.readyState >= 2 && !!v.srcObject; });
   ok(camOk, `${appearance}: Kamera läuft im Scanner (Test-Kamera)`);

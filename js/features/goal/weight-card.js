@@ -6,6 +6,7 @@ import { icon } from '../../core/icons.js';
 import { toast } from '../../core/ui.js';
 import { openSheet } from '../../core/sheet.js';
 import { openInfo, infoBtn } from '../../core/info.js';
+import { trackerCard, openTrackerDetails } from '../../core/tracker-card.js';
 import { num, r1, addDays, isoDate, fmt } from '../../core/format.js';
 import { weightLog, currentWeight, removeWeight, logWeight, getWeightGoal, getGoals } from '../../core/profile.js';
 import { weeklyTrend, wgDateFmt, WG_REFS } from './weightgoal.js';
@@ -51,30 +52,40 @@ function spark(log, today, target) {
 const kg = (v) => `${r1(v)} kg`;
 const signed = (v) => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${r1(Math.abs(v))} kg`;
 
-export function weightCard(iso, today) {
+/** Karte unter „Heute“: ohne Gewicht groß mit „+“, sonst kompakt; Verlauf und Trend in den Details. */
+export function weightCard(iso) {
   const o = getWeightGoal();
   if (!o.card) return null;
   const log = weightLog().filter((e) => e.iso <= iso);
   const w = currentWeight(iso);
-  const add = h('button', { class: 'add-btn', type: 'button', 'aria-label': 'Gewicht eintragen', onclick: () => openWeight(iso) }, icon('plus', { size: 22 }));
-  const head = h('div', { class: 'tk-head' },
-    h('div', {}, h('span', { class: 'tk-label' }, 'Gewicht', infoBtn('Gewicht', weightInfo)),
-      w != null ? h('div', { class: 'tk-big' }, r1(w), h('small', {}, ' kg')) : null,
-      w != null && log.length ? h('div', { class: 'tk-sub' }, log[log.length - 1].iso === iso ? 'heute gewogen' : `zuletzt ${wgDateFmt(log[log.length - 1].iso)}`) : null),
-    add);
-  if (w == null) {
-    return h('section', { class: 'card tk weight is-empty' }, head, h('p', { class: 'small muted' }, 'Noch kein Gewicht eingetragen.'));
-  }
-  const t = weeklyTrend(log, iso);
-  const g = getGoals(iso);
-  const stats = h('div', { class: 'tk-stats' },
-    h('div', {}, h('span', {}, 'Ø 7 Tage'), h('b', {}, t ? kg(t.avg) : '–')),
-    h('div', {}, h('span', {}, 'zur Vorwoche'), h('b', {}, t && t.diff != null ? signed(t.diff) : '–')));
-  const goalLine = o.on && o.target
-    ? h('p', { class: 'small muted' }, `Ziel ${kg(o.target)}${o.date ? ` · voraussichtlich ${wgDateFmt(o.date)}` : ''}${g?.goal ? ` · Kalorienziel ${fmt(g.goal)} kcal` : ''} · `,
-      h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'ändern'))
-    : h('p', { class: 'small muted' }, h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel festlegen'));
-  return h('section', { class: 'card tk weight' }, head, spark(log, iso, o.on ? o.target : null), stats, goalLine);
+  const last = log.length ? log[log.length - 1].iso : null;
+  return trackerCard({
+    kind: 'wt', cls: 'weight', label: 'Gewicht', value: w != null ? r1(w) : '–', unit: 'kg', filled: w != null,
+    pill: last ? (last === iso ? 'heute gewogen' : `zuletzt ${wgDateFmt(last)}`) : null,
+    addLabel: 'Gewicht eintragen', onAdd: () => openWeight(iso), onOpen: () => openWeightDetails(iso)
+  });
+}
+
+/** Details: Verlauf 30 Tage, Wochentrend, Gewichtsziel. */
+export function openWeightDetails(iso = isoDate()) {
+  return openTrackerDetails({ kind: 'wt', title: 'Gewicht', render: () => {
+    const o = getWeightGoal();
+    const log = weightLog().filter((e) => e.iso <= iso);
+    const w = currentWeight(iso);
+    const t = weeklyTrend(log, iso);
+    const g = getGoals(iso);
+    return [
+      h('div', { class: 'trk-sum' }, h('b', {}, w != null ? r1(w) : '–'), h('span', {}, 'kg'), infoBtn('Gewicht', weightInfo)),
+      spark(log, iso, o.on ? o.target : null),
+      h('div', { class: 'tk-stats' },
+        h('div', {}, h('span', {}, 'Ø 7 Tage'), h('b', {}, t ? kg(t.avg) : '–')),
+        h('div', {}, h('span', {}, 'zur Vorwoche'), h('b', {}, t && t.diff != null ? signed(t.diff) : '–'))),
+      o.on && o.target
+        ? h('p', { class: 'small muted' }, `Ziel ${kg(o.target)}${o.date ? ` · voraussichtlich ${wgDateFmt(o.date)}` : ''}${g?.goal ? ` · Kalorienziel ${fmt(g.goal)} kcal` : ''} · `,
+          h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'ändern'))
+        : h('p', { class: 'small muted' }, h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel festlegen')),
+      h('div', { class: 'trk-acts' }, h('button', { class: 'chip', type: 'button', onclick: () => openWeight(iso) }, '+ Gewicht'))];
+  } });
 }
 
 /** Eingabe-Sheet: Gewicht für einen Tag (Standard: gewählter Tag), letzte Einträge mit Löschen. */

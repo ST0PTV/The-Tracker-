@@ -12,7 +12,8 @@ import { VERSION } from '../core/version.js';
 import { isoDate, addDays } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
 import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
-import { generateDemo, generateDemoDrinks, generateDemoWeights, DEMO_GOAL } from './dev/demo.js';
+import { generateDemo, generateDemoDrinks, generateDemoWeights, generateDemoAlcohol, DEMO_GOAL } from './dev/demo.js';
+import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS } from './drinks/alcohol.js';
 import { wgoalView } from './goal/wgoal-view.js';
 import { WG_REFS } from './goal/weightgoal.js';
 import { loadDemoWater, removeDemoWater } from './drinks/water.js';
@@ -34,7 +35,7 @@ function ichView(rerender) {
     h('section', { class: 'card list' },
       row('#/ich/ziel', 'Tagesziel', g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt'),
       row('#/ich/gewichtsziel', 'Gewichtsziel', getWeightGoal().on ? `${String(getWeightGoal().target).replace('.', ',')} kg · rechnet das Kalorienziel` : 'aus'),
-      row('#/ich/getraenke', 'Getränke', 'Wasser und Koffein'),
+      row('#/ich/getraenke', 'Getränke', 'Wasser, Koffein und Alkohol'),
       row('#/ich/supplements', 'Supplements', suppSettings().items.length ? `${suppSettings().items.length} angelegt` : 'noch keine')),
     h('section', { class: 'card' },
       h('h2', {}, 'Darstellung'),
@@ -63,6 +64,7 @@ function devCard(rerender) {
     loadDemoWater(drinks.water);
     loadDemoCaffeine(drinks.caff);
     loadDemoWeights(generateDemoWeights({ today, days: 30 }));
+    loadDemoAlcohol(generateDemoAlcohol({ today, days: 30 }));
     // Ohne eigenes Ziel ein Beispielziel ab dem ersten Beispieltag (Gewicht nur im Ziel, nicht im Profil)
     if (!getGoals()) setGoal({ from: addDays(today, -29), goal: DEMO_GOAL, preset: 'dge', weight: 75 });
     toast(`${count} Beispiel-Einträge für 30 Tage geladen`);
@@ -72,10 +74,10 @@ function devCard(rerender) {
     h('h2', {}, 'Entwicklung'),
     h('p', { class: 'muted small' }, n
       ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
-      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee und Gewicht. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
+      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee, Gewicht und ein paar Abenden mit Alkohol. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
     h('div', { class: 'btn-row' },
       h('button', { class: 'btn', type: 'button', onclick: (e) => load(e.currentTarget) }, n ? 'Neu erzeugen' : 'Beispieldaten laden'),
-      n ? h('button', { class: 'btn', type: 'button', onclick: () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
+      n ? h('button', { class: 'btn', type: 'button', onclick: () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); removeDemoAlcohol(); const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
 function zielView() {
@@ -88,6 +90,7 @@ function zielView() {
   const floorNote = h('p', { class: 'warn small', hidden: true });
   const kcalIn = h('input', { class: 'input', type: 'number', inputmode: 'numeric', min: 800, max: 6000, value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
   const wIn = h('input', { class: 'input', type: 'number', inputmode: 'decimal', step: '0.1', min: 30, max: 300, value: p.weightKg ?? '', placeholder: 'z. B. 75', 'aria-label': 'Körpergewicht' });
+  const hIn = h('input', { class: 'input', type: 'number', inputmode: 'numeric', min: 120, max: 230, value: p.heightCm ?? '', placeholder: 'optional, z. B. 175', 'aria-label': 'Körpergröße' });
   const preview = h('div', { class: 'stats' });
   const note = h('p', { class: 'muted small' });
   const seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Makro-Verteilung' });
@@ -120,7 +123,9 @@ function zielView() {
     const kcal = num(kcalIn);
     const w = num(wIn);
     if (!(kcal >= 800 && kcal <= 6000)) { toast('Bitte ein Kalorienziel zwischen 800 und 6.000 eintragen.', { error: true }); return; }
-    setProfile({ sex, ...(w != null ? { weightKg: w } : {}) });
+    const cm = num(hIn);
+    if (cm != null && !(cm >= 120 && cm <= 230)) { toast('Bitte eine Körpergröße zwischen 120 und 230 cm eintragen (oder leer lassen).', { error: true }); return; }
+    setProfile({ sex, heightCm: cm != null ? Math.round(cm) : null, ...(w != null ? { weightKg: w } : {}) });
     setGoal({ goal: kcal, preset, weight: w });
     toast('Ziel gespeichert');
     location.hash = '#/ich';
@@ -136,6 +141,7 @@ function zielView() {
       h('label', {}, h('span', {}, 'Kalorien pro Tag'), kcalIn),
       floorNote,
       h('label', {}, h('span', {}, 'Körpergewicht (kg)'), wIn),
+      h('label', {}, h('span', {}, 'Körpergröße (cm, optional – für die Alkohol-Schätzung)'), hIn),
       h('span', { class: 'label' }, 'Geschlecht (für die Untergrenze)'), sexSeg,
       h('span', { class: 'label' }, 'Makro-Verteilung'), seg, preview, note),
     h('button', { class: 'btn primary block', type: 'button', onclick: save }, 'Speichern'));
@@ -154,6 +160,7 @@ const CREDITS = [
   ['Wasser-Richtwert', 'Standardziel 1,5 l Getränke pro Tag (DGE); Gesamtwasser 2,0/2,5 l inkl. Lebensmittel (EFSA 2010).', 'DGE · EFSA NDA Panel 2010', 'https://doi.org/10.2903/j.efsa.2010.1459'],
   ['Supplement-Katalog', '30 Supplements mit Studienlage, BfR-Höchstmengen und Quellen je Eintrag (ⓘ). Information, keine Empfehlung. Texte aus Rezeptbuch und Calorie-Tracker.', 'BfR, NIH ODS, Cochrane, EMA, ISSN u. a. – je Supplement im ⓘ', 'https://www.bfr.bund.de/cm/343/hoechstmengenempfehlungen-des-bfr.pdf'],
   ['Gewichtsziel', 'Kalorienziel aus Erhaltungsbedarf ± 7.700 kcal pro kg, Tempo-Grenzen 1 % (Abnahme) bzw. 0,5 % (Zunahme) pro Woche, Untergrenze 1.200/1.500 kcal, Grundumsatz-Schätzung (DGE). Datum und kcal sind Schätzungen. Rechnung aus dem Calorie-Tracker.', WG_REFS.map(([t]) => t.split(' – ')[0]).join(' · '), 'https://github.com/ST0PTV/Calorie-Tracker'],
+  ['Alkohol-Schätzung', 'Widmark-Formel mit Aufnahme erster Ordnung und Abbau 0,15 ‰/h (einstellbar); Verteilungsfaktor fest oder aus dem BMI. Getränkevorlagen aus dem BLS 4.0 umgerechnet. Grobe Schätzung, nicht geeignet, um die Fahrtüchtigkeit zu beurteilen. Rechnung aus dem Calorie-Tracker.', ALC_REFS.map(([t]) => t.split(' (')[0]).join(' · '), 'https://github.com/ST0PTV/Calorie-Tracker'],
   ['Standardportionen (LARN)', 'Portions-Schnellwahl im Mengen-Dialog. Rohgewicht, essbarer Anteil; gegarte Lebensmittel umgerechnet (Schätzung).', 'SINU (2024), LARN V Revisione, Porzioni standard (Werte über ATS Brescia 2025)', 'https://www.ats-brescia.it/documents/3432658/78612060/Porzioni+standard+degli+alimenti+per+la+popolazione+adulta.pdf/2ce817e7-0713-bbe6-56c7-767285a575dd']
 ];
 
