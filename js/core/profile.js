@@ -117,3 +117,58 @@ export function setGoal({ from = todayISO(), goal, preset = 'dge', pf, ff, weigh
   changed();
   return ok;
 }
+
+// ---------- Gewicht und Gewichtsziel ----------
+// Gewichtsverlauf: { 'JJJJ-MM-TT': { kg, demo? } }, ein Wert pro Tag (der letzte zählt).
+// Gewichtsziel (Datenform wie state.wgoal im Calorie-Tracker 2.3.1): Rechnung in js/features/goal/weightgoal.js.
+export const WG_DEFAULTS = { on: false, target: null, date: null, maint: null, auto: true, src: 'watch', bmr: null, pal: 1.4, sport: false, tempo: 'rec', card: true };
+store.define('weight', {});
+store.define('wgoal', { ...WG_DEFAULTS });
+
+/** Verlauf aufsteigend: [{ iso, kg, demo }]. */
+export function weightLog() {
+  return Object.entries(store.get('weight')).map(([iso, v]) => ({ iso, kg: v.kg, demo: !!v.demo })).sort((a, b) => a.iso.localeCompare(b.iso));
+}
+
+/** Aktuelles Gewicht: letzter Eintrag bis iso, sonst das Gewicht im Profil. */
+export function currentWeight(iso = todayISO()) {
+  const l = weightLog().filter((e) => e.iso <= iso);
+  return l.length ? l[l.length - 1].kg : getProfile().weightKg ?? null;
+}
+
+/** Gewicht eintragen (30–300 kg). Ein echter Eintrag am neuesten Tag setzt auch das Gewicht im Profil. */
+export function logWeight(iso, kg, { demo = false } = {}) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || '')) throw new Error('Bitte ein Datum wählen.');
+  if (!(kg >= 30 && kg <= 300)) throw new Error('Bitte ein Gewicht zwischen 30 und 300 kg eingeben.');
+  const v = Math.round(kg * 10) / 10;
+  store.update('weight', (w) => { w[iso] = demo ? { kg: v, demo: true } : { kg: v }; });
+  const real = weightLog().filter((e) => !e.demo);
+  if (!demo && real.length && real[real.length - 1].iso === iso) store.update('profile', (p) => { p.weightKg = v; });
+  changed();
+  return v;
+}
+
+export function removeWeight(iso) {
+  const gone = store.get('weight')[iso] || null;
+  store.update('weight', (w) => { delete w[iso]; });
+  changed();
+  return gone;
+}
+
+/** Beispiel-Gewichte schreiben ({ iso: kg }); echte Einträge bleiben, das Profil-Gewicht bleibt unberührt. */
+export function loadDemoWeights(map) {
+  removeDemoWeights();
+  store.update('weight', (w) => { for (const [iso, kg] of Object.entries(map)) if (!w[iso]) w[iso] = { kg, demo: true }; });
+  changed();
+}
+export function removeDemoWeights() {
+  store.update('weight', (w) => { for (const k of Object.keys(w)) if (w[k].demo) delete w[k]; });
+  changed();
+}
+
+export const getWeightGoal = () => ({ ...WG_DEFAULTS, ...store.get('wgoal') });
+export function setWeightGoal(patch) {
+  const ok = store.update('wgoal', (o) => Object.assign(o, patch));
+  changed();
+  return ok;
+}

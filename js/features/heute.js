@@ -1,6 +1,6 @@
 // Reiter „Heute“: Tag wählen, Kalorien-Karte, Mahlzeiten mit Einträgen.
 // Aufbau nach renderDiary im Kalorien-Tracker bzw. der Startseite im Rezeptbuch (ST0PTV/JuliaKelp, MIT).
-// Reihenfolge: Kalorien, Supplements (abhaken), Mahlzeiten, Wasser, Koffein.
+// Reihenfolge: Kalorien, Supplements (abhaken), Mahlzeiten, Wasser, Koffein, Gewicht.
 import { h } from '../core/util.js';
 import { comingSoon, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
@@ -14,6 +14,7 @@ import { waterCard } from './drinks/water-card.js';
 import { caffCard, openCaffeine } from './drinks/caffeine-card.js';
 import { caffEntries } from './drinks/caffeine.js';
 import { suppCard } from './supp/supp-card.js';
+import { weightCard } from './goal/weight-card.js';
 
 let day = null;       // gewählter Tag (nur für diese Sitzung)
 let dayAnchor = null; // Datum, an dem „day“ gesetzt wurde: neuer Kalendertag → zurück auf heute
@@ -91,5 +92,6 @@ export function heuteView(rerender) {
     copyDay,
     waterCard(iso, today),
     caffCard(iso, today),
-    comingSoon('Analyse, Alkohol & Gewichtsziel', 2));
+    weightCard(iso, today),
+    comingSoon('Alkohol & Analyse', 2));
 }

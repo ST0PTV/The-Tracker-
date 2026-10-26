@@ -5,14 +5,16 @@ import { h } from '../core/util.js';
 import { pageHead, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import * as store from '../core/store.js';
-import { getGoals, getProfile, setProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS } from '../core/profile.js';
+import { getGoals, getProfile, setProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights } from '../core/profile.js';
 import { getSettings, setSettings } from '../core/settings.js';
 import { applyTheme, APPEARANCES } from '../core/theme.js';
 import { VERSION } from '../core/version.js';
 import { isoDate, addDays } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
 import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
-import { generateDemo, generateDemoDrinks, DEMO_GOAL } from './dev/demo.js';
+import { generateDemo, generateDemoDrinks, generateDemoWeights, DEMO_GOAL } from './dev/demo.js';
+import { wgoalView } from './goal/wgoal-view.js';
+import { WG_REFS } from './goal/weightgoal.js';
 import { loadDemoWater, removeDemoWater } from './drinks/water.js';
 import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS } from './drinks/caffeine.js';
 import { drinksSettingsView } from './drinks/drinks-settings.js';
@@ -31,6 +33,7 @@ function ichView(rerender) {
     pageHead('Ich'),
     h('section', { class: 'card list' },
       row('#/ich/ziel', 'Tagesziel', g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt'),
+      row('#/ich/gewichtsziel', 'Gewichtsziel', getWeightGoal().on ? `${String(getWeightGoal().target).replace('.', ',')} kg · rechnet das Kalorienziel` : 'aus'),
       row('#/ich/getraenke', 'Getränke', 'Wasser und Koffein'),
       row('#/ich/supplements', 'Supplements', suppSettings().items.length ? `${suppSettings().items.length} angelegt` : 'noch keine')),
     h('section', { class: 'card' },
@@ -59,6 +62,7 @@ function devCard(rerender) {
     const drinks = generateDemoDrinks({ today, days: 30 });
     loadDemoWater(drinks.water);
     loadDemoCaffeine(drinks.caff);
+    loadDemoWeights(generateDemoWeights({ today, days: 30 }));
     // Ohne eigenes Ziel ein Beispielziel ab dem ersten Beispieltag (Gewicht nur im Ziel, nicht im Profil)
     if (!getGoals()) setGoal({ from: addDays(today, -29), goal: DEMO_GOAL, preset: 'dge', weight: 75 });
     toast(`${count} Beispiel-Einträge für 30 Tage geladen`);
@@ -68,10 +72,10 @@ function devCard(rerender) {
     h('h2', {}, 'Entwicklung'),
     h('p', { class: 'muted small' }, n
       ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
-      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser und Kaffee. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
+      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee und Gewicht. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
     h('div', { class: 'btn-row' },
       h('button', { class: 'btn', type: 'button', onclick: (e) => load(e.currentTarget) }, n ? 'Neu erzeugen' : 'Beispieldaten laden'),
-      n ? h('button', { class: 'btn', type: 'button', onclick: () => { removeDemoWater(); removeDemoCaffeine(); const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
+      n ? h('button', { class: 'btn', type: 'button', onclick: () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
 function zielView() {
@@ -125,6 +129,9 @@ function zielView() {
   return h('div', {},
     h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
     pageHead('Tagesziel', 'Gilt ab heute. Rezepte und Wochenplan rechnen mit diesem Ziel.'),
+    h('section', { class: 'card' }, getWeightGoal().on
+      ? h('p', { class: 'small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen'))
+      : h('p', { class: 'small muted' }, 'Kalorienziel lieber aus Zielgewicht und Tempo rechnen? ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel'))),
     h('section', { class: 'card form' },
       h('label', {}, h('span', {}, 'Kalorien pro Tag'), kcalIn),
       floorNote,
@@ -146,6 +153,7 @@ const CREDITS = [
   ['Koffein-Modell und Richtwerte', 'Ein-Kompartiment-Modell mit Aufnahme und Abbau erster Ordnung; Richtwerte 400 mg/Tag und 200 mg je Einzeldosis (EFSA). Pegel sind Schätzungen.', CAFF_REFS.map(([t]) => t.split('.')[0]).join(' · '), CAFF_REFS[0][1]],
   ['Wasser-Richtwert', 'Standardziel 1,5 l Getränke pro Tag (DGE); Gesamtwasser 2,0/2,5 l inkl. Lebensmittel (EFSA 2010).', 'DGE · EFSA NDA Panel 2010', 'https://doi.org/10.2903/j.efsa.2010.1459'],
   ['Supplement-Katalog', '30 Supplements mit Studienlage, BfR-Höchstmengen und Quellen je Eintrag (ⓘ). Information, keine Empfehlung. Texte aus Rezeptbuch und Calorie-Tracker.', 'BfR, NIH ODS, Cochrane, EMA, ISSN u. a. – je Supplement im ⓘ', 'https://www.bfr.bund.de/cm/343/hoechstmengenempfehlungen-des-bfr.pdf'],
+  ['Gewichtsziel', 'Kalorienziel aus Erhaltungsbedarf ± 7.700 kcal pro kg, Tempo-Grenzen 1 % (Abnahme) bzw. 0,5 % (Zunahme) pro Woche, Untergrenze 1.200/1.500 kcal, Grundumsatz-Schätzung (DGE). Datum und kcal sind Schätzungen. Rechnung aus dem Calorie-Tracker.', WG_REFS.map(([t]) => t.split(' – ')[0]).join(' · '), 'https://github.com/ST0PTV/Calorie-Tracker'],
   ['Standardportionen (LARN)', 'Portions-Schnellwahl im Mengen-Dialog. Rohgewicht, essbarer Anteil; gegarte Lebensmittel umgerechnet (Schätzung).', 'SINU (2024), LARN V Revisione, Porzioni standard (Werte über ATS Brescia 2025)', 'https://www.ats-brescia.it/documents/3432658/78612060/Porzioni+standard+degli+alimenti+per+la+popolazione+adulta.pdf/2ce817e7-0713-bbe6-56c7-767285a575dd']
 ];
 
@@ -158,4 +166,4 @@ function quellenView() {
       h('a', { class: 'link', href: link, target: '_blank', rel: 'noopener' }, 'Repository öffnen'))));
 }
 
-export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/getraenke': drinksSettingsView, '/ich/supplements': suppSettingsView };
+export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/getraenke': drinksSettingsView, '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView };
