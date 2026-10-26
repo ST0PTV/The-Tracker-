@@ -58,7 +58,7 @@ Regel: Bereiche greifen nie direkt auf den Speicher anderer Bereiche zu. Ziele (
 
 Eigener Code: [MIT-Lizenz](LICENSE). Übernommene Teile behalten ihre Lizenz und ihren Hinweis:
 
-- Workout-Tracker – Copyright (c) 2026 ST0PTV, MIT: Speicherschicht, Router, Sheets, Icons, Design „Apple nativ“
+- Workout-Tracker – Copyright (c) 2026 ST0PTV, MIT: Speicherschicht, Router, Sheets, Icons, Design „Apple nativ“, Tab-Leiste mit erhöhtem Mittelknopf und Streifen-Behandlung im iOS-Home-Bildschirm (`js/core/viewport-gap.js`)
 - Calorie-Tracker – Copyright (c) 2026 ST0PTV, MIT: Makro-Presets und Ziel-Historie (Herleitung und Studien in dessen README); Gewichtsziel-Rechnung aus `js/weightgoal.js` und Alkohol-Schätzung aus `js/alcohol.js` (2.3.1); Idee des „+“-Menüs, der minimalen Tracker-Karten und der Ich-Seite mit Symbolen und „Schlaf & Körper“
 - Rezeptbuch – Copyright (c) 2026 JuliaKelp, MIT: Navigation; Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung (`parseNutrition`), eigene Lebensmittel, Wasser, Koffein-Modell und -Verlauf sowie Supplement-Tracker mit Katalog aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, dort angepasst); Farben für das dunkle Theme aus dem Calorie-Tracker
 - **Nährwerte:** Max Rubner-Institut (2025). Bundeslebensmittelschlüssel (BLS), Version 4.0. Karlsruhe. DOI [10.25826/Data20251217-134202-0](https://doi.org/10.25826/Data20251217-134202-0), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). `data/bls.json` ist verändert: Auszug (Energie, Makronährstoffe, Ballaststoffe, Zucker, acht Mineralstoffe/Vitamine je 100 g); freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.

@@ -40,6 +40,23 @@ for (const appearance of ['dark', 'light']) {
     await p.screenshot({ path: join(out, `${appearance}-${r.replace(/[#/]+/g, '_') || 'root'}.png`) });
   }
 
+  // Tab-Leiste wie im Workout-Tracker: volle Breite, deckend in der Streifenfarbe, vier Tabs, erhöhter Knopf mit „+“ in der Mitte
+  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(300);
+  const bar = async () => p.evaluate(() => {
+    const t = document.querySelector('.tabbar').getBoundingClientRect(), k = document.querySelector('.tab-plus').getBoundingClientRect();
+    const cs = getComputedStyle(document.querySelector('.tabbar')), tabs = [...document.querySelectorAll('.tabbar .tab')].map((e) => e.getBoundingClientRect());
+    const strip = getComputedStyle(document.documentElement).getPropertyValue('--strip').trim();
+    return { left: t.left, right: t.right, h: Math.round(t.height), bg: cs.backgroundColor, strip, kw: Math.round(k.width), kh: Math.round(k.height), raised: Math.round(t.top - k.top),
+      centre: Math.round(Math.abs((k.left + k.right) / 2 - innerWidth / 2)), n: tabs.length, overlap: tabs.some((e) => e.right > k.left + 1 && e.left < k.right - 1) };
+  });
+  const bb = await bar();
+  ok(bb.left === 0 && bb.right === 390 && bb.n === 4, `${appearance}: Leiste über die ganze Breite mit vier Tabs (${bb.left}–${bb.right}, ${bb.n})`);
+  ok(bb.kw === 58 && bb.kh === 58 && bb.raised >= 10 && bb.raised <= 16 && bb.centre <= 1 && !bb.overlap, `${appearance}: Knopf 58 px, erhöht (${bb.raised} px), mittig, ohne Überlappung mit Tabs`);
+  ok(bb.bg !== 'rgba(0, 0, 0, 0)' && bb.strip === (appearance === 'light' ? '#F2F2F7' : '#000000'), `${appearance}: Leiste deckend in der Streifenfarbe (${bb.bg}, ${bb.strip})`);
+  await p.evaluate(() => document.documentElement.classList.add('tt-gap')); // Lücke im iOS-Home-Bildschirm: kein Abstand für den Home-Balken
+  ok((await bar()).h === 58, `${appearance}: mit Lücke (tt-gap) ist die Leiste 58 px hoch`);
+  await p.evaluate(() => document.documentElement.classList.remove('tt-gap'));
+
   const keys = await p.evaluate(() => ({ all: Object.keys(localStorage), ct: localStorage.getItem('ct.v1'), wt: localStorage.getItem('wt_settings') }));
   ok(keys.all.includes('tt_schema'), `${appearance}: Schema-Version angelegt`);
   ok(keys.all.every((k) => k.startsWith('tt_') || k === 'ct.v1' || k === 'wt_settings'), `${appearance}: nur eigene Keys angelegt (${keys.all.join(', ')})`);

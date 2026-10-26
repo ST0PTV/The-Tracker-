@@ -43,6 +43,27 @@ for (const appearance of ['dark', 'light']) {
   await shot('2-menu');
   await close();
 
+  // „+“-Menü: „Wie am Vortag“ darf das Sheet nicht nach oben schieben – der Rest rutscht nach unten
+  await p.evaluate(async () => {
+    const j = await import('./js/features/journal/journal.js');
+    const { addDays, isoDate } = await import('./js/core/format.js');
+    j.addQuick(addDays(isoDate(), -1), 400, 'dinner', 'Vortag Abend');
+    j.addQuick(isoDate(), 300, 'lunch', 'Heute Mittag');
+  });
+  await p.click('.tab-plus'); await p.waitForTimeout(300);
+  const metrics = async () => p.evaluate(() => ({ top: Math.round(document.querySelector('.sheet').getBoundingClientRect().top), trk: Math.round([...document.querySelectorAll('.qa-grp')][1].getBoundingClientRect().top),
+    copy: !!document.querySelector('.qa-row .t b') && [...document.querySelectorAll('.qa-row b')].some((x) => x.textContent === 'Wie am Vortag') }));
+  const pick = async (label) => { await p.click(`.qa-meal button:has-text("${label}")`); await p.waitForTimeout(150); };
+  await pick('Mittag'); const noCopy = await metrics();
+  await pick('Abend'); const withCopy = await metrics();
+  await pick('Snack'); const noCopy2 = await metrics();
+  ok(!noCopy.copy && withCopy.copy && !noCopy2.copy, `${appearance}: „Wie am Vortag“ erscheint nur beim Abend (${noCopy.copy}/${withCopy.copy}/${noCopy2.copy})`);
+  ok(noCopy.top === withCopy.top && withCopy.top === noCopy2.top, `${appearance}: Oberkante des Sheets bleibt (${noCopy.top}/${withCopy.top}/${noCopy2.top})`);
+  ok(withCopy.trk > noCopy.trk && noCopy2.trk === noCopy.trk, `${appearance}: Tracker-Gruppe rutscht nach unten, wenn die Zeile erscheint (${noCopy.trk} → ${withCopy.trk})`);
+  await shot('2b-menu-vortag');
+  await close();
+  await p.evaluate(() => { localStorage.removeItem('tt_days'); }); await p.reload(); await p.waitForTimeout(300);
+
   // Schnell – nur kcal
   await viaPlus(p, 'Schnell', 'Snacks');
   await p.fill('.sheet input[aria-label="Energie in kcal"]', '250');
