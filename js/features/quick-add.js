@@ -46,6 +46,9 @@ export function openQuickAdd(iso = isoDate(), meal = null) {
     return row({ kind: 'food', ico: 'swap', title: 'Wie am Vortag', sub: `${MEAL_SHORT[sel]} · ${fmt(sumEntries(prev).k)} kcal`,
       onClick: () => { document.dispatchEvent(new CustomEvent('tt-open-meal', { detail: sel })); const n = copyEntries(addDays(iso, -1), iso, sel); sheet.close(); toast(`${n} vom Vortag übernommen`); } });
   };
+  // Platz für „Wie am Vortag“: Das Sheet hängt unten und wächst mit dem Inhalt, die Oberkante würde beim Erscheinen der Zeile
+  // nach oben springen. Solange die Zeile bei irgendeiner Mahlzeit erscheinen kann, bleibt unten ihre Höhe frei.
+  const canCopy = (m) => entriesOf(addDays(iso, -1)).some((e) => e.meal === m && !e.link) && !entriesOf(iso).some((e) => e.meal === m);
   const draw = () => {
     const W = waterSettings(), C = caffSettings(), A = alcSettings(), S = suppSettings(), G = getWeightGoal();
     const due = S.enabled ? itemsFor(iso) : [];
@@ -63,6 +66,7 @@ export function openQuickAdd(iso = isoDate(), meal = null) {
       A.enabled ? row({ kind: 'alc', ico: 'glass', title: 'Alkohol', sub: 'Bier, Wein, Schnaps …', onClick: () => go(() => openAlcohol(iso)) }) : null,
       G.card ? row({ kind: 'wt', ico: 'scale', title: 'Gewicht', sub: w != null ? `zuletzt ${r1(w)} kg` : 'noch nicht eingetragen', onClick: () => go(() => openWeight(iso)) }) : null
     ].filter(Boolean);
+    const copy = copyRow(), copyRowShown = !!copy;
     box.replaceChildren(
       h('div', { class: 'seg qa-meal', role: 'radiogroup', 'aria-label': 'Mahlzeit' }, ...MEALS.map((m) => h('button', {
         type: 'button', role: 'radio', 'aria-checked': m.id === sel ? 'true' : 'false', onclick: () => { sel = m.id; draw(); }
@@ -72,9 +76,10 @@ export function openQuickAdd(iso = isoDate(), meal = null) {
         row({ kind: 'food', ico: 'search', title: 'Lebensmittel', sub: 'suchen, Favoriten, Zuletzt', onClick: () => goFood(() => openAdd(iso, sel, { tab: 'search' })) }),
         row({ kind: 'food', ico: 'scan', title: 'Scannen', sub: 'Barcode oder Nährwerttabelle', onClick: () => goFood(() => openAdd(iso, sel, { tab: 'scan' })) }),
         row({ kind: 'food', ico: 'bolt', title: 'Schnell', sub: 'nur kcal', onClick: () => goFood(() => openQuick(iso, sel)) }),
-        copyRow()),
+        copy),
       trackers.length ? h('h3', { class: 'sec' }, 'Tracker') : null,
-      trackers.length ? h('div', { class: 'card list qa-grp' }, ...trackers) : null);
+      trackers.length ? h('div', { class: 'card list qa-grp' }, ...trackers) : null,
+      !copyRowShown && MEALS.some((m) => canCopy(m.id)) ? h('div', { class: 'qa-reserve', 'aria-hidden': 'true' }) : null);
   };
   draw();
   sheet = openSheet(box, { title: 'Eintragen' });

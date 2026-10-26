@@ -31,7 +31,8 @@ export function renderTabbar(container, path) {
   const active = tabOf(path);
   const tabs = TABS.map((tab) =>
     h('a', { class: 'tab', href: `#${tab.path}`, 'aria-current': tab.path === active ? 'page' : false }, icon(tab.icon, { size: 24 }), tab.label));
-  if (tabAction) tabs.splice(2, 0, h('button', { class: 'tab-plus', type: 'button', 'aria-label': 'Eintragen', onclick: () => tabAction(path) }, icon('plus', { size: 26 })));
+  // Mitte: erhöhter Knopf mit „+“ (Aufbau und Maße wie die Leiste im Workout-Tracker, dort mit Hantel)
+  if (tabAction) tabs.splice(2, 0, h('div', { class: 'tb-mid' }, h('button', { class: 'tab-plus', type: 'button', 'aria-label': 'Eintragen', onclick: () => tabAction(path) }, icon('plus', { size: 28 }))));
   container.replaceChildren(...tabs);
 }
 

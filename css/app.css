@@ -5,6 +5,7 @@
   color-scheme: dark;
   /* Flächen (iOS systemBackground / secondarySystemBackground / tertiary) */
   --bg: #000000;
+  --strip: #000000; /* Tab-Leiste = Streifen unter dem Fenster im iOS-Home-Bildschirm (wie theme-color) */
   --surface: #1C1C1E;
   --surface-2: #2C2C2E;
   --surface-3: #3A3A3C;
@@ -50,7 +51,7 @@
   --tap-s: 44px;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --tabbar-h: 78px;
+  --tabbar-h: 58px;
   /* Makro-Farben: Stufen der einen Akzentfarbe (Anthrazit) statt bunter Palette, passend zu „Apple nativ“.
      Unterscheidbar über die Helligkeit, daher auch ohne Farbsehen lesbar. Werte in :root unten (beide Erscheinungen). */
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
@@ -58,6 +59,7 @@
 :root[data-theme="light"] {
   color-scheme: light;
   --bg: #F2F2F7;
+  --strip: #F2F2F7;
   --surface: #FFFFFF;
   --surface-2: #E9E9EE;
   --surface-3: #D8D8DC;
@@ -135,7 +137,7 @@ body {
   /* v3.0.3: einziger Scrollbereich der App (siehe html, body). Inhalt bleibt mittig max. 608 px breit. */
   position: absolute; inset: 0;
   overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
-  padding: calc(var(--safe-top) + 12px) max(16px, calc(50% - 304px)) calc(var(--tabbar-h) + var(--safe-bottom) + 24px);
+  padding: calc(var(--safe-top) + 12px) max(16px, calc(50% - 304px)) calc(var(--tabbar-h) + var(--safe-bottom) + 36px);
   outline: none;
 }
 
@@ -179,23 +181,26 @@ h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
 .empty { text-align: center; padding: 28px 16px; }
 .empty .big { font-size: 40px; margin-bottom: 6px; }
 
-/* Tab-Leiste: schwebende Glaskapsel (iOS 26) – die einzige Glasfläche der App */
+/* Tab-Leiste wie im Workout-Tracker (v3.1.0, ST0PTV, MIT; dort nach dem Calorie-Tracker): volle Breite, deckend in der
+   Streifenfarbe, dünne Linie oben, vier Tabs und in der Mitte ein erhöhter Knopf. */
 .tabbar {
-  position: fixed; z-index: 10; left: 12px; right: 12px; bottom: calc(var(--safe-bottom) + 8px);
-  max-width: 616px; margin: 0 auto; height: 62px; padding: 0 6px;
-  display: flex; justify-content: space-around; align-items: center; border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: 0 0 0 0.5px var(--line), 0 8px 24px rgba(0, 0, 0, 0.25);
+  position: fixed; z-index: 10; left: 0; right: 0; bottom: 0;
+  height: calc(var(--tabbar-h) + var(--safe-bottom));
+  padding: 4px max(0px, calc(50% - 320px)) var(--safe-bottom);
+  display: flex; justify-content: space-around; align-items: stretch; overflow: visible;
+  background: var(--strip); box-shadow: 0 -0.5px 0 var(--line);
 }
 .tab {
-  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: var(--faint); text-decoration: none; font-size: 10px; font-weight: 500; height: 50px; border-radius: 999px;
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  color: var(--faint); text-decoration: none; font-size: 11px; font-weight: 500; white-space: nowrap; letter-spacing: -0.01em;
 }
 .tab svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.tab[aria-current="page"] { color: var(--accent); font-weight: 600; background: var(--fill); }
-@media (prefers-reduced-transparency: reduce) { .tabbar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+.tab[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.tab[aria-current="page"] svg { stroke-width: 2.1; }
+/* iOS-Home-Bildschirm mit zu kurzem Fenster (js/core/viewport-gap.js setzt .tt-gap): Unter dem Fenster liegt ein Streifen,
+   dort sitzt auch der Home-Balken. Darum kein Abstand für den Home-Balken in der Leiste, und der Seitenhintergrund bekommt
+   die Farbe der Leiste, damit Leiste und Streifen wie eine Fläche wirken. */
+html.tt-gap { --safe-bottom: 0px; background: var(--strip); }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
@@ -569,8 +574,12 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .trk-sheet .trk-acts { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 10px; }
 
 /* ---------- „+“-Menü (Entwurf M2) und „+“ in der Tab-Leiste ---------- */
-.tab-plus { flex: none; width: 50px; height: 50px; border-radius: 50%; border: 0; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); margin: 0 4px; -webkit-tap-highlight-color: transparent; }
+.tb-mid { flex: 1; display: grid; place-items: center; }
+.tab-plus { width: 58px; height: 58px; margin-top: -30px; border-radius: 20px; border: 0; padding: 0; cursor: pointer;
+  background: var(--accent); color: var(--on-accent); display: grid; place-items: center;
+  box-shadow: 0 0 0 5px var(--strip), 0 8px 24px rgba(0, 0, 0, 0.3); transition: transform .12s; -webkit-tap-highlight-color: transparent; }
+.tab-plus:active { transform: scale(0.94); }
+.tab-plus:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .tab-plus .icon { stroke-width: 2.2; }
 .qa .qa-meal { margin-bottom: 6px; }
 .qa .sec { margin: 14px 4px 8px; }
@@ -645,3 +654,6 @@ input[type="time"].input, input[type="date"].input { align-items: center; line-h
 input[type="time"].input::-webkit-date-and-time-value, input[type="date"].input::-webkit-date-and-time-value { margin: 0; min-height: 0; height: auto; line-height: normal; text-align: left; }
 input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webkit-datetime-edit { display: flex; align-items: center; line-height: normal; }
 input[type="time"].input::-webkit-datetime-edit-fields-wrapper, input[type="date"].input::-webkit-datetime-edit-fields-wrapper { padding: 0; }
+
+/* „+“-Menü: Platz für die Zeile „Wie am Vortag“ (Zeilenhöhe = min-height von .qa-row), damit sich die Oberkante des Sheets nicht verschiebt */
+.qa-reserve { height: 58px; flex: none; }
