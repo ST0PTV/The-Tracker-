@@ -1,7 +1,7 @@
 // Abstände: alle Seiten unter „Ich“ und die wichtigsten Sheets, hell und dunkel, mit Beispieldaten.
 // Aufruf: node tests/browser/check-abstaende.mjs   (Befunde werden einzeln ausgegeben)
 import { launch, startServer, checker, outDir, viaPlus } from './lib.mjs';
-import { auditSpacing } from './spacing.mjs';
+import { auditSpacing, auditFields } from './spacing.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -27,6 +27,9 @@ for (const appearance of ['dark', 'light']) {
     const issues = await auditSpacing(p, where);
     for (const x of issues) console.log('  · ' + x);
     ok(issues.length === 0, `${appearance}: ${where} – Abstände (${issues.length} Befunde)`);
+    const fi = await auditFields(p, where);
+    for (const x of fi) console.log('  · ' + x);
+    ok(fi.length === 0, `${appearance}: ${where} – Text mittig in Feldern (${fi.length} Befunde)`);
     if (shotName) await p.screenshot({ path: join(out, `${appearance}-${shotName}.png`), fullPage: true });
   };
 
