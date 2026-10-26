@@ -496,3 +496,23 @@ select.input { appearance: none; -webkit-appearance: none; }
 input[type="time"].input, input[type="date"].input { width: 100%; min-width: 0; max-width: 100%; min-inline-size: 0; }
 input[type="time"].input::-webkit-date-and-time-value, input[type="date"].input::-webkit-date-and-time-value { text-align: left; min-width: 0; }
 input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webkit-datetime-edit { padding: 0; }
+
+/* ---------- Gewicht und Gewichtsziel ---------- */
+.wspark { width: 100%; height: auto; display: block; }
+.wspark .line { fill: none; stroke: var(--accent); stroke-width: 2.2; stroke-linejoin: round; stroke-linecap: round; }
+.wspark .goal { stroke: var(--muted); stroke-dasharray: 4 4; stroke-width: 1; }
+.wspark .dot { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.card.weight .tk-stats { margin-top: 4px; }
+.wg-opts { margin: 6px 0 12px; background: var(--fill); }
+.wg-opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; padding: 10px 14px; border: 0; background: none; color: var(--text); text-align: left; cursor: pointer; }
+.card.list .wg-opt + .wg-opt { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+.wg-opt .t b { font-size: 15px; }
+.wg-opt .t small { font-size: 12px; color: var(--muted); white-space: normal; }
+.wg-rad { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--muted); flex: none; box-sizing: border-box; }
+.wg-opt[aria-checked="true"] .wg-rad { border: 6px solid var(--accent); }
+.tk-v.warn b { color: var(--warn); }
+.wg-plan .kv { padding: 10px 0 4px; }
+.wg-res b { font-size: 20px; }
+.small .link, p.small a.link { font-size: inherit; padding: 0; }
+.wspark .lab { fill: var(--muted); font-size: 10px; font-family: var(--font); }
+.card.tk.is-empty > p.small { margin-top: 8px; }

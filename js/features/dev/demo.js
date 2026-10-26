@@ -125,3 +125,18 @@ export function generateDemoDrinks({ today, days = 30, seed = 2027 }) {
   }
   return { water, caff };
 }
+
+/**
+ * Beispiel-Gewichte: an ~5 von 7 Tagen gewogen, langsamer Trend (−0,25 kg/Woche) plus Tagesschwankung ±0,6 kg.
+ * Erfunden; nur für die Entwicklung. Gibt { iso: kg } zurück.
+ */
+export function generateDemoWeights({ today, days = 30, seed = 2028, start = 76.4 }) {
+  const rand = rng(seed);
+  const out = {};
+  for (let i = days - 1; i >= 0; i--) {
+    if (i > 0 && rand() < 0.28) continue;
+    const trend = start - ((days - 1 - i) * 0.25) / 7;
+    out[addDays(today, -i)] = Math.round((trend + (rand() - 0.5) * 1.2) * 10) / 10;
+  }
+  return out;
+}
