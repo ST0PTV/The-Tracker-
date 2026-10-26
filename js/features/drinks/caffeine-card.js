@@ -25,7 +25,7 @@ export function caffInfo() {
       'Modell: Aufnahme und Abbau erster Ordnung (ein Kompartiment). Maximum etwa 30–40 Minuten nach dem Trinken; danach halbiert sich die Menge im Körper je Halbwertszeit (Standard 5 h).',
       'Die Halbwertszeit ist individuell sehr verschieden (Studien 2,7–9,9 h), bei Rauchern kürzer. Körpergewicht, Mahlzeiten, Gewöhnung und Medikamente berücksichtigt das Modell nicht.',
       sx === 'f'
-        ? 'Für Frauen: Eine östrogenhaltige Pille verlängert die Halbwertszeit deutlich (Studie: 7,9 statt 5,4 h). Wenn das zutrifft, unter „Ich → Getränke“ eher 7–8 h einstellen. In der Schwangerschaft gilt laut EFSA ein Richtwert von 200 mg pro Tag.'
+        ? 'Für Frauen: Eine östrogenhaltige Pille verlängert die Halbwertszeit deutlich (Studie: 7,9 statt 5,4 h). Wenn das zutrifft, unter „Ich → Koffein“ eher 7–8 h einstellen. In der Schwangerschaft gilt laut EFSA ein Richtwert von 200 mg pro Tag.'
         : 'Das Geschlecht allein ändert den Abbau kaum; eine östrogenhaltige Pille und eine Schwangerschaft verlängern ihn deutlich.',
       'Das Ziel zur Bettzeit (Standard 50 mg) ist eine Faustregel, kein belegter Grenzwert. Laut EFSA können schon 100 mg kurz vor dem Schlafen den Schlaf stören; in einer Studie störten 400 mg sogar 6 Stunden vorher noch.',
       'Richtwert pro Tag: bis 400 mg gelten für gesunde Erwachsene als unbedenklich, Einzeldosen bis 200 mg (EFSA 2015).',

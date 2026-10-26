@@ -20,7 +20,7 @@ export function waterInfo() {
     body: [
       'Standardziel 1,5 l Getränke pro Tag – Richtwert der DGE für Erwachsene. Die EFSA nennt als angemessene Gesamtwasserzufuhr 2,0 l (Frauen) bzw. 2,5 l (Männer) pro Tag, inklusive Wasser aus Lebensmitteln (etwa ein Fünftel).',
       'Mitgezählt werden eigene Einträge, Koffein-Getränke mit „ml zum Wasser“ und flüssige Journal-Einträge mit „zählt zum Wasser“. Für Getränke aus dem Journal gilt 1 ml ≈ 1 g.',
-      'Bei Hitze, Sport oder Krankheit kann der Bedarf deutlich höher sein. Ziel und „+“-Menge stellst du unter „Ich → Getränke“ ein.'
+      'Bei Hitze, Sport oder Krankheit kann der Bedarf deutlich höher sein. Ziel und „+“-Menge stellst du unter „Ich → Wasser“ ein.'
     ],
     src: [['DGE – Richtwerte für die Wasserzufuhr', 'https://www.dge.de/wissenschaft/referenzwerte/wasser/'], ['EFSA NDA Panel (2010). Dietary reference values for water. EFSA Journal 8(3):1459.', 'https://doi.org/10.2903/j.efsa.2010.1459']]
   });
