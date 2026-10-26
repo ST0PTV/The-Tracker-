@@ -33,9 +33,9 @@ export function alcInfo(iso = isoDate()) {
     title: 'Alkohol – so rechnet die App',
     note: 'Grobe Schätzung, keine Messung – nicht geeignet, um die Fahrtüchtigkeit zu beurteilen.',
     body: ['Widmark-Formel: Alkohol im Getränk geteilt durch Körpergewicht × Verteilungsfaktor r, minus Abbau. Nüchtern geht Alkohol schneller ins Blut, mit oder nach Essen langsamer und mit niedrigerem Gipfel (Annahme der App).',
-      'Abbau: im Mittel etwa 0,15 ‰ pro Stunde, Spanne etwa 0,10–0,20 (nüchtern eher niedriger, nach Essen höher). Einstellbar unter „Ich → Getränke“.',
+      'Abbau: im Mittel etwa 0,15 ‰ pro Stunde, Spanne etwa 0,10–0,20 (nüchtern eher niedriger, nach Essen höher). Einstellbar unter „Ich → Alkohol“.',
       'Die kcal kommen ins Journal (Snacks); Alkohol zählt nicht zum Wasser. Die DGE empfiehlt (2024), auf Alkohol zu verzichten; keine Menge ist risikofrei.'],
-    points: [['Verteilungsfaktor r', `${(Math.round(q.r * 100) / 100).toLocaleString('de-DE')} (${sx === 'm' ? 'Mann' : sx === 'f' ? 'Frau' : 'ohne Geschlecht'}${bmi ? `, aus BMI ${r1(bmi)}` : ', fester Wert – mit Körpergröße unter „Tagesziel“ genauer'})`],
+    points: [['Verteilungsfaktor r', `${(Math.round(q.r * 100) / 100).toLocaleString('de-DE')} (${sx === 'm' ? 'Mann' : sx === 'f' ? 'Frau' : 'ohne Geschlecht'}${bmi ? `, aus BMI ${r1(bmi)}` : ', fester Wert – mit Körpergröße unter „Schlaf & Körper“ genauer'})`],
       ['Körpergewicht', q.kg ? `${r1(q.kg)} kg` : 'fehlt'], ['Aufnahme', 'nüchtern ka 4/h, mit Essen 1,5/h; 10 bzw. 20 % gelangen nicht ins Blut (Annahme)']],
     src: ALC_REFS
   });
@@ -107,7 +107,7 @@ export function openAlcDetails(iso, today = isoDate()) {
       h('span', { class: 'tk-v' }, h('b', {}, `${r1(alcGrams(e.ml, e.vol))} g`), h('small', {}, st.isToday && absHours(iso, e.min) > st.nowH ? 'geplant' : 'Alkohol'))))) : h('p', { class: 'small muted' }, 'Noch nichts eingetragen.');
     return [
       h('div', { class: 'trk-sum' }, h('b', {}, alcFmt(st.isToday ? st.now : st.pk[1])), h('span', {}, st.isToday ? '‰ jetzt (Schätzung)' : '‰ Höchstwert (Schätzung)'), infoBtn('Alkohol', () => alcInfo(iso))),
-      st.p.kg ? svgBox(alcChartSvg({ iso, doses: st.doses, nowH: st.nowH, p: st.p })) : h('p', { class: 'small muted' }, 'Für die Promille-Schätzung braucht die App dein Körpergewicht (Gewichtskarte oder „Ich → Tagesziel“).'),
+      st.p.kg ? svgBox(alcChartSvg({ iso, doses: st.doses, nowH: st.nowH, p: st.p })) : h('p', { class: 'small muted' }, 'Für die Promille-Schätzung braucht die App dein Körpergewicht (Gewichtskarte oder „Ich → Schlaf & Körper“).'),
       h('div', { class: 'tk-stats' },
         h('div', {}, h('span', {}, st.isToday ? 'Heute getrunken' : 'Getrunken'), h('b', {}, `${r0(st.grams)} g Alkohol`)),
         h('div', {}, h('span', {}, 'Höchstwert'), h('b', {}, `${alcFmt(st.pk[1])} ‰${st.pk[1] > 0 ? ` · ${fmtHours(st.pk[0], iso)}` : ''}`))),

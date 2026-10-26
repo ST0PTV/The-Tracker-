@@ -128,14 +128,18 @@ for (const appearance of ['dark', 'light']) {
 
   // Einstellungen Getränke: Ziel ändern, Karte ausblenden
   await p.goto(srv.url + '/index.html#/ich/getraenke'); await p.waitForTimeout(250);
+  ok((await p.evaluate(() => location.hash)) === '#/ich', `${appearance}: alte Adresse „Getränke“ leitet auf „Ich“ um`);
+  await p.goto(srv.url + '/index.html#/ich/wasser'); await p.waitForTimeout(250);
   await p.fill('input[aria-label="Tagesziel"]', '2000'); await p.dispatchEvent('input[aria-label="Tagesziel"]', 'change');
+  await p.waitForTimeout(100);
+  await p.goto(srv.url + '/index.html#/ich/koffein'); await p.waitForTimeout(250);
   await p.fill('input[aria-label="Halbwertszeit"]', '20'); await p.dispatchEvent('input[aria-label="Halbwertszeit"]', 'change'); await p.waitForTimeout(100);
   const cs = await p.evaluate(() => [JSON.parse(localStorage.getItem('tt_water')).goal, JSON.parse(localStorage.getItem('tt_caffeine')).halfLife]);
   ok(cs[0] === 2000 && cs[1] === 5, `${appearance}: Ziel gespeichert, ungültige Halbwertszeit abgelehnt (${cs})`);
   const fit = await p.evaluate(() => [...document.querySelectorAll('.card')].every((c) => { const r = c.getBoundingClientRect(); return [...c.querySelectorAll('input')].every((i) => { const q = i.getBoundingClientRect(); return q.left >= r.left && q.right <= r.right + 0.5; }); }));
   const cols = await p.evaluate(() => [...document.querySelectorAll('.two')].every((g) => { const k = [...g.children].map((c) => Math.round(c.getBoundingClientRect().width)); return Math.abs(k[0] - k[1]) <= 1; }));
-  ok(fit && cols, `${appearance}: Felder in „Getränke“ liegen in der Karte, Spalten gleich breit`);
-  await shot('7-getraenke');
+  ok(fit && cols, `${appearance}: Felder in „Koffein“ liegen in der Karte, Spalten gleich breit`);
+  await shot('7-koffein');
   await p.uncheck('input[aria-label="Koffein-Karte anzeigen"]');
   await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(250);
   ok(await p.locator('button[aria-label="Koffein-Getränk hinzufügen"]').count() === 0, `${appearance}: Koffein-Karte ausgeblendet`);

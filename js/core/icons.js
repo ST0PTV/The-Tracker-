@@ -1,7 +1,12 @@
-// Übernommen aus dem Workout-Tracker (MIT, ST0PTV); ergänzt um home, book, me, scan, star, drop, cup, glass, scale, pill, bolt.
+// Übernommen aus dem Workout-Tracker (MIT, ST0PTV); ergänzt um home, book, me, scan, star, drop, cup, glass, scale, pill, bolt, target, trend, moon, palette, flask.
 // Eigene Linien-Icons im Stil der Tab-Leiste (24er-Raster, Strich 1.8, currentColor).
 // Keine Unicode-Zeichen oder Emoji als Icons: iOS stellt z. B. „ℹ“ als farbiges Emoji dar.
 const PATHS = {
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/>',
+  trend: '<path d="M4 17l5.5-5.5 3.5 3.5L20 8"/><path d="M15 8h5v5"/>',
+  moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',
+  palette: '<path d="M12 4a8 8 0 1 0 0 16c1.2 0 1.8-.8 1.8-1.7 0-1.3-1.1-1.6-1.1-2.6 0-.9.7-1.5 1.7-1.5H17a3 3 0 0 0 3-3C20 7.3 16.4 4 12 4z"/><circle cx="8" cy="11" r="1" fill="currentColor"/><circle cx="11" cy="7.8" r="1" fill="currentColor"/><circle cx="15" cy="8.5" r="1" fill="currentColor"/>',
+  flask: '<path d="M9.5 4h5M10 4v5.5L5.5 18a1.5 1.5 0 0 0 1.3 2.2h10.4a1.5 1.5 0 0 0 1.3-2.2L14 9.5V4"/><path d="M7.5 15h9"/>',
   drop: '<path d="M12 3.5c3 4 6 7.3 6 10.6a6 6 0 0 1-12 0c0-3.3 3-6.6 6-10.6z"/>',
   cup: '<path d="M4.5 8.5h11v4.5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5z"/><path d="M15.5 9.5h1.8a2.4 2.4 0 0 1 0 4.8h-1.8"/>',
   glass: '<path d="M7 3.5h10l-1 6.5a4 4 0 0 1-8 0z"/><path d="M12 14v6M8.5 20h7"/>',

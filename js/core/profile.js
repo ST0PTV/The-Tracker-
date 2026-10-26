@@ -29,7 +29,9 @@ store.define('profile', {
   sex: null, // 'f' | 'm' | null
   birthYear: null,
   heightCm: null,
-  weightKg: null
+  weightKg: null,
+  bed: null,  // 'HH:MM' Bettzeit (Koffein-Ziel, Schlaf in den Kurven); null = Standard 23:00
+  wake: null  // 'HH:MM' Aufstehen; null = Standard 07:00
 });
 store.define('goals', []); // [{ from: 'JJJJ-MM-TT', goal, preset, pf, ff, protein, carbs, fat, fiber, sugar, weight }]
 store.define('diet', { form: 'all', allergens: [] }); // form: 'all' | 'vegetarian' | 'vegan'
@@ -84,6 +86,21 @@ export function todayISO(d = new Date()) {
 // ---------- Zugriff über den Speicher ----------
 
 export const getProfile = () => store.get('profile');
+
+export const SLEEP_DEFAULT = { bed: '23:00', wake: '07:00' };
+/** Schlafzeiten aus dem Profil (Standard 23:00–07:00). */
+export function getSleep() {
+  const p = getProfile();
+  return { bed: p.bed || SLEEP_DEFAULT.bed, wake: p.wake || SLEEP_DEFAULT.wake };
+}
+/** Übernimmt Schlafzeiten einmalig (z. B. aus früheren Koffein-Einstellungen), wenn im Profil noch keine stehen; ohne Ereignis. */
+export function adoptSleep(bed, wake) {
+  const p = getProfile();
+  if (p.bed != null || p.wake != null) return false;
+  if ((bed || SLEEP_DEFAULT.bed) === SLEEP_DEFAULT.bed && (wake || SLEEP_DEFAULT.wake) === SLEEP_DEFAULT.wake) return false;
+  store.update('profile', (x) => { x.bed = bed || SLEEP_DEFAULT.bed; x.wake = wake || SLEEP_DEFAULT.wake; });
+  return true;
+}
 export const getDiet = () => store.get('diet');
 export const getGoals = (iso = todayISO()) => goalsAt(store.get('goals'), iso);
 export const goalHistory = () => store.get('goals');

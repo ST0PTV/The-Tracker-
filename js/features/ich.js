@@ -1,54 +1,71 @@
-// Reiter „Ich“: Ziele, Körperdaten, Darstellung, Quellen & Lizenzen.
-// Das Ziel-Formular ist bewusst schlicht; Phase 2 übernimmt die volle Zielseite aus dem Calorie-Tracker
-// (Bedarf aus Uhr, Gewichtsziel, Ziel-Verlauf).
+// Reiter „Ich“: gruppierte Liste mit Icon-Plaketten nach der Einstellungsseite des Calorie-Trackers (ST0PTV, MIT):
+// Ziele · Über mich · Tracker · App. Unterseiten: Tagesziel, Gewichtsziel, Schlaf & Körper, Wasser, Supplements,
+// Koffein, Alkohol, Quellen & Lizenzen.
 import { h } from '../core/util.js';
 import { pageHead, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import * as store from '../core/store.js';
-import { getGoals, getProfile, setProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights } from '../core/profile.js';
+import { getGoals, getProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights, getSleep, currentWeight } from '../core/profile.js';
 import { getSettings, setSettings } from '../core/settings.js';
 import { applyTheme, APPEARANCES } from '../core/theme.js';
 import { VERSION } from '../core/version.js';
-import { isoDate, addDays } from '../core/format.js';
+import { isoDate, addDays, r1 } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
 import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
 import { generateDemo, generateDemoDrinks, generateDemoWeights, generateDemoAlcohol, DEMO_GOAL } from './dev/demo.js';
-import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS } from './drinks/alcohol.js';
+import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS, alcSettings } from './drinks/alcohol.js';
 import { wgoalView } from './goal/wgoal-view.js';
-import { WG_REFS } from './goal/weightgoal.js';
-import { loadDemoWater, removeDemoWater } from './drinks/water.js';
-import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS } from './drinks/caffeine.js';
-import { drinksSettingsView } from './drinks/drinks-settings.js';
+import { WG_REFS, wgDateFmt } from './goal/weightgoal.js';
+import { bodyView } from './me/body-view.js';
+import { loadDemoWater, removeDemoWater, waterSettings } from './drinks/water.js';
+import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS, caffSettings } from './drinks/caffeine.js';
+import { waterSettingsView, caffSettingsView, alcSettingsView } from './drinks/drinks-settings.js';
 import { suppSettingsView } from './supp/supp-card.js';
 import { suppSettings } from './supp/supplements.js';
 
 const fmt = (n) => Math.round(n).toLocaleString('de-DE');
 
-const row = (href, title, detail) =>
-  h('a', { class: 'row', href }, h('span', { class: 't' }, h('b', {}, title), detail ? h('small', {}, detail) : null), icon('chevron', { size: 18 }));
+const litres = (ml) => (ml / 1000).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** Zeile mit farbiger Icon-Plakette, Titel, Untertitel und Pfeil (Link) oder eigenem Inhalt rechts. */
+const meRow = ({ kind, ico, title, sub, href, right = null }) => h(href ? 'a' : 'div', { class: `me-row k-${kind}`, ...(href ? { href } : {}) },
+  h('span', { class: 'qa-badge' }, icon(ico, { size: 20 })),
+  h('span', { class: 't' }, h('b', {}, title), sub ? h('small', {}, sub) : null),
+  right || (href ? h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 })) : null));
+const group = (title, ...rows) => [h('h3', { class: 'sec' }, title), h('section', { class: 'card list me-grp' }, ...rows.filter(Boolean))];
 
 function ichView(rerender) {
   const g = getGoals();
   const s = getSettings();
-  return h('div', {},
-    pageHead('Ich'),
-    h('section', { class: 'card list' },
-      row('#/ich/ziel', 'Tagesziel', g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt'),
-      row('#/ich/gewichtsziel', 'Gewichtsziel', getWeightGoal().on ? `${String(getWeightGoal().target).replace('.', ',')} kg · rechnet das Kalorienziel` : 'aus'),
-      row('#/ich/getraenke', 'Getränke', 'Wasser, Koffein und Alkohol'),
-      row('#/ich/supplements', 'Supplements', suppSettings().items.length ? `${suppSettings().items.length} angelegt` : 'noch keine')),
-    h('section', { class: 'card' },
-      h('h2', {}, 'Darstellung'),
-      h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Darstellung' },
-        ...APPEARANCES.map(([key, label]) => h('button', {
-          type: 'button', role: 'radio', 'aria-checked': s.appearance === key ? 'true' : 'false',
-          onclick: () => { setSettings({ appearance: key }); applyTheme(key); rerender(); }
-        }, label))),
-      h('p', { class: 'muted small' }, 'Weitere Themes kommen später.')),
-    h('section', { class: 'card list' },
-      row('#/ich/quellen', 'Quellen & Lizenzen')),
+  const o = getWeightGoal();
+  const sl = getSleep();
+  const w = currentWeight(isoDate());
+  const W = waterSettings(), C = caffSettings(), A = alcSettings(), S = suppSettings();
+  const active = S.items.filter((x) => x.on).length;
+  const fmtKg = (v) => r1(v);
+  const appSeg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Darstellung' },
+    ...APPEARANCES.map(([key, label]) => h('button', {
+      type: 'button', role: 'radio', 'aria-checked': s.appearance === key ? 'true' : 'false',
+      onclick: () => { setSettings({ appearance: key }); applyTheme(key); rerender(); }
+    }, label)));
+  return h('div', { class: 'me' },
+    pageHead('Ich', 'Ziele, Tracker & Daten'),
+    ...group('Ziele',
+      meRow({ kind: 'goal', ico: 'target', title: 'Tagesziel', href: '#/ich/ziel', sub: g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt' }),
+      meRow({ kind: 'wt', ico: 'trend', title: 'Gewichtsziel', href: '#/ich/gewichtsziel',
+        sub: o.on && o.target ? `${w != null ? `${fmtKg(w)} → ` : ''}${fmtKg(o.target)} kg${o.date ? ` bis ${wgDateFmt(o.date)}` : ''}` : 'aus' })),
+    ...group('Über mich',
+      meRow({ kind: 'body', ico: 'moon', title: 'Schlaf & Körper', href: '#/ich/koerper', sub: `${sl.bed}–${sl.wake}${w != null ? ` · ${fmtKg(w)} kg` : ''}` })),
+    ...group('Tracker',
+      meRow({ kind: 'water', ico: 'drop', title: 'Wasser', href: '#/ich/wasser', sub: W.enabled ? `${litres(W.goal || 1500)} l · Plus ${fmt(W.step || 250)} ml` : 'aus' }),
+      meRow({ kind: 'supp', ico: 'pill', title: 'Supplements', href: '#/ich/supplements', sub: S.enabled ? (S.items.length ? `${active} aktiv` : 'noch keine angelegt') : 'aus' }),
+      meRow({ kind: 'caf', ico: 'cup', title: 'Koffein', href: '#/ich/koffein', sub: C.enabled ? `an · Richtwert ${fmt(C.limit)} mg` : 'aus' }),
+      meRow({ kind: 'alc', ico: 'glass', title: 'Alkohol', href: '#/ich/alkohol', sub: A.enabled ? `an · Abbau ${String(A.beta).replace('.', ',')} ‰/h` : 'aus' })),
+    ...group('App',
+      meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', right: appSeg }),
+      meRow({ kind: 'app', ico: 'info', title: 'Quellen & Lizenzen', href: '#/ich/quellen', sub: 'Daten, Studien, übernommener Code' })),
     devCard(rerender),
-    h('p', { class: 'muted small center' }, `The Tracker ${VERSION} · ${store.usageKB()} KB lokal gespeichert`));
+    h('p', { class: 'me-foot' }, `The Tracker ${VERSION} · ${store.usageKB()} KB lokal gespeichert`));
 }
 
 // Entwicklung: Beispieldaten für einen Monat (erfunden, auf dem Gerät erzeugt, als demo markiert)
@@ -70,8 +87,8 @@ function devCard(rerender) {
     toast(`${count} Beispiel-Einträge für 30 Tage geladen`);
     rerender();
   };
-  return h('section', { class: 'card' },
-    h('h2', {}, 'Entwicklung'),
+  return h('section', { class: 'card dev-card' },
+    h('div', { class: 'card-head' }, h('h2', {}, 'Beispieldaten'), h('span', { class: 'qa-badge k-app' }, icon('flask', { size: 18 }))),
     h('p', { class: 'muted small' }, n
       ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
       : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee, Gewicht und ein paar Abenden mit Alkohol. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
@@ -83,49 +100,39 @@ function devCard(rerender) {
 function zielView() {
   const g = getGoals() || {};
   const p = getProfile();
+  const w = currentWeight(isoDate());
   let preset = g.preset && PRESETS[g.preset] ? g.preset : 'dge';
-  let sex = p.sex || null;
-  const SEXES = [['f', 'Frau'], ['m', 'Mann'], [null, 'Keine Angabe']];
-  const sexSeg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Geschlecht' });
+  const floor = kcalFloor(p.sex);
   const floorNote = h('p', { class: 'warn small', hidden: true });
-  const kcalIn = h('input', { class: 'input', type: 'number', inputmode: 'numeric', min: 800, max: 6000, value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
-  const wIn = h('input', { class: 'input', type: 'number', inputmode: 'decimal', step: '0.1', min: 30, max: 300, value: p.weightKg ?? '', placeholder: 'z. B. 75', 'aria-label': 'Körpergewicht' });
-  const hIn = h('input', { class: 'input', type: 'number', inputmode: 'numeric', min: 120, max: 230, value: p.heightCm ?? '', placeholder: 'optional, z. B. 175', 'aria-label': 'Körpergröße' });
+  const kcalIn = h('input', { class: 'input', type: 'text', inputmode: 'numeric', value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
   const preview = h('div', { class: 'stats' });
   const note = h('p', { class: 'muted small' });
   const seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Makro-Verteilung' });
 
   const num = (el) => { const v = parseFloat(String(el.value).replace(',', '.')); return Number.isFinite(v) ? v : null; };
   const update = () => {
-    sexSeg.replaceChildren(...SEXES.map(([k, label]) =>
-      h('button', { type: 'button', role: 'radio', 'aria-checked': k === sex ? 'true' : 'false', onclick: () => { sex = k; update(); } }, label)));
     // Untergrenze: nur Hinweis, kein Sperren (Faustregel; Ziel bleibt die eigene Entscheidung)
-    const floor = kcalFloor(sex);
     const kc = num(kcalIn);
     floorNote.hidden = !(kc > 0 && kc < floor);
-    floorNote.textContent = `Unter ${fmt(floor)} kcal pro Tag nur mit ärztlicher oder ernährungstherapeutischer Begleitung${sex ? '' : ' (Frauen 1.200, Männer 1.500 kcal; ohne Angabe gilt 1.200)'}.`;
+    floorNote.textContent = `Unter ${fmt(floor)} kcal pro Tag nur mit ärztlicher oder ernährungstherapeutischer Begleitung${p.sex ? '' : ' (Frauen 1.200, Männer 1.500 kcal; ohne Angabe gilt 1.200)'}.`;
     seg.replaceChildren(...Object.entries(PRESETS).filter(([k]) => k !== 'custom').map(([k, P]) =>
       h('button', { type: 'button', role: 'radio', 'aria-checked': k === preset ? 'true' : 'false', onclick: () => { preset = k; update(); } }, P.label)));
     const P = PRESETS[preset];
-    const m = macrosFrom(num(kcalIn), num(wIn), P.pf, P.ff);
+    const m = macrosFrom(num(kcalIn), w, P.pf, P.ff);
     const stat = (label, v) => h('div', { class: 'stat' }, h('b', {}, v == null ? '–' : `${fmt(v)} g`), h('span', {}, label));
     preview.replaceChildren(stat('Eiweiß', m?.protein), stat('Kohlenhydrate', m?.carbs), stat('Fett', m?.fat));
     const fc = m ? fatCheck(preset, m.fatPct) : null;
-    note.textContent = !m
-      ? 'Kalorienziel und Gewicht eintragen, dann rechne ich die Makros.'
-      : `Fett ${m.fatPct} % der Energie${fc === 0 ? ' – im empfohlenen Bereich.' : fc === 1 ? ' – über dem empfohlenen Bereich.' : fc === -1 ? ' – unter dem empfohlenen Bereich.' : '.'}`;
+    note.textContent = !w
+      ? 'Für die Makros braucht die App dein Gewicht (unter „Schlaf & Körper“).'
+      : !m ? 'Kalorienziel eintragen, dann rechne ich die Makros.'
+        : `Fett ${m.fatPct} % der Energie${fc === 0 ? ' – im empfohlenen Bereich.' : fc === 1 ? ' – über dem empfohlenen Bereich.' : fc === -1 ? ' – unter dem empfohlenen Bereich.' : '.'}`;
   };
   kcalIn.addEventListener('input', update);
-  wIn.addEventListener('input', update);
   update();
 
   const save = () => {
     const kcal = num(kcalIn);
-    const w = num(wIn);
     if (!(kcal >= 800 && kcal <= 6000)) { toast('Bitte ein Kalorienziel zwischen 800 und 6.000 eintragen.', { error: true }); return; }
-    const cm = num(hIn);
-    if (cm != null && !(cm >= 120 && cm <= 230)) { toast('Bitte eine Körpergröße zwischen 120 und 230 cm eintragen (oder leer lassen).', { error: true }); return; }
-    setProfile({ sex, heightCm: cm != null ? Math.round(cm) : null, ...(w != null ? { weightKg: w } : {}) });
     setGoal({ goal: kcal, preset, weight: w });
     toast('Ziel gespeichert');
     location.hash = '#/ich';
@@ -134,23 +141,23 @@ function zielView() {
   return h('div', {},
     h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
     pageHead('Tagesziel', 'Gilt ab heute. Rezepte und Wochenplan rechnen mit diesem Ziel.'),
-    h('section', { class: 'card' }, getWeightGoal().on
-      ? h('p', { class: 'small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen'))
-      : h('p', { class: 'small muted' }, 'Kalorienziel lieber aus Zielgewicht und Tempo rechnen? ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel'))),
-    h('section', { class: 'card form' },
-      h('label', {}, h('span', {}, 'Kalorien pro Tag'), kcalIn),
+    getWeightGoal().on
+      ? h('section', { class: 'card' }, h('p', { class: 'small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen')))
+      : null,
+    h('section', { class: 'card' },
+      h('label', { class: 'form-label' }, h('span', {}, 'Kalorien pro Tag'), kcalIn),
       floorNote,
-      h('label', {}, h('span', {}, 'Körpergewicht (kg)'), wIn),
-      h('label', {}, h('span', {}, 'Körpergröße (cm, optional – für die Alkohol-Schätzung)'), hIn),
-      h('span', { class: 'label' }, 'Geschlecht (für die Untergrenze)'), sexSeg,
       h('span', { class: 'label' }, 'Makro-Verteilung'), seg, preview, note),
+    h('p', { class: 'small muted page-note' }, `Gewicht ${w != null ? `${r1(w)} kg` : 'fehlt'} · ${p.sex === 'm' ? 'Mann' : p.sex === 'f' ? 'Frau' : 'ohne Geschlecht'} – `,
+      h('a', { class: 'link', href: '#/ich/koerper' }, 'unter „Schlaf & Körper“ ändern'),
+      getWeightGoal().on ? null : h('span', {}, ' · Kalorienziel lieber aus Zielgewicht und Tempo rechnen? '), getWeightGoal().on ? null : h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel')),
     h('button', { class: 'btn primary block', type: 'button', onclick: save }, 'Speichern'));
 }
 
 // Quellen und Lizenzen aller übernommenen Teile. Wird mit jeder Phase ergänzt.
 const CREDITS = [
   ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons und das Design „Apple nativ“ übernommen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
-  ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README).', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
+  ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
   ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). Rezepte, Wochenplan und Zyklus folgen in Phase 3.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
   ['Bundeslebensmittelschlüssel (BLS) 4.0', 'Nährwerte je 100 g für die Lebensmittelsuche (data/bls.json). Verändert: Auszug; freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.', 'Max Rubner-Institut (2025), Karlsruhe · CC BY 4.0 · DOI 10.25826/Data20251217-134202-0', 'https://doi.org/10.25826/Data20251217-134202-0'],
   ['Open Food Facts', 'Produktdaten zum Barcode. Nur die Barcode-Nummer wird gesendet; gefundene Produkte werden auf dem Gerät gespeichert.', 'Open Database License (ODbL) 1.0, Inhalte Database Contents License (DbCL) 1.0', 'https://world.openfoodfacts.org'],
@@ -173,4 +180,8 @@ function quellenView() {
       h('a', { class: 'link', href: link, target: '_blank', rel: 'noopener' }, 'Repository öffnen'))));
 }
 
-export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/getraenke': drinksSettingsView, '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView };
+// „/ich/getraenke“ (bis 0.1.7) führt auf die neue Übersicht
+const oldDrinks = (rerender) => { setTimeout(() => { location.hash = '#/ich'; }, 0); return ichView(rerender); };
+export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView,
+  '/ich/wasser': waterSettingsView, '/ich/koffein': caffSettingsView, '/ich/alkohol': alcSettingsView, '/ich/getraenke': oldDrinks,
+  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView };

@@ -31,6 +31,9 @@
   --c-alc: #C69CF4;
   --c-wt: #4FD1AE;
   --c-supp: #8E9AAF;
+  --c-goal: #5CC8D9;
+  --c-body: #9AA4FF;
+  --c-app: #AEB4C0;
   /* Figuren: Piktogramme, Muskelkarte, Animation, 3D-Figur */
   --fig-base: #3A3F45;
   --fig-body: #30353B;
@@ -76,6 +79,9 @@
   --c-alc: #7F3DBF;
   --c-wt: #0E7F64;
   --c-supp: #5B6478;
+  --c-goal: #0A7484;
+  --c-body: #4A54C9;
+  --c-app: #5B6478;
   --fig-base: #D5D9DE;
   --fig-body: #FFFFFF;
   --fig-rest: #E6E9ED;
@@ -530,7 +536,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 
 /* ---------- Tracker-Karten (Heute): ohne Eintrag groß mit „+“ auf der Linie, mit Eintrag kompakt ---------- */
 .trk { --c: var(--accent); }
-.k-water { --c: var(--c-water); } .k-caf { --c: var(--c-caf); } .k-alc { --c: var(--c-alc); } .k-wt { --c: var(--c-wt); } .k-supp { --c: var(--c-supp); } .k-food { --c: var(--accent); }
+.k-water { --c: var(--c-water); } .k-caf { --c: var(--c-caf); } .k-alc { --c: var(--c-alc); } .k-wt { --c: var(--c-wt); } .k-supp { --c: var(--c-supp); } .k-food { --c: var(--accent); } .k-goal { --c: var(--c-goal); } .k-body { --c: var(--c-body); } .k-app { --c: var(--c-app); }
 .trk .trk-lbl { font-size: 15px; color: var(--muted); }
 .trk .trk-big { font-size: 40px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; color: var(--c); font-variant-numeric: tabular-nums; }
 .trk .trk-big small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 3px; letter-spacing: 0; }
@@ -583,3 +589,53 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .qa-tick { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; box-sizing: border-box; }
 .qa-tick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .heute-hint { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0 16px; }
+
+/* ---------- „Ich“: gruppierte Listen mit Icon-Plaketten (nach der Einstellungsseite des Calorie-Trackers) ---------- */
+.me .sec { margin: 18px 4px 8px; }
+.me .sec:first-of-type { margin-top: 4px; }
+.me-grp { margin-bottom: 4px; }
+.me-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px; padding: 10px 14px; color: var(--text); text-decoration: none; border: 0; background: none; font: inherit; text-align: left; cursor: pointer; box-sizing: border-box; }
+.me-row + .me-row { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+.me-row .qa-badge { width: 38px; height: 38px; border-radius: 10px; }
+.me-row .t { flex: 1; min-width: 0; }
+.me-row b { display: block; font-size: 17px; font-weight: 600; }
+.me-row small { display: block; font-size: 14px; color: var(--muted); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me-row .qa-chev { flex: none; }
+.me-row .seg { margin: 0; flex: none; }
+.me-foot { text-align: center; color: var(--muted); font-size: 13px; margin: 18px 0 8px; }
+.form-hint { display: block; font-size: 13px; color: var(--muted); margin: 6px 4px 0; line-height: 1.35; }
+.page-note { margin: 4px 4px 14px; line-height: 1.45; }
+.dev-card .card-head { align-items: center; margin-bottom: 8px; }
+
+/* ---------- Einheitliche Abstände (0.1.8): jeder Baustein hält seinen Abstand nach unten selbst ----------
+   Felder, Segmente, Raster, Kartenköpfe: 14 px; Label → Feld 6 px; Chips 10 px; letzter Baustein einer Karte 0.
+   Geprüft mit tests/browser/check-abstaende.mjs. */
+.label { display: block; font-size: 13px; font-weight: 400; color: var(--muted); margin: 0 0 6px 4px; }
+.card-head { margin-bottom: 10px; align-items: center; }
+.card-head h2 { margin: 0; }
+.two { margin-bottom: 14px; }
+.two > .form-label, .two > label { margin-bottom: 0; }
+.stats { margin-bottom: 12px; }
+.back { display: inline-flex; margin-bottom: 8px; }
+.btn.block + section, .btn.block + .card, .btn.block + .btn.block { margin-top: 12px; }
+.card > :last-child, .card > .chips:last-child, .card > .two:last-child, .card > .seg:last-child { margin-bottom: 0; }
+.me .me-grp { margin-bottom: 0; }
+.me > .card:not(.list) { margin-top: 18px; }
+
+/* Aktivitäts-Slider (Gewichtsziel) */
+.pal { margin-bottom: 14px; }
+.pal-head { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 6px; }
+.pal-val { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.pal-txt { font-size: 15px; color: var(--muted); }
+.range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 44px; margin: 0; background: transparent; touch-action: pan-y; cursor: pointer; }
+.range::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--accent) var(--fill-pct, 0%), var(--fill) var(--fill-pct, 0%)); }
+.range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--fill); }
+.range::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--accent); }
+.range::-webkit-slider-thumb { -webkit-appearance: none; width: 30px; height: 30px; margin-top: -12px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0,0,0,.35), 0 0 0 .5px rgba(0,0,0,.12); }
+.range::-moz-range-thumb { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+.range:focus-visible { outline: none; }
+.range:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--accent); }
+.pal-marks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 4px; }
+.pal-mark { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; padding: 6px 2px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; line-height: 1.2; text-align: center; cursor: pointer; }
+.pal-mark b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+.pal-mark:active { background: var(--fill); }

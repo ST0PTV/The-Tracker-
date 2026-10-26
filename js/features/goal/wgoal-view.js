@@ -58,11 +58,32 @@ export function wgoalView(rerender) {
   const targetIn = h('input', { class: 'input', type: 'text', inputmode: 'decimal', value: d.target != null ? r1(d.target) : '', placeholder: 'z. B. 72', 'aria-label': 'Zielgewicht' });
   targetIn.addEventListener('input', () => { d.target = num(targetIn.value); draw(); });
 
+  // Slider 1,2–2,2 in 0,05-Schritten; Beschriftungen darunter springen auf den Wert. Beim Ziehen nur die Anzeige
+  // und die Rechnung neu zeichnen (nicht die ganze Quelle), damit der Griff nicht abreißt.
+  const PAL_MIN = 1.2, PAL_MAX = 2.2;
+  const palFmt = (v) => v.toFixed(2).replace(/0$/, '').replace('.', ',');
+  const palLabel = (v) => (v < 1.5 ? 'sitzend' : v < 1.7 ? 'gemischt' : v < 1.9 ? 'viel auf den Beinen' : 'körperlich schwer');
+  function palSlider() {
+    const val = h('b', { class: 'pal-val' });
+    const txt = h('span', { class: 'pal-txt' });
+    const rng = h('input', { class: 'range', type: 'range', min: PAL_MIN, max: PAL_MAX, step: 0.05, value: d.pal, 'aria-label': 'Aktivität im Alltag (PAL)' });
+    const paint = () => {
+      val.textContent = palFmt(d.pal); txt.textContent = palLabel(d.pal);
+      rng.style.setProperty('--fill-pct', `${((d.pal - PAL_MIN) / (PAL_MAX - PAL_MIN)) * 100}%`);
+      rng.setAttribute('aria-valuetext', `${palFmt(d.pal)}, ${palLabel(d.pal)}`);
+    };
+    rng.addEventListener('input', () => { d.pal = Math.round(Number(rng.value) * 100) / 100; paint(); draw(); });
+    const marks = h('div', { class: 'pal-marks' }, ...WG_PAL.map(([v, l]) => h('button', { type: 'button', class: 'pal-mark', onclick: () => { d.pal = v; rng.value = v; paint(); draw(); } },
+      h('b', {}, `${palFmt(v)}${v === 2 ? '+' : ''}`), h('span', {}, l))));
+    paint();
+    return h('div', { class: 'pal' }, h('div', { class: 'pal-head' }, val, txt), rng, marks);
+  }
+
   const drawSrc = () => {
     srcSeg.replaceChildren(...WG_SRC.map(([k, l]) => h('button', { type: 'button', role: 'radio', 'aria-checked': d.src === k ? 'true' : 'false', onclick: () => { d.src = k; drawSrc(); draw(); } }, l)));
     const pal = [
       h('span', { class: 'label' }, 'Aktivität im Alltag', infoBtn('Aktivität', palInfo)),
-      h('div', { class: 'chips' }, ...WG_PAL.map(([v, l]) => h('button', { type: 'button', class: `chip${d.pal === v ? ' on' : ''}`, 'aria-pressed': d.pal === v ? 'true' : 'false', onclick: () => { d.pal = v; drawSrc(); draw(); } }, `${String(v).replace('.', ',')}${v === 2 ? '+' : ''} ${l}`))),
+      palSlider(),
       check('Sport 4–5× pro Woche (+0,3)', d.sport, (v) => { d.sport = v; draw(); })];
     const numIn = (key, label, ph) => { const i = h('input', { class: 'input', type: 'text', inputmode: 'numeric', value: d[key] ?? '', placeholder: ph, 'aria-label': label }); i.addEventListener('input', () => { d[key] = num(i.value); draw(); }); return field(label, i); };
     if (d.src === 'watch') {
@@ -76,7 +97,7 @@ export function wgoalView(rerender) {
       by.addEventListener('input', () => { const v = num(by.value); birth = v >= 1900 && v <= new Date().getFullYear() - 14 ? v : null; draw(); });
       srcBox.replaceChildren(field('Geburtsjahr', by),
         h('p', { class: 'small muted' }, `${w ? `${r1(w)} kg` : 'Gewicht fehlt'} · ${p.sex === 'm' ? 'Mann' : p.sex === 'f' ? 'Frau' : 'ohne Geschlecht (Mittelwert beider Formeln)'} · `,
-          h('a', { class: 'link', href: '#/ich/ziel' }, 'unter „Tagesziel“ ändern')), ...pal);
+          h('a', { class: 'link', href: '#/ich/koerper' }, 'unter „Schlaf & Körper“ ändern')), ...pal);
     }
   };
 

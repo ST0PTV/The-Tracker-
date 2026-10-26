@@ -69,6 +69,16 @@ for (const appearance of ['dark', 'light']) {
   ok((await text()).includes('Geburtsjahr eintragen'), `${appearance}: Schätzung fragt nach dem Geburtsjahr`);
   await p.fill('input[aria-label="Geburtsjahr"]', '1995'); await p.waitForTimeout(100);
   ok(/Erhaltungsbedarf ≈ [\d.]+ kcal/.test(await text()), `${appearance}: geschätzter Erhaltungsbedarf angezeigt`);
+  // Aktivität als Slider: Wert und Beschreibung folgen, Rechnung zieht mit, Beschriftung springt, Griff bleibt beim Ziehen im DOM
+  const maintOf = async () => Number(((await text()).match(/Erhaltungsbedarf ≈ ([\d.]+) kcal/) || [])[1]?.replace('.', ''));
+  const m14 = await maintOf();
+  const handle = await p.$('input.range');
+  await p.evaluate(() => { const r = document.querySelector('input.range'); r.value = '1.8'; r.dispatchEvent(new Event('input', { bubbles: true })); });
+  ok((await p.innerText('.pal-val')) === '1,8' && (await p.innerText('.pal-txt')) === 'viel auf den Beinen', `${appearance}: Slider zeigt 1,8 und Beschreibung`);
+  ok(Math.abs((await maintOf()) / m14 - 1.8 / 1.4) < 0.01, `${appearance}: Erhaltungsbedarf rechnet mit dem Slider (${m14} → ${await maintOf()})`);
+  ok(await handle.evaluate((e) => e.isConnected), `${appearance}: Slider bleibt beim Ziehen im DOM`);
+  await p.click('.pal-mark:has-text("sitzend")'); await p.waitForTimeout(80);
+  ok((await p.inputValue('input.range')) === '1.4' && (await p.innerText('.pal-val')) === '1,4', `${appearance}: Beschriftung „sitzend“ springt auf 1,4`);
   await shot('4-schaetzen', true);
   await p.click('.seg button:has-text("Von der Uhr")'); await p.waitForTimeout(100);
 

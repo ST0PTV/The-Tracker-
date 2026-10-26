@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MemoryStorage } from './helpers.js';
-import { macrosFrom, fatCheck, fiberSugarFrom, goalsAt, withGoal, setGoal, getGoals, setProfile, todayISO } from '../js/core/profile.js';
+import { macrosFrom, fatCheck, fiberSugarFrom, goalsAt, withGoal, setGoal, getGoals, setProfile, todayISO, getSleep, adoptSleep, getProfile } from '../js/core/profile.js';
 
 test('Makros: Eiweiß und Fett aus g/kg, Kohlenhydrate als Rest (Atwater 4/4/9)', () => {
   // 2400 kcal, 80 kg, Muskelaufbau 1,6 / 1,0 → Eiweiß 128 g, Fett 80 g, KH (2400 − 512 − 720) / 4 = 292 g
@@ -47,4 +47,16 @@ test('setGoal rechnet Makros aus Preset und Profilgewicht und speichert unter tt
 
 test('todayISO nutzt lokale Zeit', () => {
   assert.equal(todayISO(new Date(2026, 0, 5, 23, 30)), '2026-01-05');
+});
+
+test('Schlafzeit: Standard 23:00–07:00, alte Koffein-Werte werden einmal übernommen', () => {
+  globalThis.localStorage = new MemoryStorage();
+  assert.deepEqual(getSleep(), { bed: '23:00', wake: '07:00' });
+  assert.equal(adoptSleep('23:00', '07:00'), false, 'Standardwerte nicht übernehmen');
+  assert.equal(getProfile().bed, null);
+  assert.equal(adoptSleep('22:30', undefined), true);
+  assert.deepEqual(getSleep(), { bed: '22:30', wake: '07:00' });
+  assert.equal(adoptSleep('01:00', '09:00'), false, 'Profil hat Vorrang');
+  setProfile({ bed: '00:15', wake: '08:00' });
+  assert.deepEqual(getSleep(), { bed: '00:15', wake: '08:00' });
 });

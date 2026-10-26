@@ -25,13 +25,15 @@ for (const appearance of ['dark', 'light']) {
   ok((await text()).includes('Kein Tagesziel festgelegt'), `${appearance}: ohne Ziel neutraler Hinweis`);
   await shot('1-leer');
 
-  // Ziel 2000 kcal, 70 kg, Ausgewogen; Untergrenzen-Hinweis bei 1100
+  // Gewicht 70 kg unter „Schlaf & Körper“, dann Ziel 2000 kcal, Ausgewogen; Untergrenzen-Hinweis bei 1100
+  await p.goto(srv.url + '/index.html#/ich/koerper'); await p.waitForTimeout(200);
+  await p.fill('input[aria-label="Körpergewicht"]', '70');
+  await p.click('button:has-text("Speichern")'); await p.waitForTimeout(200);
   await p.goto(srv.url + '/index.html#/ich/ziel'); await p.waitForTimeout(200);
   await p.fill('input[aria-label="Kalorienziel"]', '1100');
   ok(await p.locator('.warn').isVisible(), `${appearance}: Hinweis unter der Untergrenze sichtbar`);
   await p.fill('input[aria-label="Kalorienziel"]', '2000');
   ok(!(await p.locator('.warn').isVisible()), `${appearance}: kein Hinweis bei 2000 kcal`);
-  await p.fill('input[aria-label="Körpergewicht"]', '70');
   await p.click('button:has-text("Speichern")'); await p.waitForTimeout(200);
 
   // Frühstück: Haferflocken suchen, Portion zweimal tippen (2 × 30 g = 60 g)

@@ -83,7 +83,7 @@ for (const appearance of ['dark', 'light']) {
   ok(fit, `${appearance}: nichts ragt aus den Karten`);
 
   // Alkohol ausschalten → weder Karte noch Menü-Zeile
-  await p.goto(srv.url + '/index.html#/ich/getraenke'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/ich/alkohol'); await p.waitForTimeout(250);
   await p.uncheck('input[aria-label="Alkohol im „+“-Menü (Karte erscheint mit dem ersten Eintrag)"]');
   await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(250);
   await p.click('.tab-plus'); await p.waitForTimeout(300);

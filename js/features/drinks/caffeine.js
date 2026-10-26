@@ -5,6 +5,7 @@
 // Abweichung von den Ursprungs-Apps: Koffein aus Journal-Einträgen wird nicht als Kopie gespeichert, sondern beim
 // Rechnen aus den Einträgen gelesen (Feld cf = mg pro 100 g/ml). So können Journal und Koffein nicht auseinanderlaufen.
 import * as store from '../../core/store.js';
+import { getSleep, adoptSleep } from '../../core/profile.js';
 import { uuid } from '../../core/util.js';
 import { entriesOf, setLinkedEntry, entryMin } from '../journal/journal.js';
 import { isLiq } from '../food/foods.js';
@@ -14,7 +15,12 @@ store.define('caffeine', { enabled: true, bed: '23:00', wake: '07:00', halfLife:
 // log: { 'JJJJ-MM-TT': [{ id, min, mg, n, dur (min), ml, kcal, tr (kcal ins Journal, ml zum Wasser) }] }
 // foods: { Lebensmittel-ID: mg pro 100 g/ml } – eigener Wert, gemerkt
 
-export const caffSettings = () => store.get('caffeine');
+// Bett- und Aufstehzeit stehen seit 0.1.8 im Profil („Schlaf & Körper“); alte Werte hier werden einmal übernommen.
+export const caffSettings = () => {
+  const c = store.get('caffeine');
+  adoptSleep(c.bed, c.wake);
+  return { ...c, ...getSleep() };
+};
 const changed = () => { if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('tt-journal')); };
 export function setCaffSettings(patch) { store.update('caffeine', (c) => Object.assign(c, patch)); changed(); }
 
