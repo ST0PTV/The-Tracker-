@@ -1,9 +1,10 @@
-// Wasser-Karte unter „Heute“: „+“ trägt die eingestellte Menge ein, Balken nach Herkunft, Liste aller Getränke.
+// Wasser-Karte unter „Heute“: „+“ trägt die eingestellte Menge ein; Details mit Balken nach Herkunft und allen Getränken.
 // Nach waterCardHtml im Kalorien-Tracker (Rezeptbuch/tracker/js/app.js; ST0PTV/JuliaKelp, MIT).
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { toast } from '../../core/ui.js';
 import { openInfo, infoBtn } from '../../core/info.js';
+import { trackerCard, openTrackerDetails } from '../../core/tracker-card.js';
 import { fmt, num } from '../../core/format.js';
 import { waterSettings, waterRows, waterTotal, addWater, removeWater, restoreWater } from './water.js';
 import { caffWaterRows, caffEntries } from './caffeine.js';
@@ -25,45 +26,68 @@ export function waterInfo() {
   });
 }
 
-export function waterCard(iso, today) {
+/** Karte unter „Heute“: ohne Eintrag groß mit „+“, mit Eintrag kompakt mit Balken; Tipp öffnet die Details. */
+export function waterCard(iso) {
   const W = waterSettings();
   if (!W.enabled) return null;
   const goal = W.goal || 1500, step = W.step || 250;
   const rows = waterRows(iso, caffWaterRows(iso));
   const ml = waterTotal(rows);
   const done = ml >= goal;
-  const plus = h('button', { class: 'add-btn', type: 'button', 'aria-label': `${step} ml Wasser eintragen`, onclick: () => { addWater(iso, step); if (navigator.vibrate) navigator.vibrate(20); } }, icon('plus', { size: 22 }));
-  const head = h('div', { class: 'tk-head' },
-    h('div', {}, h('span', { class: 'tk-label' }, 'Wasser', infoBtn('Wasser', waterInfo)),
-      h('div', { class: 'tk-big' }, litres(ml), h('small', {}, ` / ${litres(goal)} l`))),
-    h('span', { class: `pill ${done ? 'ok' : ''}` }, done ? 'Ziel erreicht' : `noch ${litres(goal - ml)} l`), plus);
+  return trackerCard({
+    kind: 'water', cls: 'water', label: 'Wasser', value: litres(ml), unit: 'l', filled: rows.length > 0,
+    pill: done ? 'Ziel erreicht' : `noch ${litres(goal - ml)} l`,
+    body: waterBar(rows, goal, ml),
+    addLabel: `${step} ml Wasser eintragen`,
+    onAdd: () => quickWater(iso, step),
+    onOpen: () => openWaterDetails(iso)
+  });
+}
+
+/** „+“ auf der Karte oder im Menü: Menge sofort eintragen, mit Rückgängig. */
+export function quickWater(iso, ml) {
+  const e = addWater(iso, ml);
+  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(20);
+  toast(`${fmt(ml)} ml Wasser eingetragen`, { action: { label: 'Rückgängig', onClick: () => removeWater(iso, e.id) } });
+}
+
+function waterBar(rows, goal, ml) {
   const parts = ['w', 'c', 'f'].map((k) => [k, rows.filter((r) => r.kind === k).reduce((a, r) => a + r.ml, 0)]);
-  const bar = h('div', { class: 'w-bar', role: 'img', 'aria-label': `${fmt(ml)} von ${fmt(goal)} ml` },
+  return h('div', { class: 'trk-bar', role: 'img', 'aria-label': `${fmt(ml)} von ${fmt(goal)} ml` },
     ...parts.filter(([, v]) => v > 0).map(([k, v]) => h('i', { class: `w-${k}`, style: `width:${Math.min(100, (v / goal) * 100).toFixed(1)}%` })));
+}
 
-  const other = h('div', { class: 'code-row', hidden: true });
-  const otherIn = h('input', { class: 'input', type: 'text', inputmode: 'numeric', placeholder: 'ml, z. B. 330', 'aria-label': 'Andere Menge in ml' });
-  other.append(otherIn, h('button', { class: 'btn', type: 'button', onclick: () => {
-    try { addWater(iso, num(otherIn.value)); } catch (e) { toast(e.message, { error: true }); }
-  } }, 'Eintragen'));
-
-  const list = rows.length ? h('div', { class: 'tk-rows' }, ...rows.map((r) => h('div', { class: 'tk-row' },
-    h('span', { class: 'tk-time' }, r.min != null ? minToHm(r.min) : '–'),
-    h('span', { class: 't' }, h('b', {}, r.n), r.kind !== 'w' ? h('small', {}, KIND[r.kind]) : null),
-    h('span', { class: 'tk-v' }, h('b', {}, `${fmt(r.ml)} ml`)),
-    r.kind === 'w'
-      ? h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': `${fmt(r.ml)} ml Wasser löschen`, onclick: () => {
-        const gone = removeWater(iso, r.id);
-        toast(`${fmt(r.ml)} ml gelöscht`, { action: { label: 'Rückgängig', onClick: () => restoreWater(iso, gone) } });
-      } }, icon('close', { size: 14 }))
-      : r.kind === 'c'
-        ? h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': 'Koffein-Getränk öffnen', onclick: () => openCaffeine(iso, caffEntries(iso).find((x) => x.id === r.id)) }, icon('chevron', { size: 14 }))
-        : h('span', { class: 'icon-sp' })))) : null;
-
-  return h('section', { class: 'card tk water' }, head, bar,
-    list,
-    h('div', { class: 'chips' },
-      h('button', { class: 'chip', type: 'button', onclick: () => addWater(iso, 500) }, '+ 500 ml'),
-      h('button', { class: 'chip', type: 'button', onclick: () => { other.hidden = !other.hidden; if (!other.hidden) otherIn.focus(); } }, 'Andere Menge')),
-    other);
+/** Details: Summe, Balken, alle Getränke mit Löschen, weitere Mengen. */
+export function openWaterDetails(iso) {
+  return openTrackerDetails({ kind: 'water', title: 'Wasser', render: () => {
+    const W = waterSettings();
+    const goal = W.goal || 1500, step = W.step || 250;
+    const rows = waterRows(iso, caffWaterRows(iso));
+    const ml = waterTotal(rows);
+    const other = h('div', { class: 'code-row', hidden: true });
+    const otherIn = h('input', { class: 'input', type: 'text', inputmode: 'numeric', placeholder: 'ml, z. B. 330', 'aria-label': 'Andere Menge in ml' });
+    other.append(otherIn, h('button', { class: 'btn', type: 'button', onclick: () => {
+      try { addWater(iso, num(otherIn.value)); } catch (e) { toast(e.message, { error: true }); }
+    } }, 'Eintragen'));
+    const list = rows.length ? h('div', { class: 'tk-rows' }, ...rows.map((r) => h('div', { class: 'tk-row' },
+      h('span', { class: 'tk-time' }, r.min != null ? minToHm(r.min) : '–'),
+      h('span', { class: 't' }, h('b', {}, r.n), r.kind !== 'w' ? h('small', {}, KIND[r.kind]) : null),
+      h('span', { class: 'tk-v' }, h('b', {}, `${fmt(r.ml)} ml`)),
+      r.kind === 'w'
+        ? h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': `${fmt(r.ml)} ml Wasser löschen`, onclick: () => {
+          const gone = removeWater(iso, r.id);
+          toast(`${fmt(r.ml)} ml gelöscht`, { action: { label: 'Rückgängig', onClick: () => restoreWater(iso, gone) } });
+        } }, icon('close', { size: 14 }))
+        : r.kind === 'c'
+          ? h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': 'Koffein-Getränk öffnen', onclick: () => openCaffeine(iso, caffEntries(iso).find((x) => x.id === r.id)) }, icon('chevron', { size: 14 }))
+          : h('span', { class: 'icon-sp' })))) : h('p', { class: 'small muted' }, 'Noch nichts eingetragen.');
+    return [
+      h('div', { class: 'trk-sum' }, h('b', {}, litres(ml)), h('span', {}, `von ${litres(goal)} l`), infoBtn('Wasser', waterInfo)),
+      waterBar(rows, goal, ml),
+      h('div', { class: 'trk-acts' },
+        h('button', { class: 'chip', type: 'button', onclick: () => quickWater(iso, step) }, `+ ${fmt(step)} ml`),
+        h('button', { class: 'chip', type: 'button', onclick: () => quickWater(iso, 500) }, '+ 500 ml'),
+        h('button', { class: 'chip', type: 'button', onclick: () => { other.hidden = !other.hidden; if (!other.hidden) otherIn.focus(); } }, 'Andere Menge')),
+      other, list];
+  } });
 }

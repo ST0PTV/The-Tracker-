@@ -6,7 +6,7 @@
 // Rechnen aus den Einträgen gelesen (Feld cf = mg pro 100 g/ml). So können Journal und Koffein nicht auseinanderlaufen.
 import * as store from '../../core/store.js';
 import { uuid } from '../../core/util.js';
-import { entriesOf, setLinkedEntry } from '../journal/journal.js';
+import { entriesOf, setLinkedEntry, entryMin } from '../journal/journal.js';
 import { isLiq } from '../food/foods.js';
 import { absHours, hmToMin } from './caffeine-model.js';
 
@@ -76,13 +76,11 @@ export const CAFF_SRC_HINT = {
 // ---------- Einträge ----------
 export const caffEntries = (iso) => caffSettings().log[iso] || [];
 
-// Standard-Uhrzeit je Mahlzeit, wenn ein Journal-Eintrag keine eigene hat (grobe Annahme)
-const MEAL_MIN = { breakfast: 8 * 60, lunch: 12 * 60 + 30, dinner: 18 * 60 + 30, snack: 15 * 60 + 30 };
 
 /** Koffein-Zeilen aus dem Journal: [{ id, min, mg, n, dur, fromJournal: true }]. */
 export function journalCaffeine(iso) {
   return entriesOf(iso).filter((e) => e.cf > 0 && e.grams > 0 && !e.link).map((e) => ({
-    id: e.id, min: e.t ? hmToMin(e.t) : MEAL_MIN[e.meal] ?? 720, mg: Math.round(((e.cf * e.grams) / 100) * 10) / 10,
+    id: e.id, min: entryMin(e), mg: Math.round(((e.cf * e.grams) / 100) * 10) / 10,
     n: e.n.split(',')[0], dur: isLiq(e) ? 15 : 0, fromJournal: true
   }));
 }

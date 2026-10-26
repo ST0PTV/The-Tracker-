@@ -1,7 +1,7 @@
 // Journal im Browser: Ziel setzen, Lebensmittel suchen, Portion mehrfach tippen, eintragen, bearbeiten,
 // löschen mit Rückgängig, Vortag übernehmen. Prüft Zahlen, Konsolenfehler und fremde Keys; Screenshots hell/dunkel.
 // Aufruf: node tests/browser/check-journal.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -36,7 +36,7 @@ for (const appearance of ['dark', 'light']) {
 
   // Frühstück: Haferflocken suchen, Portion zweimal tippen (2 × 30 g = 60 g)
   await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(200);
-  await p.click('button[aria-label="Frühstück hinzufügen"]'); await p.waitForTimeout(300);
+  await viaPlus(p, 'Lebensmittel', 'Frühstück');
   await p.waitForFunction(() => /Bundeslebensmittelschlüssel/.test(document.body.innerText), null, { timeout: 8000 });
   await p.fill('input[aria-label="Lebensmittel suchen"]', 'haferflocken'); await p.waitForTimeout(200);
   const first = await p.locator('.sheet .results .row b').first().innerText();
@@ -74,7 +74,8 @@ for (const appearance of ['dark', 'light']) {
   // Nächster Tag: Frühstück wie am Vortag
   await p.click('button[aria-label="Nächster Tag"]'); await p.waitForTimeout(200);
   ok((await text()).includes('Morgen'), `${appearance}: Tageswechsel auf Morgen`);
-  await p.click('button:has-text("Wie am Vortag")'); await p.waitForTimeout(250);
+  ok(await p.locator('.card.meal').count() === 0 && (await text()).includes('Ganzen Vortag übernehmen'), `${appearance}: leerer Tag ohne Mahlzeit-Karten, mit „Ganzen Vortag übernehmen“`);
+  await viaPlus(p, 'Wie am Vortag', 'Frühstück');
   ok((await text()).includes('348 kcal'), `${appearance}: Vortag übernommen`);
   await shot('5-morgen');
 

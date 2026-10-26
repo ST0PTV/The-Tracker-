@@ -140,3 +140,25 @@ export function generateDemoWeights({ today, days = 30, seed = 2028, start = 76.
   }
   return out;
 }
+
+/**
+ * Beispiel-Alkohol: an Freitagen und Samstagen 1–3 Getränke am Abend (mit Essen), nie heute. Erfunden.
+ * Gibt { iso: [{ min, ml, vol, kcal, n, fed }] } zurück.
+ */
+export function generateDemoAlcohol({ today, days = 30, seed = 2029 }) {
+  const rand = rng(seed);
+  const out = {};
+  const DR = [['Pils 500 ml', 500, 4.9, 190], ['Rotwein trocken 200 ml', 200, 11.7, 140], ['Weizenbier 500 ml', 500, 5.3, 210]];
+  for (let i = days - 1; i >= 1; i--) {
+    const iso = addDays(today, -i);
+    const wd = new Date(iso + 'T12:00:00').getDay();
+    if (wd !== 5 && wd !== 6) continue;
+    if (rand() < 0.35) continue;
+    const n = 1 + Math.floor(rand() * 3);
+    out[iso] = Array.from({ length: n }, (_, k) => {
+      const [name, ml, vol, kcal] = DR[Math.floor(rand() * DR.length)];
+      return { min: 19 * 60 + k * 75 + Math.round(rand() * 3) * 10, ml, vol, kcal, n: name, fed: true };
+    });
+  }
+  return out;
+}

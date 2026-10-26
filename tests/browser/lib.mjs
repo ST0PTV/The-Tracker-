@@ -77,3 +77,11 @@ export function checker() {
 }
 
 export const BAD_TEXT = /\bnull\b|undefined|NaN/;
+
+const MEAL_SHORT = { 'Frühstück': 'Frühstück', 'Mittagessen': 'Mittag', 'Abendessen': 'Abend', 'Snacks': 'Snack' };
+/** Über das „+“ der Tab-Leiste: Mahlzeit wählen und eine Zeile antippen (z. B. „Lebensmittel“). */
+export async function viaPlus(p, row, meal = null) {
+  await p.click('.tab-plus'); await p.waitForTimeout(300);
+  if (meal) { await p.click(`.qa-meal button:has-text("${MEAL_SHORT[meal] || meal}")`); await p.waitForTimeout(80); }
+  await p.click(`.qa-row:has-text("${row}")`); await p.waitForTimeout(450);
+}
