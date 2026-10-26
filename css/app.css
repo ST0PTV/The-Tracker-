@@ -228,7 +228,7 @@ button { font: inherit; color: inherit; }
   background: var(--fill); border: 1px solid transparent; outline: none; }
 .input:focus { border-color: var(--accent); }
 .input { min-width: 0; max-width: 100%; box-sizing: border-box; }
-input[type="time"].input, input[type="date"].input { display: block; -webkit-appearance: none; appearance: none; text-align: left; }
+input[type="time"].input, input[type="date"].input { display: flex; align-items: center; -webkit-appearance: none; appearance: none; text-align: left; }
 
 /* Segment-Steuerung wie iOS (Buttons mit aria-checked oder Links mit aria-current) */
 .seg { display: flex; padding: 2px; border-radius: 9px; background: var(--fill); margin-bottom: 14px; }
@@ -639,3 +639,9 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .pal-mark { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 52px; padding: 6px 2px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-size: 12px; line-height: 1.2; text-align: center; cursor: pointer; }
 .pal-mark b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
 .pal-mark:active { background: var(--fill); }
+
+/* iPhone: Zeit- und Datumsfelder setzten den Wert oben ins Feld. Feld und innere Teile mittig ausrichten, Höhe fest wie die anderen Felder. */
+input[type="time"].input, input[type="date"].input { align-items: center; line-height: normal; padding-top: 0; padding-bottom: 0; }
+input[type="time"].input::-webkit-date-and-time-value, input[type="date"].input::-webkit-date-and-time-value { margin: 0; min-height: 0; height: auto; line-height: normal; text-align: left; }
+input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webkit-datetime-edit { display: flex; align-items: center; line-height: normal; }
+input[type="time"].input::-webkit-datetime-edit-fields-wrapper, input[type="date"].input::-webkit-datetime-edit-fields-wrapper { padding: 0; }
