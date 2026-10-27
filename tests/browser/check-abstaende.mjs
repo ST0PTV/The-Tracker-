@@ -8,7 +8,7 @@ const srv = await startServer();
 const b = await launch();
 const { ok, done } = checker();
 const out = outDir('abstaende');
-const ROUTES = ['#/ich', '#/ich/ziel', '#/ich/gewichtsziel', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/quellen', '#/', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen'];
+const ROUTES = ['#/ich', '#/ich/ziel', '#/ich/gewichtsziel', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/quellen', '#/', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen', '#/rezepte', '#/rezepte/rezept?id=linsen-bolognese', '#/rezepte/neu', '#/rezepte/start', '#/rezepte/start?s=2', '#/rezepte/start?s=3', '#/ich/ernaehrung'];
 
 for (const appearance of ['dark', 'light']) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, serviceWorkers: 'block' });
@@ -16,7 +16,7 @@ for (const appearance of ['dark', 'light']) {
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e)));
   await p.goto(srv.url + '/index.html');
-  await p.evaluate((a) => { localStorage.clear(); localStorage.setItem('tt_settings', JSON.stringify({ appearance: a })); localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f', weightKg: 64, heightCm: 168, birthYear: 1995 })); }, appearance);
+  await p.evaluate((a) => { localStorage.clear(); localStorage.setItem('tt_settings', JSON.stringify({ appearance: a })); localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f', weightKg: 64, heightCm: 168, birthYear: 1995 })); localStorage.setItem('tt_recipes', JSON.stringify({ started: true })); }, appearance);
   await p.reload(); await p.waitForTimeout(300);
   await p.goto(srv.url + '/index.html#/ich'); await p.waitForTimeout(200);
   await p.click('button:has-text("Beispieldaten laden")');

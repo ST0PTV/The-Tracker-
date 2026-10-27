@@ -17,6 +17,8 @@ import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS, alcSettings } from './dri
 import { wgoalView } from './goal/wgoal-view.js';
 import { WG_REFS, wgDateFmt } from './goal/weightgoal.js';
 import { bodyView } from './me/body-view.js';
+import { prefsView } from './recipes/start-view.js';
+import { dietForm, allergenCodes, rs as recipeSettings } from './recipes/recipes.js';
 import { loadDemoWater, removeDemoWater, waterSettings } from './drinks/water.js';
 import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS, caffSettings } from './drinks/caffeine.js';
 import { waterSettingsView, caffSettingsView, alcSettingsView } from './drinks/drinks-settings.js';
@@ -55,7 +57,9 @@ function ichView(rerender) {
       meRow({ kind: 'wt', ico: 'trend', title: 'Gewichtsziel', href: '#/ich/gewichtsziel',
         sub: o.on && o.target ? `${w != null ? `${fmtKg(w)} → ` : ''}${fmtKg(o.target)} kg${o.date ? ` bis ${wgDateFmt(o.date)}` : ''}` : 'aus' })),
     ...group('Über mich',
-      meRow({ kind: 'body', ico: 'moon', title: 'Schlaf & Körper', href: '#/ich/koerper', sub: `${sl.bed}–${sl.wake}${w != null ? ` · ${fmtKg(w)} kg` : ''}` })),
+      meRow({ kind: 'body', ico: 'moon', title: 'Schlaf & Körper', href: '#/ich/koerper', sub: `${sl.bed}–${sl.wake}${w != null ? ` · ${fmtKg(w)} kg` : ''}` }),
+      meRow({ kind: 'food', ico: 'book', title: 'Ernährung & Rezepte', href: '#/ich/ernaehrung',
+        sub: `${({ all: 'Alles', vegetarian: 'Vegetarisch', vegan: 'Vegan' })[dietForm()]}${allergenCodes().length ? ` · ${allergenCodes().length} ${allergenCodes().length === 1 ? 'Allergen' : 'Allergene'}` : ''} · ${recipeSettings().mealCount} Mahlzeiten` })),
     ...group('Tracker',
       meRow({ kind: 'water', ico: 'drop', title: 'Wasser', href: '#/ich/wasser', sub: W.enabled ? `${litres(W.goal || 1500)} l · Plus ${fmt(W.step || 250)} ml` : 'aus' }),
       meRow({ kind: 'supp', ico: 'pill', title: 'Supplements', href: '#/ich/supplements', sub: S.enabled ? (S.items.length ? `${active} aktiv` : 'noch keine angelegt') : 'aus' }),
@@ -158,7 +162,7 @@ function zielView() {
 const CREDITS = [
   ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
   ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
-  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). Rezepte, Wochenplan und Zyklus folgen in Phase 3.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
+  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). Rezepte (96 Rezepte mit Zutaten-Nährwerten), Auswahl, Rezeptseite, eigene Rezepte und die Ginger-Zeichnung als Platzhalterbild. Wochenplan, Einkauf und Zyklus folgen.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
   ['Bundeslebensmittelschlüssel (BLS) 4.0', 'Nährwerte je 100 g für die Lebensmittelsuche (data/bls.json). Verändert: Auszug; freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.', 'Max Rubner-Institut (2025), Karlsruhe · CC BY 4.0 · DOI 10.25826/Data20251217-134202-0', 'https://doi.org/10.25826/Data20251217-134202-0'],
   ['Open Food Facts', 'Produktdaten zum Barcode. Nur die Barcode-Nummer wird gesendet; gefundene Produkte werden auf dem Gerät gespeichert.', 'Open Database License (ODbL) 1.0, Inhalte Database Contents License (DbCL) 1.0', 'https://world.openfoodfacts.org'],
   ['ZXing für JavaScript', 'Erkennt Barcodes im Kamerabild (vendor/zxing.min.js).', 'ZXing-Autoren · Apache License 2.0 (vendor/ZXING-LICENSE)', 'https://github.com/zxing-js/library'],
@@ -185,6 +189,6 @@ function quellenView() {
 
 // „/ich/getraenke“ (bis 0.1.7) führt auf die neue Übersicht
 const oldDrinks = (rerender) => { setTimeout(() => { location.hash = '#/ich'; }, 0); return ichView(rerender); };
-export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView,
+export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView, '/ich/ernaehrung': prefsView,
   '/ich/wasser': waterSettingsView, '/ich/koffein': caffSettingsView, '/ich/alkohol': alcSettingsView, '/ich/getraenke': oldDrinks,
   '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView };

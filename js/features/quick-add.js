@@ -76,6 +76,7 @@ export function openQuickAdd(iso = isoDate(), meal = null) {
         row({ kind: 'food', ico: 'search', title: 'Lebensmittel', sub: 'suchen, Favoriten, Zuletzt', onClick: () => goFood(() => openAdd(iso, sel, { tab: 'search' })) }),
         row({ kind: 'food', ico: 'scan', title: 'Scannen', sub: 'Barcode oder Nährwerttabelle', onClick: () => goFood(() => openAdd(iso, sel, { tab: 'scan' })) }),
         row({ kind: 'food', ico: 'bolt', title: 'Schnell', sub: 'nur kcal', onClick: () => goFood(() => openQuick(iso, sel)) }),
+        row({ kind: 'food', ico: 'book', title: 'Rezept', sub: 'Vorschläge passend zur Mahlzeit', onClick: () => go(() => { location.hash = `#/rezepte?m=${sel}`; }) }),
         copy),
       trackers.length ? h('h3', { class: 'sec' }, 'Tracker') : null,
       trackers.length ? h('div', { class: 'card list qa-grp' }, ...trackers) : null,

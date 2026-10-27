@@ -754,3 +754,98 @@ a.icon-btn { text-decoration: none; }
 .mc-row + .mc-row { margin-top: 6px; }
 .cal-wd { margin-bottom: 8px; }
 .st .chart-box { margin-bottom: 10px; }
+
+/* ---------- Rezepte (0.2.1, Entwurf A „Liste“ und Rezeptseite P1; nach dem Rezeptbuch von JuliaKelp) ---------- */
+.rz-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+a.icon-btn { text-decoration: none; }
+.rz-sub { margin-bottom: 14px; }
+.rz-sug-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 0 4px 8px; }
+.rz-sug-h b { font-size: 17px; }
+.rz-sug-h span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.rz-meal { margin-bottom: 10px; }
+.rz-list { margin-bottom: 10px; }
+.rz-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 72px; color: var(--text); text-decoration: none; }
+.rz-row + .rz-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.rz-row .t { flex: 1; min-width: 0; }
+.rz-row b { display: block; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rz-row small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.rz-row .rz-extra { color: var(--c-goal); }
+.rz-fav { color: var(--c-alc); flex: none; display: inline-flex; }
+.rz-fav .icon, .rp-acts .chip.on .icon { fill: currentColor; stroke: currentColor; }
+.rp-acts .icon { fill: none; stroke: currentColor; stroke-width: 1.8; }
+.rz-th { width: 52px; height: 52px; border-radius: 12px; flex: none; display: grid; place-items: end center; overflow: hidden;
+  background: var(--t); }
+:root:not([data-theme="light"]) .rz-th, :root:not([data-theme="light"]) .rp-hero { background: color-mix(in srgb, var(--t) 55%, var(--surface-2)); }
+.ginger { display: block; line-height: 0; }
+.rz-search { margin: 0 0 10px; }
+.rz-chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px; scrollbar-width: none; touch-action: pan-x; }
+.rz-chips::-webkit-scrollbar { display: none; }
+.rz-chips .chip { flex: none; }
+.rz-count { margin: 0 4px 8px; }
+.rz-have { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-bottom: 12px; }
+/* Rezeptseite */
+.rp-hero { height: 150px; border-radius: 20px; margin: 0 0 14px; display: grid; place-items: end center; overflow: hidden; background: var(--t); }
+.rp h1 { font-size: 28px; line-height: 1.15; margin: 0 0 6px; }
+.rp-meta { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+.rp-acts { display: flex; gap: 8px; margin: 0 0 14px; }
+.rp-acts .chip { flex: 1; justify-content: center; gap: 6px; text-decoration: none; }
+.rp-acts .chip.on { color: var(--on-accent); }
+.rp-macros { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0 0 8px; }
+.rp-macros div { background: var(--surface); border-radius: 12px; padding: 8px 10px; min-width: 0; }
+.rp-macros b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; }
+.rp-macros span { font-size: 12px; color: var(--muted); }
+.rp-portions { display: flex; align-items: center; justify-content: space-between; }
+.rp-stp { display: flex; align-items: center; gap: 10px; }
+.rp-stp b { font-size: 15px; min-width: 92px; text-align: center; }
+.rp-ing { list-style: none; margin: 0; padding: 0; }
+.rp-ing li { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding: 9px 0; font-size: 15px; border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.rp-ing li:first-child { border-top: 0; padding-top: 0; }
+.rp-ing small { color: var(--muted); font-size: 13px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rp-steps { padding: 0; }
+.rp-step { display: flex; gap: 12px; align-items: flex-start; width: 100%; padding: 12px 14px; border: 0; background: none; color: var(--text);
+  font: inherit; font-size: 15px; line-height: 1.4; text-align: left; cursor: pointer; }
+.rp-step + .rp-step { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.rp-step i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--faint); flex: none; display: grid; place-items: center; color: var(--on-accent); }
+.rp-step i .icon { stroke: currentColor; fill: none; stroke-width: 2.4; }
+.rp-step.done i { background: var(--accent); border-color: var(--accent); }
+.rp-step.done span { color: var(--muted); text-decoration: line-through; }
+.rp-nrow { display: grid; grid-template-columns: minmax(0, 1fr) 72px 64px 40px; align-items: center; gap: 8px; min-height: 30px; font-size: 14px; }
+.rp-nrow + .rp-nrow { margin-top: 6px; }
+.rp-nrow.sub span:first-child { padding-left: 12px; color: var(--muted); }
+.rp-nrow b { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.rp-nrow small { color: var(--muted); font-size: 12px; text-align: right; white-space: nowrap; }
+.rp-bar { height: 6px; border-radius: 3px; background: var(--fill); overflow: hidden; }
+.rp-bar i { display: block; height: 100%; border-radius: 3px; background: var(--c-goal); }
+.rp-nut > p.small { margin-top: 10px; }
+.rp-note { min-height: 80px; padding: 10px 14px; line-height: 1.4; resize: vertical; height: auto; }
+.rp-cook { margin-top: 18px; }
+.rp-cook .seg { margin-bottom: 12px; }
+.rp-del { margin-top: 12px; color: var(--danger); }
+/* Eigenes Rezept */
+.own-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.own-line { display: grid; grid-template-columns: 64px 76px minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.own-line .input { padding: 0 10px; }
+.own-kbox { margin: 6px 0 0; }
+.own-kbox[hidden] { display: none; }
+.own-steps { min-height: 120px; padding: 10px 14px; line-height: 1.5; height: auto; resize: vertical; }
+.own-ana > * + * { margin-top: 8px; }
+.own-sum { display: flex; align-items: baseline; gap: 6px; }
+.own-sum b { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.own-sum span { color: var(--muted); font-size: 14px; }
+.own-bar { height: 8px; border-radius: 4px; }
+.own > .btn.primary { margin-top: 16px; }
+/* Start und Geschmack */
+.rz-steps { display: flex; align-items: center; gap: 6px; margin: 4px 4px 8px; }
+.rz-steps span { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); }
+.rz-steps span.on { background: var(--accent); }
+.rz-steps b { font-size: 12px; color: var(--muted); margin-left: 6px; font-weight: 500; }
+.rz-start > .btn.primary { margin-top: 16px; }
+.rz-backstep { display: block; text-align: center; margin: 12px 0 0; }
+.taste-row { display: flex; align-items: center; gap: 10px; padding: 6px 14px; min-height: 52px; }
+.taste-row + .taste-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.taste-row .t { flex: 1; font-size: 16px; }
+.taste-row .icon-btn { color: var(--muted); }
+.taste-row .like.on { background: color-mix(in srgb, var(--c-alc) 22%, transparent); color: var(--c-alc); }
+.taste-row .like.on .icon { fill: currentColor; }
+.taste-row .no.on { background: color-mix(in srgb, var(--text) 16%, transparent); color: var(--text); }
+.card.taste { margin-bottom: 12px; }
