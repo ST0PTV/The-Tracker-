@@ -36,7 +36,7 @@ for (const appearance of ['dark', 'light']) {
   await p.click('.tab-plus'); await p.waitForTimeout(300);
   const rows = await p.locator('.qa-grp').nth(1).locator('.qa-row b').allInnerTexts();
   ok(rows.join(',') === 'Wasser,Supplements,Koffein,Alkohol,Gewicht', `${appearance}: Tracker-Reihenfolge (${rows.join(', ')})`);
-  ok((await p.locator('.qa-grp').first().locator('.qa-row b').allInnerTexts()).join(',') === 'Lebensmittel,Scannen,Schnell', `${appearance}: Gruppe Essen`);
+  ok((await p.locator('.qa-grp').first().locator('.qa-row b').allInnerTexts()).join(',') === 'Lebensmittel,Scannen,Schnell,Rezept', `${appearance}: Gruppe Essen`);
   const badges = await p.locator('.qa-grp').nth(1).locator('.qa-badge').evaluateAll((l) => l.map((b) => getComputedStyle(b).color));
   ok(new Set(badges).size === 5, `${appearance}: Farbe je Tracker im Menü (${new Set(badges).size} Farben)`);
   ok(await p.locator('.qa-meal [aria-checked="true"]').count() === 1, `${appearance}: Mahlzeit vorgewählt`);
