@@ -28,6 +28,12 @@ if (typeof document !== 'undefined') document.addEventListener('tt-open-meal', (
 /** Gewählter Tag auf „Heute“ (für das „+“ in der Tab-Leiste). */
 export const heuteDay = () => currentDay();
 
+/** Springt auf „Heute“ zu einem Tag (z. B. aus Monat oder Jahr der Analyse); Zukunft → heute. */
+export function showDay(iso) {
+  const today = isoDate();
+  day = iso > today ? today : iso; dayAnchor = today; openMeals.clear();
+}
+
 function currentDay() {
   const today = isoDate();
   if (!day || dayAnchor !== today) { day = today; dayAnchor = today; }
@@ -40,6 +46,8 @@ function dayNav(iso, today, rerender) {
   return h('header', { class: 'page-head day-head' },
     h('div', {}, h('h1', {}, dayLabel(iso, today)), h('p', { class: 'sub' }, weekday)),
     h('div', { class: 'day-nav' },
+      // Analyse nur am heutigen Tag; an anderen Tagen steht hier „Heute“ (sonst bricht der Titel auf schmalen Geräten um)
+      iso === today ? h('a', { class: 'icon-btn', href: '#/analyse', 'aria-label': 'Analyse' }, icon('trend', { size: 20 })) : null,
       iso !== today ? h('button', { class: 'btn small-btn', type: 'button', onclick: () => { day = today; openMeals.clear(); rerender(); } }, 'Heute') : null,
       h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Vorheriger Tag', onclick: () => go(-1) }, icon('chevron', { size: 20, cls: 'flip' })),
       h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Nächster Tag', onclick: () => go(1) }, icon('chevron', { size: 20 }))));
