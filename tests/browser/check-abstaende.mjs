@@ -8,7 +8,7 @@ const srv = await startServer();
 const b = await launch();
 const { ok, done } = checker();
 const out = outDir('abstaende');
-const ROUTES = ['#/ich', '#/ich/ziel', '#/ich/gewichtsziel', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/quellen', '#/'];
+const ROUTES = ['#/ich', '#/ich/ziel', '#/ich/gewichtsziel', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/quellen', '#/', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen'];
 
 for (const appearance of ['dark', 'light']) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, serviceWorkers: 'block' });

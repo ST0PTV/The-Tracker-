@@ -10,6 +10,7 @@ import { openQuickAdd } from './features/quick-add.js';
 import { rezepteRoutes } from './features/rezepte.js';
 import { trainingView } from './features/training.js';
 import { ichRoutes } from './features/ich.js';
+import { analyseRoutes } from './features/analyse/routes.js';
 import { loadFoods } from './features/food/foods.js';
 
 const boot = store.init();
@@ -27,7 +28,8 @@ const rerender = startRouter({
   '/': heuteView,
   ...rezepteRoutes,
   '/training': trainingView,
-  ...ichRoutes
+  ...ichRoutes,
+  ...analyseRoutes
 });
 
 // Ziele geändert → offene Seite neu zeichnen (z. B. Rezepte zeigen das neue Tagesziel).

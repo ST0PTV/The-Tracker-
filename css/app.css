@@ -657,3 +657,100 @@ input[type="time"].input::-webkit-datetime-edit-fields-wrapper, input[type="date
 
 /* „+“-Menü: Platz für die Zeile „Wie am Vortag“ (Zeilenhöhe = min-height von .qa-row), damit sich die Oberkante des Sheets nicht verschiebt */
 .qa-reserve { height: 58px; flex: none; }
+
+/* ---------- Analyse (0.2.0, Entwurf A „Kacheln“ nach Analytics im Calorie-Tracker) ---------- */
+a.icon-btn { text-decoration: none; }
+.an-seg { margin: 4px 0 14px; }
+.an-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+.an-tile { display: flex; flex-direction: column; gap: 2px; min-height: 116px; padding: 12px 14px 10px; border: 0; border-radius: 16px;
+  background: var(--surface); color: var(--text); font: inherit; text-align: left; cursor: pointer; min-width: 0; -webkit-tap-highlight-color: transparent; }
+.an-tile:active { background: var(--surface-2); }
+.an-tile.wide { grid-column: 1 / -1; }
+.an-h { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); font-weight: 500; }
+.an-h .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c); flex: none; }
+.an-h .chev { margin-left: auto; color: var(--faint); display: inline-flex; }
+.an-h .chev .icon { stroke: currentColor; fill: none; stroke-width: 2; }
+.an-v { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.an-v small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.an-s { font-size: 12.5px; color: var(--muted); line-height: 1.3; }
+.an-viz { margin-top: auto; padding-top: 6px; }
+.an-viz svg { display: block; width: 100%; height: 36px; }
+.an-tile.wide .an-viz svg { height: 52px; }
+.spk .l { fill: none; stroke: var(--c); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.spk .a { fill: color-mix(in srgb, var(--c) 16%, transparent); }
+.kb .band { fill: color-mix(in srgb, var(--accent) 12%, transparent); }
+.kb .b { fill: var(--accent); }
+.kb .b.over { fill: color-mix(in srgb, var(--accent) 50%, var(--surface)); }
+.kb-lab { display: grid; font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; }
+.an-leg { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 4px 4px; font-size: 12.5px; color: var(--muted); }
+.an-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.an-leg i.band { width: 14px; height: 10px; border-radius: 2px; background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.an-note { font-size: 12.5px; color: var(--muted); margin: 10px 4px 0; line-height: 1.4; }
+.an-stats { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); margin: 0 0 12px; }
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+.an-stats b { font-variant-numeric: tabular-nums; }
+/* Mikronährstoffe */
+.mc-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 72px 44px; align-items: center; gap: 8px; min-height: 34px; font-size: 14px; }
+.mc-bar, .am-bar { height: 8px; border-radius: 4px; background: var(--fill); overflow: hidden; }
+.mc-bar i, .am-bar i { display: block; height: 100%; border-radius: 4px; background: var(--c-body); }
+.mc-v, .am-v { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mc-p, .am-p { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+.mc > p.small { margin-top: 10px; }
+/* Monat */
+.cal-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-wd { margin-bottom: 4px; font-size: 11px; color: var(--muted); text-align: center; }
+.cal-d { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-height: 46px; padding: 2px 0; border-radius: 10px;
+  border: 1.5px solid transparent; background: var(--fill); color: var(--text); font: inherit; cursor: pointer; min-width: 0; }
+.cal-d.empty { background: none; }
+.cal-d b { font-size: 14px; font-weight: 600; }
+.cal-d small { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cal-d:disabled { opacity: 0.35; cursor: default; }
+.cal-d.ok { background: var(--accent); color: var(--on-accent); }
+.cal-d.ok small { color: color-mix(in srgb, var(--on-accent) 75%, transparent); }
+.cal-d.over { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+.cal-d.low { background: var(--surface); border-color: color-mix(in srgb, var(--accent) 45%, transparent); border-style: dashed; }
+.cal-d.today { box-shadow: inset 0 0 0 2px var(--c-goal); }
+.cal-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.cal-leg span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-leg i { width: 12px; height: 12px; border-radius: 3px; background: var(--fill); }
+.cal-leg i.ok, .cal-leg i.yon { background: var(--accent); }
+.cal-leg i.over { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+.cal-leg i.low { background: none; border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, transparent); }
+.an-macro .am-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 56px 40px; align-items: center; gap: 8px; min-height: 32px; font-size: 14px; }
+.am-row.am-px .am-bar i { background: var(--m-p); }
+.am-row.am-cx .am-bar i { background: var(--m-c); }
+.am-row.am-fx .am-bar i { background: var(--m-f); }
+.an-macro p.small { margin-top: 8px; }
+/* Jahr */
+.y-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
+.ym-n { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+.ym-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.ym-g > i, .yd { aspect-ratio: 1; border-radius: 2px; }
+.yd { border: 0; padding: 0; background: var(--fill); cursor: pointer; min-width: 0; }
+.yd.on { background: var(--accent); }
+.yd.fut { opacity: 0.3; cursor: default; }
+.yd.today { box-shadow: 0 0 0 1.5px var(--c-goal); }
+.cal-leg i.yoff { background: var(--fill); }
+/* Magen-Modell */
+.st .trk-sum { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin: 0; }
+.st .trk-sum b { font-size: 34px; font-weight: 300; color: var(--c); font-variant-numeric: tabular-nums; }
+.st .trk-sum span { color: var(--muted); font-size: 14px; flex: 1; min-width: 0; }
+.st-svg .night { fill: color-mix(in srgb, var(--text) 7%, transparent); }
+.st-svg .grid { stroke: color-mix(in srgb, var(--text) 8%, transparent); stroke-width: 1; }
+.st-svg .lab { font-size: 10px; fill: var(--muted); }
+.st-svg .area { fill: color-mix(in srgb, var(--c) 18%, transparent); }
+.st-svg .line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; }
+.st-svg .ev { fill: var(--c); stroke: var(--surface); stroke-width: 2; }
+.st-svg .now { stroke: var(--c-goal); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.st-row { gap: 12px; }
+.st-row .st-t { width: 46px; flex: none; font-variant-numeric: tabular-nums; color: var(--muted); }
+.st-row .grow { flex: 1; min-width: 0; }
+.st-row .grow b, .st-row .st-v b { display: block; font-size: 15px; font-weight: 600; }
+.st-row small { display: block; font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.st-row .st-v { text-align: right; flex: none; }
+/* Analyse: Abstände (geprüft mit check-abstaende) */
+.an-leg { margin-bottom: 14px; }
+.mc-row { min-height: 28px; }
+.mc-row + .mc-row { margin-top: 6px; }
+.cal-wd { margin-bottom: 8px; }
+.st .chart-box { margin-bottom: 10px; }

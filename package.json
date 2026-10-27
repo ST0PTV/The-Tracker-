@@ -9,6 +9,6 @@
     "check": "node scripts/check-syntax.mjs",
     "privacy": "sh scripts/privacy-scan.sh",
     "release": "node scripts/release.mjs",
-    "test:browser": "node tests/browser/check-tabs.mjs && node tests/browser/check-journal.mjs && node tests/browser/check-demo.mjs && node tests/browser/check-scanner.mjs && node tests/browser/check-ocr.mjs && node tests/browser/check-drinks.mjs && node tests/browser/check-weight.mjs && node tests/browser/check-heute.mjs && node tests/browser/check-abstaende.mjs"
+    "test:browser": "node tests/browser/check-tabs.mjs && node tests/browser/check-journal.mjs && node tests/browser/check-demo.mjs && node tests/browser/check-scanner.mjs && node tests/browser/check-ocr.mjs && node tests/browser/check-drinks.mjs && node tests/browser/check-weight.mjs && node tests/browser/check-heute.mjs && node tests/browser/check-abstaende.mjs && node tests/browser/check-analyse.mjs"
   }
 }
