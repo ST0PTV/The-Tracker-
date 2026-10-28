@@ -1,14 +1,14 @@
 // Rezepte: eigener Zustand, Auswahl passender Rezepte, Nährwerte pro Portion, „Gekocht“ ins Journal.
 // Auswahl und Lernen aus Ablehnungen nach dem Rezeptbuch, app.js (suitable, likeScore, rejectPenalty, timeMode,
 // ideasFor, macroScore, mealBudget; Copyright (c) 2026 JuliaKelp, MIT-Lizenz). Geändert: Ernährungsform, Allergene und
-// Ziele kommen aus core/profile.js; Vorrat, Mangel-Bonus und Vorkoch-Tipps folgen in späteren Schritten (0.2.3, 0.3.0);
+// Ziele kommen aus core/profile.js; Vorrat, Mangel-Bonus und Vorkoch-Tipps folgen in späteren Schritten (0.2.4, 0.3.0);
 // keine Stempel/XP (Level-System bis nach Phase 5 draußen). Speicher nur über core/store.js (Schlüssel tt_recipes).
 import * as store from '../../core/store.js';
 import { getGoals, getDiet, setDiet, getWeightGoal, currentWeight } from '../../core/profile.js';
 import { isoDate } from '../../core/format.js';
 import { entriesOf, sumEntries, addEntry, removeEntry, restoreEntry } from '../journal/journal.js';
 import { RECIPES, TASTE_FOODS } from './recipe-data.js';
-import { findFood, parseIngredient, nutrientsOfText, gramsOfText, addNutrients, emptyNutrients, scaleIngredient, gramsOf, nutrientsFor } from './ingredients.js';
+import { findFood, allergensOfText, parseIngredient, nutrientsOfText, gramsOfText, addNutrients, emptyNutrients, scaleIngredient, gramsOf, nutrientsFor } from './ingredients.js';
 
 store.define('recipes', {
   started: false,       // kurzer Start (Ernährung, Geschmack, Mahlzeiten) erledigt
@@ -29,8 +29,11 @@ export const KCAL_FALLBACK = 2000;
 // Rezept-Ernährungsform → erlaubt bei Profil-Form
 const DIET_ALLOWS = { vegan: ['vegan'], vegetarian: ['vegan', 'vegetarisch'], all: ['vegan', 'vegetarisch', 'fisch', 'fleisch'] };
 // Allergene der Rezepte → LMIV-Codes im Profil
-export const ALLERGEN_CODES = { gluten: ['gl'], laktose: ['mi'], ei: ['ei'], nuesse: ['nu', 'er'], soja: ['so'], fisch: ['fi'] };
-export const ALLERGEN_NAMES = { gl: 'Gluten', mi: 'Milch/Laktose', ei: 'Ei', nu: 'Schalenfrüchte', er: 'Erdnuss', so: 'Soja', fi: 'Fisch', kr: 'Krebstiere', we: 'Weichtiere', se: 'Sellerie', sf: 'Senf', sa: 'Sesam', lu: 'Lupine' };
+// Rezept-Allergen → Profil-Codes (LMIV Anhang II, 14 Hauptallergene). „nuesse“ fasst wie im Rezeptbuch Schalenfrüchte
+// und Erdnuss zusammen; deshalb sperrt jedes der beiden Häkchen alle Nuss-Rezepte.
+export const ALLERGEN_CODES = { gluten: ['gl'], laktose: ['mi'], ei: ['ei'], nuesse: ['nu', 'er'], soja: ['so'], fisch: ['fi'],
+  krebstiere: ['kr'], weichtiere: ['we'], sellerie: ['se'], senf: ['sf'], sesam: ['sa'], sulfite: ['su'], lupine: ['lu'] };
+export const ALLERGEN_NAMES = { gl: 'Gluten', mi: 'Milch/Laktose', ei: 'Ei', nu: 'Schalenfrüchte', er: 'Erdnuss', so: 'Soja', fi: 'Fisch', kr: 'Krebstiere', we: 'Weichtiere', se: 'Sellerie', sf: 'Senf', sa: 'Sesam', su: 'Sulfite', lu: 'Lupine' };
 export const DIET_FORMS = [['all', 'Alles'], ['vegetarian', 'Vegetarisch'], ['vegan', 'Vegan']];
 export const DIET_LABEL = { vegan: 'vegan', vegetarisch: 'vegetarisch', fisch: 'mit Fisch', fleisch: 'mit Fleisch' };
 // Lebensmittel, die bei einer Ernährungsform oder Allergie nicht abgefragt werden
@@ -52,7 +55,16 @@ export function recipeNutrients(r) {
   nutCache.set(r.id, n);
   return n;
 }
-export const clearNutrientCache = () => nutCache.clear();
+const algCache = new Map();
+/** Allergene eines Rezepts: Angabe im Rezept plus Ableitung aus den Zutatenzeilen (eigene Rezepte: gespeichert). */
+export function allergensOf(r) {
+  if (r.own) return r.allergens || [];
+  if (algCache.has(r.id)) return algCache.get(r.id);
+  const a = [...new Set([...(r.allergens || []), ...(r.ingredients || []).flatMap(allergensOfText)])];
+  algCache.set(r.id, a);
+  return a;
+}
+export const clearNutrientCache = () => { nutCache.clear(); algCache.clear(); };
 export const kcalOfRecipe = (r) => Math.round(recipeNutrients(r).kcal / 10) * 10;
 export const allRecipes = () => [...rs().own, ...RECIPES];
 export const recipeById = (id) => allRecipes().find((r) => r.id === id) || null;
@@ -121,7 +133,7 @@ export function suitable(r) {
   if (s.rejected[r.id]) return false;
   if (!DIET_ALLOWS[dietForm()].includes(r.diet)) return false;
   const blocked = blockedAllergens();
-  if ((r.allergens || []).some((a) => blocked.includes(a))) return false;
+  if (allergensOf(r).some((a) => blocked.includes(a))) return false;
   const text = textOf(r);
   for (const [food, v] of Object.entries(s.taste)) if (v === 'no' && text.includes(food.toLowerCase())) return false;
   return true;
@@ -300,7 +312,7 @@ export function analyzeOwn(form) {
   const nutrients = lines.reduce((acc, x) => addNutrients(acc, x.n), emptyNutrients());
   const tags = lines.map((x) => x.food && x.food.diet).filter(Boolean);
   const diet = tags.includes('fleisch') ? 'fleisch' : tags.includes('fisch') ? 'fisch' : tags.includes('tierisch') ? 'vegetarisch' : 'vegan';
-  const allergens = [...new Set(lines.flatMap((x) => (x.food && x.food.allergens) || []))];
+  const allergens = [...new Set(lines.flatMap((x) => allergensOfText(x.row.name)))];
   return { portions, lines, nutrients, total: nutrients.kcal, perPortion: nutrients.kcal / portions, unknown: lines.filter((x) => !x.known), diet, allergens };
 }
 /** Prüft und speichert ein eigenes Rezept (neu oder geändert). Gibt das Rezept zurück. */

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { MemoryStorage } from './helpers.js';
-import { prepareIngredients, parseIngredient, scaleIngredient, nutrientsOfText, gramsOfText, findFood } from '../js/features/recipes/ingredients.js';
+import { prepareIngredients, allergensOfText, parseIngredient, scaleIngredient, nutrientsOfText, gramsOfText, findFood } from '../js/features/recipes/ingredients.js';
 import { RECIPES } from '../js/features/recipes/recipe-data.js';
 import * as R from '../js/features/recipes/recipes.js';
 import { setDiet, setGoal } from '../js/core/profile.js';
@@ -120,4 +120,27 @@ test('Eigenes Rezept: Rechnung, unbekannte Zutat mit kcal/100 g, Ernährungsform
   R.restoreOwn(gone); assert.ok(R.recipeById(r.id));
   assert.throws(() => R.saveOwn({ ...form, name: ' ' }), /Namen/);
   assert.throws(() => R.saveOwn({ ...form, rows: [] }), /Zutat/);
+});
+
+test('Allergene: alle 14 Hauptallergene nach LMIV Anhang II wählbar und ableitbar', () => {
+  fresh(); prepareIngredients((id) => byId.get(id) || null);
+  assert.equal(Object.keys(R.ALLERGEN_NAMES).length, 14);
+  assert.ok(Object.values(R.ALLERGEN_CODES).flat().length === 14, 'jeder Profil-Code gehört zu einem Rezept-Allergen');
+  assert.equal(R.ALLERGEN_NAMES.su, 'Sulfite');
+  assert.deepEqual(allergensOfText('3 EL Hummus'), ['sesam']);
+  assert.deepEqual(allergensOfText('300 ml Gemüsebrühe'), ['sellerie']);
+  assert.deepEqual(allergensOfText('100 g Garnelen'), ['krebstiere']);
+  assert.ok(allergensOfText('1 EL Balsamico-Essig').includes('sulfite'));
+  assert.ok(allergensOfText('1 TL Senf').includes('senf'));
+  assert.deepEqual(allergensOfText('1 Prise Muskatnuss'), [], 'Muskatnuss ist keine Schalenfrucht');
+  assert.deepEqual(allergensOfText('200 ml Wasser'), [], 'Wasser ist keine Brühe');
+  const hummus = RECIPES.find((r) => r.ingredients.some((l) => /hummus/i.test(l)));
+  assert.ok(R.suitable(hummus));
+  setDiet({ allergens: ['sa'] });
+  assert.ok(!R.suitable(hummus), 'Sesam sperrt Hummus-Rezepte');
+  setDiet({ allergens: ['se'] });
+  assert.ok(RECIPES.filter((r) => r.ingredients.some((l) => /brühe/i.test(l))).every((r) => !R.suitable(r)), 'Sellerie sperrt Brühe');
+  setDiet({ allergens: [] });
+  const a = R.analyzeOwn({ name: 'x', portions: 1, time: 5, meals: ['lunch'], steps: '', rows: [{ amount: '1', unit: 'tl', name: 'Senf' }, { amount: '20', unit: 'g', name: 'Rosinen' }] });
+  assert.ok(a.allergens.includes('senf') && a.allergens.includes('sulfite'), 'eigene Rezepte leiten mit ab');
 });
