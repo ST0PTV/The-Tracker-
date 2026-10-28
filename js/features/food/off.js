@@ -16,14 +16,14 @@ const SWEETENERS = {
   'en:e954': 'Saccharin', 'en:e955': 'Sucralose', 'en:e957': 'Thaumatin', 'en:e959': 'Neohesperidin', 'en:e960': 'Steviol', 'en:e961': 'Neotam',
   'en:e962': 'Aspartam-Acesulfam', 'en:e964': 'Polyglycitol', 'en:e965': 'Maltit', 'en:e966': 'Lactit', 'en:e967': 'Xylit', 'en:e968': 'Erythrit', 'en:e969': 'Advantam'
 };
-// Allergene nach LMIV Anhang II (ohne Sulfite), Kürzel wie im BLS-Auszug
+// Allergene nach LMIV Anhang II (14 Hauptallergene), Kürzel wie im BLS-Auszug; „su“ (Sulfite) kommt nur aus Open Food Facts
 export const ALLERGENS = [
   ['gl', 'Gluten'], ['mi', 'Milch/Laktose'], ['ei', 'Ei'], ['nu', 'Schalenfrüchte'], ['er', 'Erdnuss'], ['so', 'Soja'],
-  ['fi', 'Fisch'], ['kr', 'Krebstiere'], ['we', 'Weichtiere'], ['se', 'Sellerie'], ['sf', 'Senf'], ['sa', 'Sesam'], ['lu', 'Lupine']
+  ['fi', 'Fisch'], ['kr', 'Krebstiere'], ['we', 'Weichtiere'], ['se', 'Sellerie'], ['sf', 'Senf'], ['sa', 'Sesam'], ['su', 'Sulfite'], ['lu', 'Lupine']
 ];
 const OFF_ALLERGEN = {
   'en:gluten': 'gl', 'en:milk': 'mi', 'en:eggs': 'ei', 'en:nuts': 'nu', 'en:peanuts': 'er', 'en:soybeans': 'so', 'en:fish': 'fi',
-  'en:crustaceans': 'kr', 'en:molluscs': 'we', 'en:celery': 'se', 'en:mustard': 'sf', 'en:sesame-seeds': 'sa', 'en:lupin': 'lu'
+  'en:crustaceans': 'kr', 'en:molluscs': 'we', 'en:celery': 'se', 'en:mustard': 'sf', 'en:sesame-seeds': 'sa', 'en:sulphur-dioxide-and-sulphites': 'su', 'en:lupin': 'lu'
 };
 
 /** Ernährungsform (2 vegan, 1 vegetarisch, 0 mit Fleisch/Fisch, null unbekannt) und Allergene aus Open Food Facts. */

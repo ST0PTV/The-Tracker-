@@ -120,6 +120,29 @@ function norm(s) {
 }
 
 // Findet eine Zutat: exakter Name, Alias, dann Teilwort
+// Allergene aus dem Zeilentext (0.2.2): Die Rezeptbuch-Daten markieren nur Gluten, Laktose, Ei, Nüsse, Soja und Fisch.
+// Die übrigen Hauptallergene nach LMIV Anhang II leitet die App aus Stichwörtern ab – vorsichtig (Brühe zählt als
+// Sellerie, Essig und Trockenobst als Sulfite), weil die Packung abweichen kann. Schätzung, kein Ersatz für die Packung.
+export const ALLERGEN_WORDS = {
+  sellerie: /sellerie|brühe|bruehe/,
+  senf: /senf/,
+  sesam: /sesam|tahin|hummus/,
+  krebstiere: /garnele|shrimp|krabbe|hummer|languste|scampi|krebs/,
+  weichtiere: /muschel|tintenfisch|kalmar|calamar|oktopus|sepia|schnecke/,
+  lupine: /lupine/,
+  sulfite: /wein|rosine|trockenobst|getrocknet|dörr|essig|balsamico|sauerkraut/,
+  soja: /soja|edamame|miso/,
+  nuesse: /(?<!muskat|kokos)nuss|nüsse|mandel|cashew|pistazie|pekan|macadamia|paranuss/
+};
+/** Allergene einer Zutatenzeile: aus der erkannten Zutat und aus Stichwörtern im Text. */
+export function allergensOfText(text) {
+  const t = String(text || '').toLowerCase();
+  const food = findFood(parseIngredient(text).name || t);
+  const out = new Set((food && food.allergens) || []);
+  for (const [a, re] of Object.entries(ALLERGEN_WORDS)) if (re.test(t)) out.add(a);
+  return [...out];
+}
+
 export function findFood(name) {
   const n = norm(name);
   if (!n) return null;

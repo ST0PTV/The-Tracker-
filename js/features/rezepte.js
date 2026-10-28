@@ -1,6 +1,6 @@
 // Reiter „Rezepte“ mit Unterleiste (Rezepte · Woche · Einkauf). Entwurf A „Liste“ (Nutzerwahl 2026-10-27):
 // oben Vorschläge für die nächste Mahlzeit, darunter Suche, Filter und Katalog. Aufbau nach viewRezepte im
-// Rezeptbuch (JuliaKelp, MIT). Woche und Einkauf folgen in 0.2.2 / 0.2.3.
+// Rezeptbuch (JuliaKelp, MIT). Woche und Einkauf folgen in 0.2.3 / 0.2.4.
 import { h } from '../core/util.js';
 import { icon } from '../core/icons.js';
 import { pageHead, comingSoon } from '../core/ui.js';
@@ -94,7 +94,7 @@ const placeholder = (path, title, what) => () => h('div', {}, pageHead(title), s
 
 export const rezepteRoutes = {
   '/rezepte': rezepteView,
-  '/rezepte/woche': placeholder('/rezepte/woche', 'Woche', 'Wochenplan (0.2.2)'),
-  '/rezepte/einkauf': placeholder('/rezepte/einkauf', 'Einkauf', 'Einkauf & Vorrat (0.2.2 / 0.2.3)'),
+  '/rezepte/woche': placeholder('/rezepte/woche', 'Woche', 'Wochenplan (0.2.3)'),
+  '/rezepte/einkauf': placeholder('/rezepte/einkauf', 'Einkauf', 'Einkauf & Vorrat (0.2.3 / 0.2.4)'),
   ...recipeRoutes, ...ownRoutes, ...startRoutes
 };

@@ -1,6 +1,6 @@
 // Kurzer Start beim ersten Öffnen der Rezepte (Nutzerwunsch 2026-10-27; eine große Einführung folgt später) und
 // dieselben Einstellungen unter „Ich → Ernährung & Rezepte“. Nach viewStart1–3 im Rezeptbuch (JuliaKelp, MIT), ohne
-// Ginger, Name, Alter und Regel-Frage (Körperdaten liegen unter „Schlaf & Körper“, Zyklus kommt in 0.2.4).
+// Ginger, Name, Alter und Regel-Frage (Körperdaten liegen unter „Schlaf & Körper“, Zyklus kommt in 0.2.5).
 // Ernährungsform und Allergene speichert core/profile.js (diet), alles andere recipes.js.
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
@@ -24,7 +24,7 @@ function dietCards(rerender) {
       h('span', { class: 'label' }, 'Was verträgst du nicht?'),
       h('div', { class: 'chips', role: 'group', 'aria-label': 'Allergene' }, ...Object.entries(ALLERGEN_NAMES).map(([k, l]) => h('button', {
         class: `chip${codes.includes(k) ? ' on' : ''}`, type: 'button', 'aria-pressed': codes.includes(k) ? 'true' : 'false', onclick: () => { toggleAllergen(k); rerender(); } }, l))),
-      h('p', { class: 'small muted' }, 'Rezepte mit diesen Allergenen schlägt die App nicht vor. Die Angaben der Rezepte sind abgeleitet und ersetzen keinen Blick auf die Verpackung.')),
+      h('p', { class: 'small muted' }, 'Rezepte mit diesen Allergenen schlägt die App nicht vor. Die Angaben sind aus den Zutaten geschätzt (z.\u00a0B. Brühe zählt als Sellerie, Essig als Sulfite) und ersetzen keinen Blick auf die Verpackung.')),
     h('p', { class: 'small muted page-note' }, g?.goal ? `Geplant wird mit deinem Tagesziel ${fmt(g.goal)} kcal. ` : 'Noch kein Tagesziel – bis dahin rechnet die Auswahl mit 2.000 kcal. ',
       h('a', { class: 'link', href: '#/ich/ziel' }, g?.goal ? 'Tagesziel ändern' : 'Tagesziel festlegen'))
   ];
