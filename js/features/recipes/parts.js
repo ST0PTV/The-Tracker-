@@ -29,12 +29,21 @@ export function macroText(r, f = 1) {
   return `E ${fmt(n.protein * f)} · KH ${fmt(n.kh * f)} · F ${fmt(n.fett * f)} g`;
 }
 
-export const recipeHref = (r, meal = null) => `#/rezepte/rezept?id=${encodeURIComponent(r.id)}${meal ? `&m=${meal}` : ''}`;
+export const recipeHref = (r, meal = null, factor = 1) => `#/rezepte/rezept?id=${encodeURIComponent(r.id)}${meal ? `&m=${meal}` : ''}${factor !== 1 ? `&f=${factor}` : ''}`;
+/** „1,3“ für Mengenfaktoren. */
+export const fmtFactor = (f) => String(Math.round(f * 100) / 100).replace('.', ',');
+
+const SUB = [['/rezepte', 'Rezepte'], ['/rezepte/woche', 'Woche'], ['/rezepte/einkauf', 'Einkauf']];
+/** Unterleiste Rezepte · Woche · Einkauf. */
+export function subnav(active) {
+  return h('nav', { class: 'seg rz-sub', 'aria-label': 'Rezepte-Bereiche' },
+    ...SUB.map(([path, label]) => h('a', { href: `#${path}`, 'aria-current': path === active ? 'page' : false }, label)));
+}
 
 /** Zeile in Listen: Bild, Name, Zeit · kcal · Makros, Herz bei Favoriten. */
-export function recipeRow(r, { meal = null, mode = null, extra = null } = {}) {
+export function recipeRow(r, { meal = null, mode = null, extra = null, factor = 1 } = {}) {
   const time = mode === 'prep' ? `am Vorabend ${r.time} Min` : mode === 'vorkochen' ? 'vorkochen' : `${r.time} Min`;
-  return h('a', { class: 'rz-row', href: recipeHref(r, meal) },
+  return h('a', { class: 'rz-row', href: recipeHref(r, meal, factor) },
     thumb(r),
     h('span', { class: 't' }, h('b', {}, r.name),
       h('small', {}, `${time} · ${fmt(kcalOfRecipe(r))} kcal · ${macroText(r)}`),

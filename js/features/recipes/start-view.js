@@ -1,6 +1,6 @@
 // Kurzer Start beim ersten Öffnen der Rezepte (Nutzerwunsch 2026-10-27; eine große Einführung folgt später) und
 // dieselben Einstellungen unter „Ich → Ernährung & Rezepte“. Nach viewStart1–3 im Rezeptbuch (JuliaKelp, MIT), ohne
-// Ginger, Name, Alter und Regel-Frage (Körperdaten liegen unter „Schlaf & Körper“, Zyklus kommt in 0.2.5).
+// Ginger, Name, Alter und Regel-Frage (Körperdaten liegen unter „Schlaf & Körper“, Zyklus kommt in 0.2.6).
 // Ernährungsform und Allergene speichert core/profile.js (diet), alles andere recipes.js.
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
