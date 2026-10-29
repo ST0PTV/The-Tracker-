@@ -1618,5 +1618,7 @@ export const TASTE_FOODS = [
   'Nudeln', 'Reis', 'Kartoffeln', 'Süßkartoffel', 'Haferflocken', 'Brot',
   'Linsen', 'Kichererbsen', 'Bohnen', 'Tofu', 'Eier', 'Käse', 'Feta', 'Joghurt', 'Quark',
   'Tomaten', 'Paprika', 'Brokkoli', 'Spinat', 'Zucchini', 'Pilze', 'Gurke', 'Avocado', 'Mais',
-  'Banane', 'Beeren', 'Hähnchen', 'Lachs', 'Thunfisch'
+  'Banane', 'Beeren', 'Hähnchen', 'Lachs', 'Thunfisch',
+  // ab 0.2.4 (neue Fleischrezepte in recipe-data-2.js)
+  'Pute', 'Schweinefleisch', 'Rindfleisch'
 ];
