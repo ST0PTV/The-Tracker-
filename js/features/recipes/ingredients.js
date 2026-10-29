@@ -17,9 +17,9 @@
 
 export const FOODS = [
   // Sättigungsbeilagen
-  { name: 'Nudeln', el: 10, allergens: ['gluten'], group: 'saettigung', aliases: ['spaghetti', 'penne', 'pasta', 'fusilli', 'makkaroni', 'vollkornnudeln'] },
+  { name: 'Nudeln', el: 10, allergens: ['gluten'], group: 'saettigung', aliases: ['spaghetti', 'penne', 'pasta', 'fusilli', 'makkaroni', 'vollkornnudeln', 'lasagneplatten', 'bandnudeln', 'tagliatelle', 'suppennudeln'] },
   { name: 'Gekochter Reis', el: 20, group: 'saettigung', aliases: ['reis gekocht', 'gekochter reis'] },
-  { name: 'Reis', el: 15, group: 'saettigung', aliases: ['basmati', 'jasminreis', 'risottoreis', 'naturreis'] },
+  { name: 'Reis', el: 15, group: 'saettigung', aliases: ['basmati', 'jasminreis', 'risottoreis', 'naturreis', 'milchreis', 'basmatireis'] },
   { name: 'Kartoffeln', piece: 100, group: 'saettigung', aliases: ['kartoffel'] },
   { name: 'Süßkartoffel', piece: 300, group: 'saettigung', aliases: ['süßkartoffeln', 'suesskartoffel'] },
   { name: 'Haferflocken', el: 8, allergens: ['gluten'], group: 'saettigung', aliases: ['hafer'] },
@@ -29,15 +29,42 @@ export const FOODS = [
   { name: 'Couscous', el: 12, allergens: ['gluten'], group: 'saettigung', aliases: ['bulgur'] },
   { name: 'Quinoa', el: 12, group: 'saettigung' },
   { name: 'Mehl', el: 10, allergens: ['gluten'], group: 'saettigung', aliases: ['weizenmehl', 'dinkelmehl'] },
+  // Ab 0.2.4 (mehr Rezepte; Zuordnung zum BLS 4.0 unten in BLS_CODES)
+  { name: 'Bulgur', el: 12, allergens: ['gluten'], group: 'saettigung' },
+  { name: 'Gnocchi', allergens: ['gluten'], group: 'saettigung' },
+  { name: 'Spätzle', diet: 'tierisch', allergens: ['gluten', 'ei'], group: 'saettigung', aliases: ['frische spätzle', 'eierspätzle'] },
+  { name: 'Polenta', el: 12, group: 'saettigung', aliases: ['maisgrieß'] },
+  { name: 'Hirse', el: 12, group: 'saettigung' },
+  { name: 'Buchweizen', el: 12, group: 'saettigung' },
+  { name: 'Reisnudeln', group: 'saettigung', aliases: ['reisbandnudeln'] },
+  { name: 'Glasnudeln', group: 'saettigung' },
+  { name: 'Grieß', el: 12, allergens: ['gluten'], group: 'saettigung', aliases: ['weichweizengrieß', 'hartweizengrieß'] },
+  { name: 'Paniermehl', el: 8, allergens: ['gluten'], group: 'saettigung', aliases: ['semmelbrösel'] },
+  { name: 'Fladenbrot', piece: 400, allergens: ['gluten'], group: 'saettigung', aliases: ['fladenbrote', 'türkisches fladenbrot'] },
+  { name: 'Knäckebrot', piece: 10, allergens: ['gluten'], group: 'saettigung' },
+  { name: 'Baguette', piece: 250, allergens: ['gluten'], group: 'saettigung', aliases: ['ciabatta'] },
 
   // Hülsenfrüchte und Eiweiß
   { name: 'Linsen', el: 12, group: 'eiweiss', aliases: ['rote linsen', 'berglinsen'] },
   { name: 'Kichererbsen', group: 'eiweiss', aliases: ['kichererbsen dose'] },
   { name: 'Kidneybohnen', group: 'eiweiss', aliases: ['bohnen', 'weiße bohnen', 'schwarze bohnen'] },
   { name: 'Tofu', allergens: ['soja'], group: 'eiweiss', aliases: ['räuchertofu'] },
+  { name: 'Edamame', allergens: ['soja'], group: 'eiweiss' },
+  { name: 'Sojaschnetzel', allergens: ['soja'], group: 'eiweiss', aliases: ['sojagranulat'] },
   { name: 'Ei', piece: 60, diet: 'tierisch', allergens: ['ei'], group: 'eiweiss', aliases: ['eier'] },
-  { name: 'Hähnchen', diet: 'fleisch', group: 'eiweiss', aliases: ['hähnchenbrust', 'hühnchen', 'huhn', 'putenbrust', 'pute'] },
-  { name: 'Hackfleisch', diet: 'fleisch', group: 'eiweiss', aliases: ['hack', 'rinderhack', 'gemischtes hack'] },
+  { name: 'Hähnchen', diet: 'fleisch', group: 'eiweiss', aliases: ['hähnchenbrust', 'hühnchen', 'huhn', 'hähnchenbrustfilet', 'hähnchenfleisch'] },
+  { name: 'Pute', diet: 'fleisch', group: 'eiweiss', aliases: ['putenbrust', 'putenschnitzel', 'putenfleisch', 'putengeschnetzeltes'] },
+  { name: 'Hackfleisch', diet: 'fleisch', group: 'eiweiss', aliases: ['hack', 'gemischtes hack'] },
+  { name: 'Rinderhack', diet: 'fleisch', group: 'eiweiss', aliases: ['rinderhackfleisch'] },
+  { name: 'Schweinefilet', diet: 'fleisch', group: 'eiweiss', aliases: ['schweinelende', 'schweinemedaillons'] },
+  { name: 'Schweineschnitzel', diet: 'fleisch', group: 'eiweiss', aliases: ['schnitzel', 'schweinefleisch', 'schweinegeschnetzeltes'] },
+  { name: 'Schweinegulasch', diet: 'fleisch', group: 'eiweiss' },
+  { name: 'Rindergulasch', diet: 'fleisch', group: 'eiweiss', aliases: ['gulaschfleisch'] },
+  { name: 'Kasseler', diet: 'fleisch', group: 'eiweiss', aliases: ['kassler'] },
+  { name: 'Bratwurst', piece: 100, diet: 'fleisch', group: 'fett', aliases: ['bratwürste', 'rostbratwurst'] },
+  { name: 'Wiener Würstchen', piece: 50, diet: 'fleisch', group: 'fett', aliases: ['wiener', 'würstchen', 'wienerle'] },
+  { name: 'Salami', diet: 'fleisch', group: 'fett' },
+  { name: 'Leberkäse', diet: 'fleisch', group: 'fett', aliases: ['fleischkäse'] },
   { name: 'Rindfleisch', diet: 'fleisch', group: 'eiweiss', aliases: ['rind', 'steak'] },
   { name: 'Schinken', diet: 'fleisch', group: 'eiweiss', aliases: ['kochschinken'] },
   { name: 'Speck', diet: 'fleisch', group: 'fett', aliases: ['bacon', 'speckwürfel'] },
@@ -48,7 +75,7 @@ export const FOODS = [
   // Milchprodukte
   { name: 'Milch', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss', aliases: ['milch 1,5%', 'vollmilch'] },
   { name: 'Haferdrink', allergens: ['gluten'], group: 'sonst', aliases: ['hafermilch', 'pflanzendrink', 'sojadrink', 'mandeldrink'] },
-  { name: 'Joghurt', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss', aliases: ['naturjoghurt', 'griechischer joghurt', 'skyr'] },
+  { name: 'Joghurt', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss', aliases: ['naturjoghurt', 'griechischer joghurt'] },
   { name: 'Magerquark', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss', aliases: ['quark'] },
   { name: 'Frischkäse', diet: 'tierisch', allergens: ['laktose'], group: 'fett' },
   { name: 'Feta', diet: 'tierisch', allergens: ['laktose'], group: 'fett', aliases: ['schafskäse', 'hirtenkäse'] },
@@ -58,6 +85,12 @@ export const FOODS = [
   { name: 'Sahne', diet: 'tierisch', allergens: ['laktose'], group: 'fett', aliases: ['schlagsahne', 'kochsahne'] },
   { name: 'Schmand', diet: 'tierisch', allergens: ['laktose'], group: 'fett', aliases: ['saure sahne', 'crème fraîche', 'creme fraiche'] },
   { name: 'Butter', el: 12, diet: 'tierisch', allergens: ['laktose'], group: 'fett' },
+  { name: 'Skyr', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss' },
+  { name: 'Körniger Frischkäse', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss', aliases: ['hüttenkäse', 'cottage cheese'] },
+  { name: 'Ricotta', diet: 'tierisch', allergens: ['laktose'], group: 'fett' },
+  { name: 'Halloumi', piece: 225, diet: 'tierisch', allergens: ['laktose'], group: 'fett', aliases: ['grillkäse'] },
+  { name: 'Buttermilch', diet: 'tierisch', allergens: ['laktose'], group: 'eiweiss' },
+  { name: 'Sojajoghurt', allergens: ['soja'], group: 'eiweiss', aliases: ['soja-joghurt', 'joghurtalternative'] },
 
   // Fette, Süßes, Saaten
   { name: 'Öl', el: 10, group: 'fett', aliases: ['olivenöl', 'rapsöl', 'sonnenblumenöl', 'sesamöl'] },
@@ -74,6 +107,16 @@ export const FOODS = [
   { name: 'Honig', el: 20, diet: 'tierisch', group: 'suess' },
   { name: 'Ahornsirup', el: 20, group: 'suess', aliases: ['sirup', 'agavendicksaft'] },
   { name: 'Schokolade', group: 'suess', aliases: ['zartbitterschokolade', 'schoko'] },
+  { name: 'Tahin', el: 15, allergens: ['sesam'], group: 'fett', aliases: ['sesammus', 'tahini'] },
+  { name: 'Sesam', el: 9, allergens: ['sesam'], group: 'fett', aliases: ['sesamsamen'] },
+  { name: 'Kürbiskerne', el: 9, group: 'fett' },
+  { name: 'Sonnenblumenkerne', el: 9, group: 'fett' },
+  { name: 'Erdnüsse', el: 9, allergens: ['nuesse'], group: 'fett', aliases: ['erdnuss'] },
+  { name: 'Kokosraspeln', el: 5, group: 'fett', aliases: ['kokosflocken'] },
+  { name: 'Oliven', piece: 4, group: 'fett', aliases: ['schwarze oliven', 'kalamata-oliven'] },
+  { name: 'Konfitüre', el: 20, group: 'suess', aliases: ['marmelade', 'fruchtaufstrich'] },
+  { name: 'Kakao', el: 6, group: 'suess', aliases: ['kakaopulver', 'backkakao'] },
+  { name: 'Backpulver', el: 10, group: 'sonst' },
 
   // Gemüse und Obst
   { name: 'Tomaten', piece: 100, group: 'gemuese', aliases: ['tomate', 'kirschtomaten', 'cherrytomaten'] },
@@ -99,12 +142,39 @@ export const FOODS = [
   { name: 'Apfel', piece: 150, group: 'suess', aliases: ['äpfel'] },
   { name: 'Beeren', group: 'suess', aliases: ['heidelbeeren', 'himbeeren', 'erdbeeren', 'tk-beeren'] },
   { name: 'Zitrone', piece: 100, group: 'sonst', aliases: ['zitronensaft', 'limette'] },
+  { name: 'Lauch', piece: 200, group: 'gemuese', aliases: ['porree', 'lauchstange'] },
+  { name: 'Weißkohl', group: 'gemuese', aliases: ['spitzkohl'] },
+  { name: 'Rotkohl', group: 'gemuese', aliases: ['blaukraut'] },
+  { name: 'Sauerkraut', group: 'gemuese' },
+  { name: 'Grüne Bohnen', group: 'gemuese', aliases: ['prinzessbohnen', 'brechbohnen', 'buschbohnen'] },
+  { name: 'Rote Bete', piece: 100, group: 'gemuese', aliases: ['rote beete', 'rote rübe'] },
+  { name: 'Fenchel', piece: 250, group: 'gemuese', aliases: ['fenchelknolle'] },
+  { name: 'Kohlrabi', piece: 300, group: 'gemuese' },
+  { name: 'Spargel', group: 'gemuese', aliases: ['grüner spargel'] },
+  { name: 'Radieschen', group: 'gemuese' },
+  { name: 'Rosenkohl', group: 'gemuese' },
+  { name: 'Grünkohl', group: 'gemuese' },
+  { name: 'Wirsing', group: 'gemuese' },
+  { name: 'Pak Choi', piece: 200, group: 'gemuese' },
+  { name: 'Pastinake', piece: 150, group: 'gemuese', aliases: ['pastinaken'] },
+  { name: 'Knollensellerie', allergens: ['sellerie'], group: 'gemuese', aliases: ['sellerie', 'staudensellerie'] },
+  { name: 'Ingwer', el: 6, group: 'gemuese', aliases: ['ingwerwurzel'] },
+  { name: 'Orange', piece: 150, group: 'suess', aliases: ['orangen', 'apfelsine'] },
+  { name: 'Mango', piece: 250, group: 'suess' },
+  { name: 'Ananas', group: 'suess' },
+  { name: 'Birne', piece: 160, group: 'suess', aliases: ['birnen'] },
+  { name: 'Kiwi', piece: 75, group: 'suess' },
+  { name: 'Weintrauben', group: 'suess', aliases: ['trauben'] },
+  { name: 'Datteln', piece: 8, group: 'suess', aliases: ['dattel'] },
+  { name: 'Rosinen', el: 10, group: 'suess', aliases: ['sultaninen'] },
+  { name: 'Pflaumen', piece: 35, group: 'suess', aliases: ['zwetschgen', 'pflaume'] },
+  { name: 'Apfelmus', el: 15, group: 'suess' },
 
   // Fast ohne Kalorien
   { name: 'Salsa', el: 15, group: 'sonst', aliases: ['tomatensalsa'] },
   { name: 'Gemüsebrühe', group: 'sonst', aliases: ['brühe', 'wasser'] },
   { name: 'Sojasauce', el: 15, allergens: ['soja', 'gluten'], group: 'sonst', aliases: ['sojasoße'] },
-  { name: 'Gewürze', kcal: 0, el: 5, group: 'sonst', aliases: ['salz', 'pfeffer', 'curry', 'currypulver', 'paprikapulver', 'zimt', 'oregano', 'kräuter', 'petersilie', 'schnittlauch', 'basilikum', 'senf', 'essig'] }
+  { name: 'Gewürze', kcal: 0, el: 5, group: 'sonst', aliases: ['salz', 'pfeffer', 'curry', 'currypulver', 'paprikapulver', 'zimt', 'oregano', 'kräuter', 'petersilie', 'schnittlauch', 'basilikum', 'senf', 'essig', 'kreuzkümmel', 'chiliflocken', 'chilipulver', 'chili', 'majoran', 'thymian', 'rosmarin', 'kümmel', 'muskat', 'kurkuma', 'garam masala', 'koriander', 'dill', 'minze', 'lorbeerblatt', 'zimtpulver', 'vanille', 'gewürze', 'kräuter der provence', 'paprika edelsüß', 'rauchpaprika'] }
 ];
 
 export const UNITS = [
@@ -255,6 +325,76 @@ const BLS_CODES = {
   'Salsa': 'X3A7040', // Spanische Sauce (Salsa)
   'Gemüsebrühe': 'X416243', // Gemüsebrühe
   'Sojasauce': 'R143000', // Sojasauce/Sojasoße
+  // Ab 0.2.4 – Codes in data/bls.json nachgesehen (2026-10-29)
+  'Bulgur': 'C119100', // Bulgur (Hartweizen) roh
+  'Gnocchi': 'K270000', // Gnocchi roh
+  'Spätzle': 'X711512', // Eier-Frischteigwaren Spätzle, roh (frisch, Kühlregal)
+  'Polenta': 'C346000', // Mais Grieß
+  'Hirse': 'C332000', // Hirse roh
+  'Buchweizen': 'C322000', // Buchweizen roh
+  'Reisnudeln': 'C559000', // Reisnudeln roh
+  'Glasnudeln': 'H030400', // Glasnudeln aus Mungbohnenstärke, roh
+  'Grieß': 'C219300', // Hartweizen Grieß
+  'Paniermehl': 'B821000', // Paniermehl/Semmelbrösel
+  'Fladenbrot': 'B782100', // Weizenfladenbrot
+  'Knäckebrot': 'B6A2100', // Roggenvollkornknäckebrot
+  'Baguette': 'B781200', // Weizenbaguette
+  'Edamame': 'G750100', // Sojabohne unreif (Edamame) roh
+  'Sojaschnetzel': 'H765000', // Sojaschnetzel/Sojagranulat, trocken
+  'Pute': 'V486100', // Pute Brust, ohne Haut, roh
+  'Rinderhack': 'U010100', // Rind Hackfleisch, roh
+  'Schweinefilet': 'U611100', // Schwein Filet/Lende, roh
+  'Schweineschnitzel': 'U541100', // Schwein Schnitzel (Oberschale) roh
+  'Schweinegulasch': 'U554100', // Schwein Gulasch (Restbug) roh
+  'Rindergulasch': 'U151100', // Rind Gulasch (Bug) roh
+  'Kasseler': 'W510000', // Kasseler, Rohpökelware, geräuchert
+  'Bratwurst': 'W221000', // Rheinische Bratwurst
+  'Wiener Würstchen': 'W211200', // Wiener Würstchen
+  'Salami': 'W140000', // Salami
+  'Leberkäse': 'W233000', // Fleischkäse/Leberkäse fein
+  'Skyr': 'M710100', // Skyr
+  'Körniger Frischkäse': 'M711100', // Körniger Frischkäse < 10 % Fett i. Tr.
+  'Ricotta': 'M741600', // Ricotta
+  'Halloumi': 'M524500', // Halloumi Grillkäse
+  'Buttermilch': 'M150000', // Buttermilch
+  'Sojajoghurt': 'H844000', // Soja-Joghurtalternative ungesüßt
+  'Tahin': 'Q901000', // Tahin (Sesammus)
+  'Sesam': 'H420100', // Sesam
+  'Kürbiskerne': 'H310100', // Kürbiskern
+  'Sonnenblumenkerne': 'H430100', // Sonnenblumenkern
+  'Erdnüsse': 'H110600', // Erdnuss geröstet
+  'Kokosraspeln': 'H150400', // Kokos Fruchtfleisch, geraspelt, getrocknet
+  'Oliven': 'H520800', // Oliven geschwärzt, in Salzlake, abgetropft
+  'Konfitüre': 'S132000', // Konfitüre extra
+  'Kakao': 'S713000', // Kakaopulver stark entölt
+  'Backpulver': 'R421100', // Backpulver
+  'Lauch': 'G470100', // Porree/Lauch, roh
+  'Weißkohl': 'G342100', // Weißkohl roh
+  'Rotkohl': 'G341100', // Rotkohl roh
+  'Sauerkraut': 'G345902', // Sauerkraut Konserve, abgetropft
+  'Grüne Bohnen': 'G710100', // Bohne grün, roh
+  'Rote Bete': 'G613132', // Rote Rübe/Rote Bete, gekocht (vakuumiert)
+  'Fenchel': 'G430100', // Gemüsefenchel roh
+  'Kohlrabi': 'G331100', // Kohlrabi roh
+  'Spargel': 'G450100', // Spargel roh
+  'Radieschen': 'G691100', // Radieschen roh
+  'Rosenkohl': 'G332100', // Rosenkohl roh
+  'Grünkohl': 'G322100', // Grünkohl roh
+  'Wirsing': 'G343100', // Wirsing roh
+  'Pak Choi': 'G324100', // Pak Choi roh
+  'Pastinake': 'G640100', // Pastinake roh
+  'Knollensellerie': 'G660100', // Knollensellerie roh
+  'Ingwer': 'R211200', // Ingwer/Ingwerwurzel, roh
+  'Orange': 'F603100', // Orange roh
+  'Mango': 'F516100', // Mango roh
+  'Ananas': 'F501100', // Ananas roh
+  'Birne': 'F130100', // Birne roh
+  'Kiwi': 'F514100', // Kiwi roh
+  'Weintrauben': 'F310100', // Weintraube roh
+  'Datteln': 'F504400', // Dattel getrocknet
+  'Rosinen': 'F840100', // Rosine/Sultanine
+  'Pflaumen': 'F220100', // Pflaume roh
+  'Apfelmus': 'Y864112', // Apfelmus ungesüßt
 };
 
 // Ohne passenden BLS-Eintrag: Kokosmilch light (fettreduzierte Kokosmilch gibt es im BLS nicht) und Gewürze (in kleinen Mengen vernachlässigt).
@@ -305,9 +445,9 @@ export const ingredientsReady = () => ready;
 export const blsCodeOf = (name) => BLS_CODES[name] || null;
 
 // Gramm pro Handvoll, Dose (abgetropft) und Scheibe
-const HAND = { 'Spinat': 30, 'Beeren': 70, 'Erbsen': 60, 'Salat': 30, 'Gewürze': 10, 'Nüsse': 25, 'Champignons': 50 };
-const DOSE = { 'Kichererbsen': 240, 'Kidneybohnen': 240, 'Passierte Tomaten': 400, 'Tomaten': 400, 'Thunfisch': 150, 'Mais': 140, 'Kokosmilch': 400, 'Kokosmilch light': 400 };
-const SCHEIBE = { 'Brot': 50, 'Toast': 25, 'Käse': 20, 'Schinken': 20 };
+const HAND = { 'Weintrauben': 80, 'Radieschen': 60, 'Grünkohl': 40, 'Spinat': 30, 'Beeren': 70, 'Erbsen': 60, 'Salat': 30, 'Gewürze': 10, 'Nüsse': 25, 'Champignons': 50 };
+const DOSE = { 'Kichererbsen': 240, 'Kidneybohnen': 240, 'Sauerkraut': 500, 'Passierte Tomaten': 400, 'Tomaten': 400, 'Thunfisch': 150, 'Mais': 140, 'Kokosmilch': 400, 'Kokosmilch light': 400 };
+const SCHEIBE = { 'Brot': 50, 'Toast': 25, 'Käse': 20, 'Schinken': 20, 'Salami': 8, 'Leberkäse': 100, 'Ananas': 60, 'Knäckebrot': 10 };
 
 export const NUTRIENTS = [
   { id: 'protein', name: 'Eiweiß' },

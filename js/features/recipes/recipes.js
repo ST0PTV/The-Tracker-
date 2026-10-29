@@ -8,6 +8,7 @@ import { getGoals, getDiet, setDiet, getWeightGoal, currentWeight } from '../../
 import { isoDate } from '../../core/format.js';
 import { entriesOf, sumEntries, addEntry, removeEntry, restoreEntry } from '../journal/journal.js';
 import { RECIPES, TASTE_FOODS } from './recipe-data.js';
+import { RECIPES_2 } from './recipe-data-2.js';
 import { findFood, allergensOfText, parseIngredient, nutrientsOfText, gramsOfText, addNutrients, emptyNutrients, scaleIngredient, gramsOf, nutrientsFor } from './ingredients.js';
 
 store.define('recipes', {
@@ -37,7 +38,8 @@ export const ALLERGEN_NAMES = { gl: 'Gluten', mi: 'Milch/Laktose', ei: 'Ei', nu:
 export const DIET_FORMS = [['all', 'Alles'], ['vegetarian', 'Vegetarisch'], ['vegan', 'Vegan']];
 export const DIET_LABEL = { vegan: 'vegan', vegetarisch: 'vegetarisch', fisch: 'mit Fisch', fleisch: 'mit Fleisch' };
 // Lebensmittel, die bei einer Ernährungsform oder Allergie nicht abgefragt werden
-const HIDE_FOR_DIET = { vegan: ['Eier', 'Käse', 'Feta', 'Joghurt', 'Quark', 'Hähnchen', 'Lachs', 'Thunfisch'], vegetarian: ['Hähnchen', 'Lachs', 'Thunfisch'], all: [] };
+const MEAT = ['Hähnchen', 'Pute', 'Schweinefleisch', 'Rindfleisch'];
+const HIDE_FOR_DIET = { vegan: ['Eier', 'Käse', 'Feta', 'Joghurt', 'Quark', ...MEAT, 'Lachs', 'Thunfisch'], vegetarian: [...MEAT, 'Lachs', 'Thunfisch'], all: [] };
 const HIDE_FOR_ALLERGY = { ei: ['Eier'], mi: ['Käse', 'Feta', 'Joghurt', 'Quark'], fi: ['Lachs', 'Thunfisch'], so: ['Tofu'] };
 const changed = () => { if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('tt-recipes')); };
 
@@ -66,7 +68,9 @@ export function allergensOf(r) {
 }
 export const clearNutrientCache = () => { nutCache.clear(); algCache.clear(); };
 export const kcalOfRecipe = (r) => Math.round(recipeNutrients(r).kcal / 10) * 10;
-export const allRecipes = () => [...rs().own, ...RECIPES];
+// Rezeptbuch (96) und eigene Fassungen ab 0.2.4 (recipe-data-2.js)
+const BOOK = [...RECIPES, ...RECIPES_2];
+export const allRecipes = () => [...rs().own, ...BOOK];
 export const recipeById = (id) => allRecipes().find((r) => r.id === id) || null;
 export const isFav = (r) => !!rs().favorites[r.id];
 
