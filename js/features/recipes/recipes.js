@@ -1,7 +1,7 @@
 // Rezepte: eigener Zustand, Auswahl passender Rezepte, Nährwerte pro Portion, „Gekocht“ ins Journal.
 // Auswahl und Lernen aus Ablehnungen nach dem Rezeptbuch, app.js (suitable, likeScore, rejectPenalty, timeMode,
 // ideasFor, macroScore, mealBudget; Copyright (c) 2026 JuliaKelp, MIT-Lizenz). Geändert: Ernährungsform, Allergene und
-// Ziele kommen aus core/profile.js; Vorrat, Mangel-Bonus und Vorkoch-Tipps folgen in späteren Schritten (0.2.4, 0.3.0);
+// Ziele kommen aus core/profile.js; Vorrat, Mangel-Bonus und Vorkoch-Tipps folgen in späteren Schritten (0.2.5, 0.3.0);
 // keine Stempel/XP (Level-System bis nach Phase 5 draußen). Speicher nur über core/store.js (Schlüssel tt_recipes).
 import * as store from '../../core/store.js';
 import { getGoals, getDiet, setDiet, getWeightGoal, currentWeight } from '../../core/profile.js';

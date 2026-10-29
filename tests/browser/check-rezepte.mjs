@@ -71,7 +71,7 @@ for (const appearance of ['dark', 'light']) {
   ok(ing0 !== ing1, `${appearance}: Zutaten skalieren (${ing1} → ${ing0})`);
   await p.locator('.rp-step').first().click(); await p.waitForTimeout(100);
   ok((await p.locator(".rp-step.done").count()) === 1 && /1 von/i.test(await text()), `${appearance}: Schritt abgehakt`);
-  await p.click('.rp-acts button:has-text("Zu Favoriten")'); await p.waitForTimeout(100);
+  await p.click('.rp-acts button[aria-label="Zu Favoriten"]'); await p.waitForTimeout(100);
   ok((await p.locator('.rp-acts .chip.on').innerText()).includes('Favorit'), `${appearance}: Favorit gesetzt`);
   await shot('3-rezept');
   await p.click('.rp-cook .seg button:has-text("Abend")');

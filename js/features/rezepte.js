@@ -1,34 +1,34 @@
 // Reiter „Rezepte“ mit Unterleiste (Rezepte · Woche · Einkauf). Entwurf A „Liste“ (Nutzerwahl 2026-10-27):
 // oben Vorschläge für die nächste Mahlzeit, darunter Suche, Filter und Katalog. Aufbau nach viewRezepte im
-// Rezeptbuch (JuliaKelp, MIT). Woche und Einkauf folgen in 0.2.3 / 0.2.4.
+// Rezeptbuch (JuliaKelp, MIT). Woche (Entwurf A „Tagesliste“) und Einkauf (Entwurf B „Liste mit Gerichten“) seit 0.2.3.
+// Steht für die Mahlzeit ein übernommenes Gericht im Wochenplan, kommt es bei den Vorschlägen zuerst.
 import { h } from '../core/util.js';
 import { icon } from '../core/icons.js';
-import { pageHead, comingSoon } from '../core/ui.js';
+import { pageHead } from '../core/ui.js';
 import { fmt, isoDate } from '../core/format.js';
 import { mealByMin } from './journal/journal.js';
 import { rs, ideasFor, catalogue, haveMatches, kcalLeft, mealBudget, hasGoal, MEAL_SHORT } from './recipes/recipes.js';
 import { FOODS } from './recipes/ingredients.js';
-import { ensureReady, recipeRow, qp } from './recipes/parts.js';
+import { ensureReady, recipeRow, qp, subnav, fmtFactor } from './recipes/parts.js';
+import { plannedFor } from './recipes/week.js';
+import { weekRoutes } from './recipes/week-view.js';
+import { shopRoutes } from './recipes/shop-view.js';
 import { recipeRoutes } from './recipes/recipe-view.js';
 import { ownRoutes } from './recipes/own-view.js';
 import { startRoutes } from './recipes/start-view.js';
 
-const SUB = [['/rezepte', 'Rezepte'], ['/rezepte/woche', 'Woche'], ['/rezepte/einkauf', 'Einkauf']];
 const MEAL_NAME = { breakfast: 'dein Frühstück', lunch: 'dein Mittagessen', dinner: 'dein Abendessen', snack: 'einen Snack' };
 const FILTERS = [['all', 'Alle'], ['breakfast', 'Frühstück'], ['lunch', 'Mittag'], ['dinner', 'Abend'], ['snack', 'Snack'], ['fav', 'Favoriten'], ['have', 'Ich habe …']];
 const ui = { filter: 'all', query: '', have: [], sugMeal: null };
 
-function subnav(active) {
-  return h('nav', { class: 'seg rz-sub', 'aria-label': 'Rezepte-Bereiche' },
-    ...SUB.map(([path, label]) => h('a', { href: `#${path}`, 'aria-current': path === active ? 'page' : false }, label)));
-}
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 
 function suggestions(rerender) {
   const today = isoDate();
   const meal = ui.sugMeal || mealByMin(nowMin());
   const left = kcalLeft(today);
-  const ideas = ideasFor(meal, today).slice(0, 3);
+  const plan = plannedFor(today, meal);
+  const ideas = (plan ? [{ recipe: plan.recipe, mode: null, factor: plan.factor, planned: true }, ...ideasFor(meal, today).filter((x) => x.recipe.id !== plan.recipe.id)] : ideasFor(meal, today)).slice(0, 3);
   const mealSeg = h('div', { class: 'seg rz-meal', role: 'radiogroup', 'aria-label': 'Mahlzeit für Vorschläge' },
     ...['breakfast', 'lunch', 'dinner', 'snack'].map((m) => h('button', { type: 'button', role: 'radio', 'aria-checked': m === meal ? 'true' : 'false', onclick: () => { ui.sugMeal = m; rerender(); } }, MEAL_SHORT[m])));
   return [
@@ -36,7 +36,7 @@ function suggestions(rerender) {
       h('span', {}, left != null ? (left > 0 ? `noch ${fmt(left)} kcal frei` : 'Tagesziel erreicht') : `Rahmen ca. ${fmt(mealBudget(meal, today))} kcal`)),
     mealSeg,
     ideas.length
-      ? h('section', { class: 'card list rz-list' }, ...ideas.map((x) => recipeRow(x.recipe, { meal, mode: x.mode })))
+      ? h('section', { class: 'card list rz-list' }, ...ideas.map((x) => recipeRow(x.recipe, { meal, mode: x.mode, factor: x.factor || 1, extra: x.planned ? `aus dem Wochenplan${x.factor !== 1 ? ` · ${fmtFactor(x.factor)}× Menge` : ''}` : null })))
       : h('section', { class: 'card' }, h('p', { class: 'small muted' }, 'Gerade passt kein Rezept zu deinen Einstellungen und der Zeit für diese Mahlzeit.')),
     hasGoal(today) ? null : h('p', { class: 'small muted page-note' }, 'Ohne Tagesziel rechnet die Auswahl mit 2.000 kcal. ', h('a', { class: 'link', href: '#/ich/ziel' }, 'Tagesziel festlegen'))
   ];
@@ -90,11 +90,7 @@ function rezepteView(rerender) {
     h('p', { class: 'small muted page-note' }, `Gefiltert nach deiner Ernährungsform, Allergenen und Geschmack. `, h('a', { class: 'link', href: '#/ich/ernaehrung' }, 'Ändern')));
 }
 
-const placeholder = (path, title, what) => () => h('div', {}, pageHead(title), subnav(path), comingSoon(what, 3));
-
 export const rezepteRoutes = {
   '/rezepte': rezepteView,
-  '/rezepte/woche': placeholder('/rezepte/woche', 'Woche', 'Wochenplan (0.2.3)'),
-  '/rezepte/einkauf': placeholder('/rezepte/einkauf', 'Einkauf', 'Einkauf & Vorrat (0.2.3 / 0.2.4)'),
-  ...recipeRoutes, ...ownRoutes, ...startRoutes
+  ...weekRoutes, ...shopRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
 };

@@ -363,7 +363,7 @@ const UNIT_LABEL = { g: 'g', ml: 'ml', el: 'EL', tl: 'TL', hand: 'Handvoll', stu
 const PLURAL = {
   Zwiebel: 'Zwiebeln', Möhre: 'Möhren', Tomate: 'Tomaten', Banane: 'Bananen', Knoblauchzehe: 'Knoblauchzehen', Süßkartoffel: 'Süßkartoffeln',
   Avocado: 'Avocados', Gurke: 'Gurken', Lachsfilet: 'Lachsfilets', Paprika: 'Paprika', Zucchini: 'Zucchini', Brokkoli: 'Brokkoli', Zitrone: 'Zitronen',
-  Scheibe: 'Scheiben', Dose: 'Dosen', Ei: 'Eier', Tortilla: 'Tortillas'
+  Scheibe: 'Scheiben', Dose: 'Dosen', Ei: 'Eier', Tortilla: 'Tortillas', Apfel: 'Äpfel', Kartoffel: 'Kartoffeln', Mozzarella: 'Mozzarella'
 };
 
 // „½ Dose Kichererbsen“ → { amount: 0.5, unit: 'dose', name: 'Kichererbsen' }; ohne Menge (z. B. „Salz, Pfeffer“) ist amount null
