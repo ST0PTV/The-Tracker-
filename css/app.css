@@ -869,6 +869,28 @@ a.icon-btn { text-decoration: none; }
 .sh-row small { font-size: 12px; color: var(--muted); }
 .sh-row.done b { font-weight: 400; color: var(--faint); text-decoration: line-through; }
 .sh-reset { margin-top: 12px; }
+/* Vorrat (0.2.5, Entwurf A „Liste mit −/+“; nach dem Rezeptbuch von JuliaKelp) */
+.vr-search { margin: 0 0 10px; }
+.vr-row { display: flex; align-items: center; gap: 8px; min-height: 58px; padding: 6px 10px 6px 0; }
+.vr-row + .vr-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.vr-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 6px 0 6px 14px; border: 0; background: none;
+  color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.vr-main b { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vr-main small { font-size: 12px; color: var(--muted); }
+.vr-row.low .vr-main small { color: var(--warn); }
+.vr-stp { display: flex; align-items: center; gap: 6px; flex: none; }
+.vr-stp span { min-width: 64px; text-align: center; font-size: 14px; font-variant-numeric: tabular-nums; }
+.vr-add, .vr-item { display: flex; flex-direction: column; gap: 4px; }
+.vr-add > p, .vr-item > p { margin: 0 0 8px; }
+.vr-add .seg, .vr-add .btn + .btn { margin-bottom: 10px; }
+.vr-eat { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+.vr-eat span { color: var(--muted); }
+.vr-item .rp-del { margin-top: 14px; }
+.sh-row .sh-stock { color: var(--c-wt); }
+.sh-topantry { margin-top: 12px; }
+.rp-stock { margin: 0 0 10px; color: var(--muted); }
+.rp-stock.ok { color: var(--c-wt); }
+.rz-pf { margin-bottom: 10px; }
 /* Eigenes Rezept */
 .own-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
 .own-line { display: grid; grid-template-columns: 64px 76px minmax(0, 1fr) auto; gap: 6px; align-items: center; }

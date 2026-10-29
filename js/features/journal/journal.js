@@ -2,7 +2,7 @@
 // Datenform wie im Kalorien-Tracker (Rezeptbuch/tracker/js/app.js, ST0PTV/JuliaKelp, MIT): Ein Eintrag hält eine
 // Kopie der Nährwerte je 100 g, damit spätere Änderungen an einem Lebensmittel alte Tage nicht verändern.
 import * as store from '../../core/store.js';
-import { uuid } from '../../core/util.js';
+import { uuid, nowISO } from '../../core/util.js';
 import { NUTRIENTS, nutrientsOf, per, isLiq } from '../food/foods.js';
 
 export const MEALS = [
@@ -56,7 +56,11 @@ export function foodSnap(food) {
    water: true  – Flüssigkeit zählt zum Wasserzähler
    cf: Zahl     – Koffein in mg pro 100 g/ml (der Koffein-Tracker rechnet daraus; Ausnahme: verknüpfte Einträge)
    t: 'HH:MM'   – abweichende Uhrzeit (für Koffein)
-   link: Text   – Eintrag gehört zu einem anderen Tracker (z. B. 'caff:<id>'); wird dort angelegt und gelöscht */
+   link: Text   – Eintrag gehört zu einem anderen Tracker (z. B. 'caff:<id>'); wird dort angelegt und gelöscht
+   at: ISO-Zeit – wann der Eintrag erfasst wurde (UTC, ab 0.2.5). Einmal beim Anlegen gesetzt, bleibt bei Ändern,
+                  Rückgängig und Wiederherstellen; eine Kopie auf einen anderen Tag ist ein neuer Eintrag mit neuem at.
+                  Ältere Einträge haben kein at („Zeit unbekannt“) – es wird nichts nachgetragen. Vorbereitung für das
+                  Level-System (Nachtragen zählt dort nur bis 7 Tage; Drive: Ideas - Level System Integration). */
 const EXTRA = ['water', 'cf', 't'];
 function extras(o = {}) {
   const x = {};
@@ -70,7 +74,7 @@ function extras(o = {}) {
 export function makeEntry(food, grams, meal, more = {}) {
   if (!(grams > 0 && grams <= MAX_GRAMS)) throw new Error(`Menge muss zwischen 0 und ${MAX_GRAMS} liegen.`);
   if (!MEALS.some((m) => m.id === meal)) throw new Error(`Unbekannte Mahlzeit: ${meal}`);
-  return { id: uuid(), meal, grams, ref: food.ref || food.id, src: food.src, n: food.n, brand: food.brand || '', liq: isLiq(food), ...nutrientsOf(food), ...extras(more) };
+  return { id: uuid(), meal, grams, ref: food.ref || food.id, src: food.src, n: food.n, brand: food.brand || '', liq: isLiq(food), ...nutrientsOf(food), ...extras(more), at: nowISO() };
 }
 
 // ---------- Zugriff ----------
@@ -141,7 +145,8 @@ export function setLinkedEntry(iso, link, entry) {
     const rest = list.filter((e) => e.link !== link);
     if (!entry) return rest;
     const old = list.find((e) => e.link === link);
-    return rest.concat([{ ...entry, id: old ? old.id : uuid(), link }]);
+    // Ersetzen ist ein Ändern: Erfassungszeit des alten Eintrags bleibt
+    return rest.concat([{ ...entry, id: old ? old.id : uuid(), link, ...(old && old.at ? { at: old.at } : {}) }]);
   });
 }
 
@@ -161,7 +166,8 @@ export function restoreEntry(iso, entry) {
 export function copyEntries(fromIso, toIso, meal = null) {
   const src = entriesOf(fromIso).filter((e) => (!meal || e.meal === meal) && !e.link);
   if (!src.length) return 0;
-  writeDay(toIso, (list) => list.concat(src.map((e) => ({ ...e, id: uuid() }))));
+  const at = nowISO();
+  writeDay(toIso, (list) => list.concat(src.map((e) => ({ ...e, id: uuid(), at }))));
   return src.length;
 }
 

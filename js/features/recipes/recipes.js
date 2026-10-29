@@ -9,6 +9,7 @@ import { isoDate } from '../../core/format.js';
 import { entriesOf, sumEntries, addEntry, removeEntry, restoreEntry } from '../journal/journal.js';
 import { RECIPES, TASTE_FOODS } from './recipe-data.js';
 import { RECIPES_2 } from './recipe-data-2.js';
+import { pantryInUse, recipeStock, takeIngredients, giveBack } from './pantry.js';
 import { findFood, allergensOfText, parseIngredient, nutrientsOfText, gramsOfText, addNutrients, emptyNutrients, scaleIngredient, gramsOf, nutrientsFor } from './ingredients.js';
 
 store.define('recipes', {
@@ -214,6 +215,7 @@ const recipeMeals = (r) => (r.meals || []).map((m) => MEAL_OF[m] || m);
 /** Vorschläge für eine Mahlzeit, beste zuerst: [{ recipe, mode, score }]. */
 export function ideasFor(meal, iso = isoDate()) {
   const budget = mealBudget(meal, iso);
+  const stocked = pantryInUse();
   const cooked = new Set(entriesOf(iso).map((e) => String(e.ref || '')).filter((x) => x.startsWith('rcp:')).map((x) => x.slice(4)));
   return allRecipes()
     .filter((r) => recipeMeals(r).includes(meal) && suitable(r))
@@ -225,6 +227,7 @@ export function ideasFor(meal, iso = isoDate()) {
       if (x.mode === 'vorkochen') score -= 2;
       if (isFav(r)) score += 3;
       if (cooked.has(r.id)) score -= 10;
+      if (stocked) { const st = recipeStock(portionLines(r)); score += st.have.length * 0.8 + (st.all ? 3 : 0); } // Vorrat zuerst (0.2.5)
       score -= rejectPenalty(r);
       score += (hashStr(iso + r.id) % 100) / 60; // jeden Tag etwas Abwechslung
       return { ...x, score };
@@ -284,15 +287,28 @@ export function recipeFood(r) {
     k: per100(n.kcal), p: per100(n.protein), c: per100(n.kh), f: per100(n.fett), fi: per100(n.ballast),
     su: per100(n.zucker), fs: per100(Math.min(n.zugesetzt, n.zucker)) };
 }
-/** Trägt factor Portionen als Mahlzeit ins Journal ein und setzt die abgehakten Schritte zurück. Gibt den Eintrag zurück. */
+/** Zutatenzeilen für 1 Portion (eigene Rezepte: aus den Zeilen umgerechnet). */
+export const portionLines = (r) => scaledIngredients(r, 1);
+const cookUsed = new Map(); // Eintrags-ID → { used, names } aus dem Vorrat (nur für „Rückgängig“ in dieser Sitzung)
+export const cookedFromPantry = (id) => (cookUsed.get(id) || {}).names || [];
+/**
+ * Trägt factor Portionen als Mahlzeit ins Journal ein, zieht die Zutaten vom Vorrat ab (falls vorhanden) und setzt die
+ * abgehakten Schritte zurück. Gibt den Eintrag zurück; cookedFromPantry(entry.id) nennt die abgezogenen Zutaten.
+ */
 export function cookRecipe(r, meal, factor = 1, iso = isoDate()) {
   const food = recipeFood(r);
   if (!food) throw new Error('Für dieses Rezept sind zu wenige Nährwerte bekannt.');
   const entry = addEntry(iso, food, Math.round(food.serving * factor), meal);
   upd((s) => { delete s.cooking[r.id]; });
+  const taken = pantryInUse() ? takeIngredients(portionLines(r), factor) : { used: [], names: [] };
+  if (taken.used.length) cookUsed.set(entry.id, taken);
   return entry;
 }
-export const undoCook = (iso, entry) => removeEntry(iso, entry.id);
+export function undoCook(iso, entry) {
+  giveBack((cookUsed.get(entry.id) || {}).used);
+  cookUsed.delete(entry.id);
+  return removeEntry(iso, entry.id);
+}
 export const redoCook = (iso, entry) => restoreEntry(iso, entry);
 
 // ---------- Eigene Rezepte ----------
@@ -331,6 +347,7 @@ export function saveOwn(form) {
   const toBook = { breakfast: 'fruehstueck', lunch: 'mittag', dinner: 'abend', snack: 'snack' };
   const rows = a.lines.map((x) => ({ amount: String(x.row.amount).trim(), unit: x.row.unit || 'g', name: String(x.row.name).trim(), ...(x.row.kcal100 !== undefined && x.row.kcal100 !== '' ? { kcal100: num(x.row.kcal100) } : {}) }));
   const prev = rs().own.find((r) => r.id === id);
+  const at = new Date().toISOString();
   const r = {
     id, own: true, name, time, serve: 0, prep: false, portions: a.portions,
     meals: (form.meals && form.meals.length ? form.meals : ['lunch', 'dinner']).map((m) => toBook[m] || m),
@@ -340,7 +357,10 @@ export function saveOwn(form) {
     ingredients: [], // eigene Rezepte rechnen über rows
     steps: String(form.steps || '').split('\n').map((s) => s.trim()).filter(Boolean),
     mealprep: a.portions >= 2 || time > 30,
-    tint: prev?.tint || OWN_TINTS[rs().own.length % OWN_TINTS.length]
+    tint: prev?.tint || OWN_TINTS[rs().own.length % OWN_TINTS.length],
+    // Zeitstempel (UTC, ab 0.2.5): angelegt und zuletzt geändert; ältere Rezepte ohne created bleiben so
+    ...(prev ? (prev.created ? { created: prev.created } : {}) : { created: at }),
+    updated: at
   };
   if (!r.steps.length) r.steps = ['Nach Gefühl zubereiten.'];
   upd((s) => { s.own = [r, ...s.own.filter((x) => x.id !== id)]; });

@@ -35,7 +35,11 @@ function foodRow(food, onPick) {
     icon('chevron', { size: 18 }));
 }
 
-export function openAdd(iso, meal, { tab = lastTab } = {}) {
+/**
+ * iso, meal: wohin eingetragen wird. onPick (ab 0.2.5): statt Mengen-Dialog fürs Journal eigene Auswahl (z. B. Vorrat);
+ * title ersetzt dann die Überschrift.
+ */
+export function openAdd(iso, meal, { tab = lastTab, onPick = null, title = null } = {}) {
   let current = tab;
   let sheet = null;
   const body = h('div', { class: 'add-body' });
@@ -44,6 +48,7 @@ export function openAdd(iso, meal, { tab = lastTab } = {}) {
   // Nach dem Eintragen: in der Suche Sheet schließen, im Scanner weiterscannen
   const pick = (food) => {
     if (current === 'scan') stopScanner();
+    if (onPick) { onPick(food, { again: () => { if (current === 'scan' && sheet.panel.isConnected) drawScan(); }, close: () => sheet.close() }); return; }
     openAmount(food, {
       iso, meal,
       onDone: () => { if (current !== 'scan') sheet.close(); },
@@ -160,7 +165,7 @@ export function openAdd(iso, meal, { tab = lastTab } = {}) {
   loadFoods();
 
   sheet = openSheet(h('div', { class: 'add' }, seg, body), {
-    title: `${mealLabel(meal)} hinzufügen`, full: true,
+    title: title || `${mealLabel(meal)} hinzufügen`, full: true,
     onClose: () => { stopScanner(); document.removeEventListener('tt-foods', onFoods); document.removeEventListener('visibilitychange', onVisible); }
   });
   draw();

@@ -1,7 +1,8 @@
 // Eigene Lebensmittel (Werte pro 100 g/ml, z. B. von der Packung oder vom Foto). Einzige Stelle, die tt_custom speichert.
 // Nach saveOwnFood/removeOwnFood im Kalorien-Tracker (Rezeptbuch/tracker/js/app.js, ST0PTV/JuliaKelp, MIT).
 import * as store from '../../core/store.js';
-import { uuid } from '../../core/util.js';
+import { uuid, nowISO } from '../../core/util.js';
+import { logFoodEvent } from './events.js';
 
 store.define('custom', []);
 
@@ -33,13 +34,34 @@ export function makeCustom(v, id = null) {
   return food;
 }
 
-export function saveCustom(food) {
+/**
+ * Speichert neu oder geändert. Zeitstempel (ab 0.2.5, UTC): created beim Anlegen, updated bei jeder Änderung,
+ * filled: [{ at, keys }], wenn eine Änderung vorher fehlende Angaben (miss) füllt. Ältere Einträge ohne created
+ * bekommen keins nachgetragen. Eigene Lebensmittel und Nachträge landen zusätzlich in den Lebensmittel-Ereignissen.
+ */
+export function saveCustom(food, at = nowISO()) {
+  const prev = customById(food.id);
+  const next = { ...food };
+  delete next.created; delete next.updated; delete next.filled;
+  if (prev) {
+    if (prev.created) next.created = prev.created;
+    next.updated = at;
+    const was = new Set(prev.miss || []), now = new Set(next.miss || []);
+    const keys = [...was].filter((k) => !now.has(k));
+    const filled = (prev.filled || []).concat(keys.length ? [{ at, keys }] : []);
+    if (filled.length) next.filled = filled;
+    if (keys.length) logFoodEvent('fill', next.id, at);
+  } else {
+    next.created = at;
+    next.updated = at;
+    logFoodEvent('custom', next.id, at);
+  }
   store.update('custom', (list) => {
-    const i = list.findIndex((x) => x.id === food.id);
-    if (i >= 0) list[i] = food; else list.push(food);
+    const i = list.findIndex((x) => x.id === next.id);
+    if (i >= 0) list[i] = next; else list.push(next);
   });
   changed();
-  return food;
+  return next;
 }
 
 export function removeCustom(id) {
