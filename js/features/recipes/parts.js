@@ -33,8 +33,8 @@ export const recipeHref = (r, meal = null, factor = 1) => `#/rezepte/rezept?id=$
 /** „1,3“ für Mengenfaktoren. */
 export const fmtFactor = (f) => String(Math.round(f * 100) / 100).replace('.', ',');
 
-const SUB = [['/rezepte', 'Rezepte'], ['/rezepte/woche', 'Woche'], ['/rezepte/einkauf', 'Einkauf']];
-/** Unterleiste Rezepte · Woche · Einkauf. */
+const SUB = [['/rezepte', 'Rezepte'], ['/rezepte/woche', 'Woche'], ['/rezepte/einkauf', 'Einkauf'], ['/rezepte/vorrat', 'Vorrat']];
+/** Unterleiste Rezepte · Woche · Einkauf · Vorrat (Vorrat ab 0.2.5, Entwurf A). */
 export function subnav(active) {
   return h('nav', { class: 'seg rz-sub', 'aria-label': 'Rezepte-Bereiche' },
     ...SUB.map(([path, label]) => h('a', { href: `#${path}`, 'aria-current': path === active ? 'page' : false }, label)));

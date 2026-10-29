@@ -101,7 +101,7 @@ export function openFoodForm(base = {}, { onSaved = null, photo = false } = {}) 
     for (const key of ['d', 'a', 'sw']) if (base[key] != null) v[key] = base[key];
     let food;
     try { food = makeCustom(v, isEdit ? base.id : null); } catch (e) { toast(e.message, { error: true }); return; }
-    saveCustom(food);
+    food = saveCustom(food);
     toast(isEdit ? 'Gespeichert' : `„${food.n}“ angelegt`);
     sheet.close();
     if (onSaved) onSaved(food);

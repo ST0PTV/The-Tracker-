@@ -3,6 +3,8 @@
 // Datenschutz: Nur die Barcode-Nummer geht an Open Food Facts. Daten: Open Food Facts, ODbL 1.0 / DbCL 1.0.
 import * as store from '../../core/store.js';
 import { num } from '../../core/format.js';
+import { nowISO } from '../../core/util.js';
+import { logFoodEvent } from './events.js';
 
 store.define('offcache', {}); // { barcode: Lebensmittel }
 
@@ -74,7 +76,10 @@ export const offCache = () => store.get('offcache');
 /** Schon gescannte Produkte als Liste (für die Suche). */
 export const scannedFoods = () => Object.values(offCache());
 
-function remember(food) {
+// scannedAt (UTC, ab 0.2.5): erster Abruf. Der Speicher wirft ab 500 Produkte alte raus; das Ereignis bleibt.
+function remember(food, at = nowISO()) {
+  food.scannedAt = food.scannedAt || at;
+  logFoodEvent('scan', food.barcode, food.scannedAt);
   store.update('offcache', (c) => {
     c[food.barcode] = food;
     const keys = Object.keys(c);

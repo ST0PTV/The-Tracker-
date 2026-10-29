@@ -13,8 +13,9 @@ import { getGoals } from '../../core/profile.js';
 import { mealByMin } from '../journal/journal.js';
 import { nutrientsOfText } from './ingredients.js';
 import { rs, recipeById, recipeNutrients, kcalOfRecipe, isFav, toggleFav, reject, unreject, rejectFood, setNote, toggleStep,
-  setRs, scaledIngredients, cookRecipe, undoCook, removeOwn, restoreOwn, DIET_LABEL, MEAL_SHORT, MEAL_OF, mealBudget } from './recipes.js';
+  setRs, scaledIngredients, cookRecipe, undoCook, cookedFromPantry, portionLines, removeOwn, restoreOwn, DIET_LABEL, MEAL_SHORT, MEAL_OF, mealBudget } from './recipes.js';
 import { ensureReady, qp, thumb, fmtFactor } from './parts.js';
+import { pantryInUse, recipeStock } from './pantry.js';
 import { weekDays, wk, slotKey, planAt, unplanAt, planMeals, togglePlanMeal, ensureWeek } from './week.js';
 
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
@@ -100,7 +101,8 @@ function recipeView(rerender) {
     try {
       const iso = isoDate();
       const e = cookRecipe(r, meal, factor);
-      toast(`${r.name} als ${MEAL_SHORT[meal]} eingetragen`, { action: { label: 'Rückgängig', onClick: () => { undoCook(iso, e); rerender(); } } });
+      const from = cookedFromPantry(e.id);
+      toast(`${r.name} als ${MEAL_SHORT[meal]} eingetragen${from.length ? `. Vom Vorrat abgezogen: ${from.join(', ')}` : ''}`, { action: { label: 'Rückgängig', onClick: () => { undoCook(iso, e); rerender(); } } });
       rerender();
     } catch (err) { toast(err.message, { error: true }); }
   };
@@ -130,6 +132,8 @@ function recipeView(rerender) {
           h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': 'Eine Portion weniger', disabled: n <= 1, onclick: () => { portionsUi[r.id] = n - 1; rerender(); } }, icon('minus', { size: 16 })),
           h('b', {}, `${n} ${n === 1 ? 'Portion' : 'Portionen'}`),
           h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': 'Eine Portion mehr', disabled: n >= 12, onclick: () => { portionsUi[r.id] = n + 1; rerender(); } }, icon('plus', { size: 16 })))),
+      pantryInUse() ? (() => { const st = recipeStock(portionLines(r), factor * n); return st.have.length || st.missing.length
+        ? h('p', { class: `small rp-stock${st.all ? ' ok' : ''}` }, st.all ? `Alles im Vorrat für ${n} ${n === 1 ? 'Portion' : 'Portionen'}` : `Im Vorrat fehlt: ${st.missing.join(', ')}`) : null; })() : null,
       h('ul', { class: 'rp-ing' }, ...scaledIngredients(r, n).map((line) => {
         const k = r.own ? 0 : nutrientsOfText(line).kcal;
         return h('li', {}, h('span', {}, line), k >= 1 ? h('small', {}, `${fmt(k)} kcal`) : null);

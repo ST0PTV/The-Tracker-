@@ -1,11 +1,13 @@
 // Einkaufsliste aus den übernommenen Gerichten des Wochenplans: Zutaten je Lebensmittel und Einheit zusammengezählt,
 // mit Portionen und Mengenfaktor des Plans. Gewürze, Öl und Brühe stehen getrennt unter „Hast du meistens da“.
 // Nach dem Rezeptbuch, app.js (shoppingList, STAPLES; Copyright (c) 2026 JuliaKelp, MIT-Lizenz). Geändert: ohne
-// Vorrat-Abgleich (folgt in 0.2.5), ohne gekaufte Produkte als Snack; Stück, Dosen und Scheiben aufgerundet;
+// gekaufte Produkte als Snack; Stück, Dosen und Scheiben aufgerundet; ab 0.2.5 mit dem Vorrat verrechnet (was da ist,
+// muss nicht gekauft werden, bei zu wenig nur der Rest);
 // zeigt zu jeder Zutat Gericht, Tag und Mahlzeit.
 import { isoDate } from '../../core/format.js';
 import { scaledIngredients } from './recipes.js';
-import { parseIngredient, findFood, scaleIngredient } from './ingredients.js';
+import { parseIngredient, findFood, scaleIngredient, gramsOfText } from './ingredients.js';
+import { stockOf } from './pantry.js';
 import { acceptedSlots, weekPortions } from './week.js';
 
 export const STAPLES = ['Gewürze', 'Öl', 'Gemüsebrühe'];
@@ -16,7 +18,8 @@ const buyable = (unit, x) => (WHOLE.has(unit) ? Math.max(1, Math.ceil(x - 0.1)) 
 const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
 /**
- * { items: [{ key, text, sort, recipes: [Name], uses: [{ day, meal, name }] }], staples: [Text], dishes: [Platz] }
+ * { items: [{ key, text, sort, recipes, uses, stock, stockText, food, needG }], staples: [Text], dishes: [Platz] }
+ * stock: null (nicht im Vorrat) | 'full' (reicht) | 'part' (Rest steht in text) | 'open' (da, Menge unbekannt)
  * Mengen: Zeile × Portionen × Mengenfaktor des Tags. Zeilen ohne Menge („Salz, Pfeffer“) gehen zu den Grundzutaten.
  */
 export function shoppingList(today = isoDate()) {
@@ -37,21 +40,25 @@ export function shoppingList(today = isoDate()) {
         continue;
       }
       const key = `${food ? food.name : p.name.toLowerCase()}|${p.unit}`;
-      const g = groups.get(key) || { key, p, food, amount: 0, names: new Set(), recipes: new Set(), uses: [] };
+      const g = groups.get(key) || { key, p, food, amount: 0, grams: 0, names: new Set(), recipes: new Set(), uses: [] };
       g.names.add(p.name.replace(/\(.*?\)/g, '').trim().toLowerCase());
       g.amount += p.amount * n * d.factor;
+      g.grams += gramsOfText(line) * n * d.factor;
       g.recipes.add(d.recipe.name);
       g.uses.push({ day: d.day, meal: d.meal, name: d.recipe.name });
       groups.set(key, g);
     }
   }
-  const items = [...groups.values()].map((g) => ({
-    key: g.key,
+  const items = [...groups.values()].map((g) => {
     // Verschiedene Namen für dasselbe Lebensmittel (z. B. „gehackte“ und „passierte Tomaten“) → Name der Zutat
-    text: scaleIngredient(`1 ${g.p.unitWord ? g.p.unitWord + ' ' : ''}${g.names.size > 1 && g.food ? g.food.name : g.p.name}`, buyable(g.p.unit, g.amount)),
-    sort: (g.food ? g.food.name : g.p.name).toLowerCase(),
-    recipes: [...g.recipes],
-    uses: g.uses
-  })).sort((a, b) => a.sort.localeCompare(b.sort, 'de'));
+    const name = g.names.size > 1 && g.food ? g.food.name : g.p.name;
+    const text = (amount) => scaleIngredient(`1 ${g.p.unitWord ? g.p.unitWord + ' ' : ''}${name}`, buyable(g.p.unit, amount));
+    const base = { key: g.key, sort: (g.food ? g.food.name : g.p.name).toLowerCase(), recipes: [...g.recipes], uses: g.uses, food: g.food ? g.food.name : null, needG: g.grams };
+    const st = g.food ? stockOf(g.food.name) : { g: 0, open: false };
+    if (!g.grams || (!st.g && !st.open)) return { ...base, text: text(g.amount), stock: null };
+    if (st.g >= g.grams * 0.98) return { ...base, text: text(g.amount), needG: 0, stock: 'full', stockText: `${Math.round(st.g)} g da` };
+    if (st.g > 0) { const rest = g.grams - st.g; return { ...base, text: text(g.amount * (rest / g.grams)), needG: rest, stock: 'part', stockText: `${Math.round(st.g)} g schon da` }; }
+    return { ...base, text: text(g.amount), stock: 'open', stockText: 'im Vorrat, Menge offen' };
+  }).sort((a, b) => a.sort.localeCompare(b.sort, 'de'));
   return { items, staples: [...staples.values()].sort((a, b) => a.localeCompare(b, 'de')), dishes, portions: n };
 }

@@ -7,19 +7,27 @@ import { icon } from '../core/icons.js';
 import { pageHead } from '../core/ui.js';
 import { fmt, isoDate } from '../core/format.js';
 import { mealByMin } from './journal/journal.js';
-import { rs, ideasFor, catalogue, haveMatches, kcalLeft, mealBudget, hasGoal, MEAL_SHORT } from './recipes/recipes.js';
+import { portionLines, rs, ideasFor, catalogue, haveMatches, kcalLeft, mealBudget, hasGoal, MEAL_SHORT } from './recipes/recipes.js';
 import { FOODS } from './recipes/ingredients.js';
 import { ensureReady, recipeRow, qp, subnav, fmtFactor } from './recipes/parts.js';
 import { plannedFor } from './recipes/week.js';
 import { weekRoutes } from './recipes/week-view.js';
 import { shopRoutes } from './recipes/shop-view.js';
+import { pantryRoutes } from './recipes/pantry-view.js';
+import { pantryInUse, recipeStock } from './recipes/pantry.js';
 import { recipeRoutes } from './recipes/recipe-view.js';
 import { ownRoutes } from './recipes/own-view.js';
 import { startRoutes } from './recipes/start-view.js';
 
 const MEAL_NAME = { breakfast: 'dein Frühstück', lunch: 'dein Mittagessen', dinner: 'dein Abendessen', snack: 'einen Snack' };
 const FILTERS = [['all', 'Alle'], ['breakfast', 'Frühstück'], ['lunch', 'Mittag'], ['dinner', 'Abend'], ['snack', 'Snack'], ['fav', 'Favoriten'], ['have', 'Ich habe …']];
-const ui = { filter: 'all', query: '', have: [], sugMeal: null };
+const ui = { filter: 'all', query: '', have: [], sugMeal: null, pantryFirst: true };
+// Vorrats-Hinweis unter einem Vorschlag (ab 0.2.5, nur wenn der Vorrat benutzt wird)
+function stockNote(r, factor = 1) {
+  const st = recipeStock(portionLines(r), factor);
+  if (!st.have.length && !st.missing.length) return null;
+  return st.all ? 'Alles im Vorrat' : `Fehlt: ${st.missing.slice(0, 3).join(', ')}${st.missing.length > 3 ? ' …' : ''}`;
+}
 
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 
@@ -28,15 +36,22 @@ function suggestions(rerender) {
   const meal = ui.sugMeal || mealByMin(nowMin());
   const left = kcalLeft(today);
   const plan = plannedFor(today, meal);
-  const ideas = (plan ? [{ recipe: plan.recipe, mode: null, factor: plan.factor, planned: true }, ...ideasFor(meal, today).filter((x) => x.recipe.id !== plan.recipe.id)] : ideasFor(meal, today)).slice(0, 3);
+  const stocked = pantryInUse();
+  let pool = ideasFor(meal, today);
+  if (stocked && ui.pantryFirst) pool = pool.slice(0, 12).sort((a, b) => (recipeStock(portionLines(b.recipe)).all ? 1 : 0) - (recipeStock(portionLines(a.recipe)).all ? 1 : 0)).concat(pool.slice(12));
+  const ideas = (plan ? [{ recipe: plan.recipe, mode: null, factor: plan.factor, planned: true }, ...pool.filter((x) => x.recipe.id !== plan.recipe.id)] : pool).slice(0, 3);
   const mealSeg = h('div', { class: 'seg rz-meal', role: 'radiogroup', 'aria-label': 'Mahlzeit für Vorschläge' },
     ...['breakfast', 'lunch', 'dinner', 'snack'].map((m) => h('button', { type: 'button', role: 'radio', 'aria-checked': m === meal ? 'true' : 'false', onclick: () => { ui.sugMeal = m; rerender(); } }, MEAL_SHORT[m])));
   return [
     h('div', { class: 'rz-sug-h' }, h('b', {}, `Für ${MEAL_NAME[meal]}`),
       h('span', {}, left != null ? (left > 0 ? `noch ${fmt(left)} kcal frei` : 'Tagesziel erreicht') : `Rahmen ca. ${fmt(mealBudget(meal, today))} kcal`)),
     mealSeg,
+    stocked ? h('div', { class: 'chips rz-pf', role: 'group', 'aria-label': 'Reihenfolge' },
+      h('button', { class: `chip${ui.pantryFirst ? ' on' : ''}`, type: 'button', 'aria-pressed': ui.pantryFirst ? 'true' : 'false', onclick: () => { ui.pantryFirst = true; rerender(); } }, 'Mit Vorrat zuerst'),
+      h('button', { class: `chip${!ui.pantryFirst ? ' on' : ''}`, type: 'button', 'aria-pressed': !ui.pantryFirst ? 'true' : 'false', onclick: () => { ui.pantryFirst = false; rerender(); } }, 'Beste Passung')) : null,
     ideas.length
-      ? h('section', { class: 'card list rz-list' }, ...ideas.map((x) => recipeRow(x.recipe, { meal, mode: x.mode, factor: x.factor || 1, extra: x.planned ? `aus dem Wochenplan${x.factor !== 1 ? ` · ${fmtFactor(x.factor)}× Menge` : ''}` : null })))
+      ? h('section', { class: 'card list rz-list' }, ...ideas.map((x) => recipeRow(x.recipe, { meal, mode: x.mode, factor: x.factor || 1,
+        extra: [x.planned ? `aus dem Wochenplan${x.factor !== 1 ? ` · ${fmtFactor(x.factor)}× Menge` : ''}` : null, stocked ? stockNote(x.recipe, x.factor || 1) : null].filter(Boolean).join(' · ') || null })))
       : h('section', { class: 'card' }, h('p', { class: 'small muted' }, 'Gerade passt kein Rezept zu deinen Einstellungen und der Zeit für diese Mahlzeit.')),
     hasGoal(today) ? null : h('p', { class: 'small muted page-note' }, 'Ohne Tagesziel rechnet die Auswahl mit 2.000 kcal. ', h('a', { class: 'link', href: '#/ich/ziel' }, 'Tagesziel festlegen'))
   ];
@@ -92,5 +107,5 @@ function rezepteView(rerender) {
 
 export const rezepteRoutes = {
   '/rezepte': rezepteView,
-  ...weekRoutes, ...shopRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
+  ...weekRoutes, ...shopRoutes, ...pantryRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
 };
