@@ -125,9 +125,15 @@ test('Eigenes Rezept: Rechnung, unbekannte Zutat mit kcal/100 g, Ernährungsform
 test('Allergene: alle 14 Hauptallergene nach LMIV Anhang II wählbar und ableitbar', () => {
   fresh(); prepareIngredients((id) => byId.get(id) || null);
   assert.equal(Object.keys(R.ALLERGEN_NAMES).length, 14);
-  assert.ok(Object.values(R.ALLERGEN_CODES).flat().length === 14, 'jeder Profil-Code gehört zu einem Rezept-Allergen');
+  assert.equal(new Set(Object.values(R.ALLERGEN_CODES).flat()).size, 14, 'jeder Profil-Code gehört zu einem Rezept-Allergen');
   assert.equal(R.ALLERGEN_NAMES.su, 'Sulfite');
   assert.deepEqual(allergensOfText('3 EL Hummus'), ['sesam']);
+  // 0.3.0: Schalenfrüchte und Erdnuss getrennt (LMIV Anhang II Nr. 8 und Nr. 5)
+  assert.deepEqual(allergensOfText('2 EL Erdnussbutter'), ['erdnuss']);
+  assert.deepEqual(allergensOfText('30 g Erdnüsse'), ['erdnuss']);
+  assert.deepEqual(allergensOfText('30 g Walnüsse'), ['schalen']);
+  assert.deepEqual(allergensOfText('20 g gehobelte Mandeln'), ['schalen']);
+  assert.ok(!allergensOfText('1 Prise Muskatnuss').length && !allergensOfText('2 EL Kokosraspeln').some((a) => a === 'schalen'));
   assert.deepEqual(allergensOfText('300 ml Gemüsebrühe'), ['sellerie']);
   assert.deepEqual(allergensOfText('100 g Garnelen'), ['krebstiere']);
   assert.ok(allergensOfText('1 EL Balsamico-Essig').includes('sulfite'));
@@ -143,4 +149,19 @@ test('Allergene: alle 14 Hauptallergene nach LMIV Anhang II wählbar und ableitb
   setDiet({ allergens: [] });
   const a = R.analyzeOwn({ name: 'x', portions: 1, time: 5, meals: ['lunch'], steps: '', rows: [{ amount: '1', unit: 'tl', name: 'Senf' }, { amount: '20', unit: 'g', name: 'Rosinen' }] });
   assert.ok(a.allergens.includes('senf') && a.allergens.includes('sulfite'), 'eigene Rezepte leiten mit ab');
+});
+
+test('Nüsse getrennt (0.3.0): Erdnuss-Allergie sperrt Erdnuss-Rezepte, nicht Walnuss; altes „nuesse“ fällt bei Ableitung weg', () => {
+  fresh(); prepareIngredients((id) => byId.get(id) || null);
+  const nutty = RECIPES.filter((r) => (r.allergens || []).includes('nuesse'));
+  assert.ok(nutty.length > 5);
+  const pea = nutty.filter((r) => R.allergensOf(r).includes('erdnuss'));
+  const tree = nutty.filter((r) => R.allergensOf(r).includes('schalen') && !R.allergensOf(r).includes('erdnuss'));
+  assert.ok(pea.length && tree.length, `Erdnuss ${pea.length}, Schalenfrüchte ${tree.length}`);
+  assert.ok(nutty.every((r) => !R.allergensOf(r).includes('nuesse') || !R.allergensOf(r).some((a) => a === 'schalen' || a === 'erdnuss')));
+  setDiet({ form: 'all', allergens: ['er'] });
+  assert.ok(pea.every((r) => !R.suitable(r)) && tree.some((r) => R.suitable(r)), 'nur Erdnuss gesperrt');
+  setDiet({ allergens: ['nu'] });
+  assert.ok(tree.every((r) => !R.suitable(r)));
+  setDiet({ allergens: [] });
 });

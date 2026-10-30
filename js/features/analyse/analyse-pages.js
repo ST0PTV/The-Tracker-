@@ -7,6 +7,7 @@ import { openInfo, infoBtn } from '../../core/info.js';
 import { fmt, r1, isoDate, addDays } from '../../core/format.js';
 import { loadFoods, foodsState, foodById } from '../food/foods.js';
 import { microAvg } from './micro.js';
+import { refOf, deficits } from './deficits.js';
 import { goalState } from './insights.js';
 import { RANGES, getRange, setRange, dayRow, foodEntries } from './data.js';
 import { backTo, dateShort } from './analyse-view.js';
@@ -24,14 +25,14 @@ function microInfo() {
     title: 'Mikronährstoffe',
     note: 'Keine Empfehlung und keine Aussage über eine Unterversorgung.',
     body: ['Durchschnitt pro Tag über die Tage mit Einträgen im gewählten Zeitraum, berechnet aus den Nährwerten des Bundeslebensmittelschlüssels (BLS 4.0).',
-      'Der Balken zeigt den Anteil am EU-Nährstoffbezugswert (NRV). Das ist der Wert für die Kennzeichnung auf Verpackungen, nicht dein persönlicher Bedarf; die DGE-Referenzwerte liegen teils deutlich anders.'],
+      'Der Balken zeigt den Anteil am DGE-Referenzwert für dein Alter und Geschlecht (ohne Angabe: 30 Jahre). Referenzwerte gelten für Gesunde und sind eine Orientierung, kein persönlich gemessener Bedarf.'],
     points: [['Nur BLS-Lebensmittel', 'Gescannte, eigene und „nur kcal“-Einträge haben keine Werte; „Abdeckung“ zeigt, welcher Anteil der Kalorien eingerechnet ist.'],
       ['Angereicherte Produkte', 'Mit B12, Calcium, Jod oder Vitamin D angereicherte Pflanzendrinks, Salze usw. stehen meist nicht im BLS – gerade bei veganer Ernährung wird dann zu wenig angezeigt.'],
       ['Supplements', 'Tabletten aus dem Supplement-Tracker sind nicht eingerechnet.'],
       ['Vitamin D', 'Wird hauptsächlich über die Haut gebildet; die Zufuhr über Essen sagt wenig über die Versorgung.'],
       ['Blutwerte', 'Ob ein Nährstoff fehlt, zeigt nur eine ärztliche Untersuchung.']],
     src: [['Max Rubner-Institut (2025). Bundeslebensmittelschlüssel (BLS) 4.0, CC BY 4.0', 'https://doi.org/10.25826/Data20251217-134202-0'],
-      ['Verordnung (EU) Nr. 1169/2011, Anhang XIII Teil A (NRV)', 'https://eur-lex.europa.eu/eli/reg/2011/1169/oj']]
+      ['DGE/ÖGE-Referenzwerte für die Nährstoffzufuhr (je Nährstoff)', 'https://www.dge.de/wissenschaft/referenzwerte/']]
   });
 }
 
@@ -47,17 +48,18 @@ export function microView(rerender) {
     return h('div', { class: 'me an' }, ...head, h('section', { class: 'card' }, h('p', { class: 'small muted' }, foodsState() === 'failed' ? 'Lebensmitteldaten konnten nicht geladen werden.' : 'Lebensmitteldaten werden geladen …')));
   }
   const lists = []; for (let i = 0; i < n; i++) lists.push(foodEntries(addDays(first, i)));
-  const r = microAvg(lists, foodById);
+  const r = microAvg(lists, foodById, refOf);
+  const mine = deficits();
   const fmtV = (v) => (v < 10 ? r1(v) : fmt(v));
   const card = r.n
     ? h('section', { class: 'card mc' },
       h('div', { class: 'card-head' }, h('h2', {}, `${r.n} ${r.n === 1 ? 'Tag' : 'Tage'} mit Einträgen`), infoBtn('Mikronährstoffe', microInfo)),
       ...r.rows.map((x) => h('div', { class: 'mc-row' },
-        h('span', { class: 'mc-l' }, x.label),
+        h('span', { class: 'mc-l' }, x.label, mine.includes(x.k) ? h('small', { class: 'mc-def' }, ' Mangel') : null),
         h('span', { class: 'mc-bar' }, h('i', { style: `width:${Math.min(100, x.pct)}%` })),
         h('span', { class: 'mc-v' }, `${fmtV(x.v)} ${x.unit}`),
         h('span', { class: 'mc-p' }, `${x.pct} %`))),
-      h('p', { class: 'small muted' }, `Balken = Anteil am EU-Bezugswert (Kennzeichnung), kein persönlicher Bedarf. Abdeckung: ${r.cov} % der Kalorien stammen aus BLS-Lebensmitteln mit Werten.`))
+      h('p', { class: 'small muted' }, `Balken = Anteil am DGE-Referenzwert (Orientierung für Gesunde). Abdeckung: ${r.cov} % der Kalorien stammen aus BLS-Lebensmitteln mit Werten.`))
     : h('section', { class: 'card' }, h('p', { class: 'small muted' }, 'Im Zeitraum gibt es noch keine Tage mit Einträgen.'), infoBtn('Mikronährstoffe', microInfo));
   return h('div', { class: 'me an' }, ...head, card);
 }

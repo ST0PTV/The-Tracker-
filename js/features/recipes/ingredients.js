@@ -96,11 +96,11 @@ export const FOODS = [
   { name: 'Öl', el: 10, group: 'fett', aliases: ['olivenöl', 'rapsöl', 'sonnenblumenöl', 'sesamöl'] },
   { name: 'Kokosmilch light', kcal: 75, group: 'fett', aliases: ['kokosmilch fettreduziert'] },
   { name: 'Kokosmilch', group: 'fett' },
-  { name: 'Pesto', el: 15, diet: 'tierisch', allergens: ['nuesse', 'laktose'], group: 'fett' },
+  { name: 'Pesto', el: 15, diet: 'tierisch', allergens: ['schalen', 'laktose'], group: 'fett' },
   { name: 'Mayonnaise', el: 15, diet: 'tierisch', allergens: ['ei'], group: 'fett', aliases: ['mayo'] },
   { name: 'Hummus', el: 15, group: 'eiweiss' },
-  { name: 'Nüsse', el: 8, allergens: ['nuesse'], group: 'fett', aliases: ['walnüsse', 'mandeln', 'cashews', 'haselnüsse'] },
-  { name: 'Erdnussbutter', el: 15, allergens: ['nuesse'], group: 'fett', aliases: ['erdnussmus'] },
+  { name: 'Nüsse', el: 8, allergens: ['schalen'], group: 'fett', aliases: ['walnüsse', 'mandeln', 'cashews', 'haselnüsse'] },
+  { name: 'Erdnussbutter', el: 15, allergens: ['erdnuss'], group: 'fett', aliases: ['erdnussmus'] },
   { name: 'Chiasamen', el: 12, group: 'fett', aliases: ['chia'] },
   { name: 'Leinsamen', el: 10, group: 'fett' },
   { name: 'Zucker', el: 15, group: 'suess', aliases: ['rohrzucker'] },
@@ -111,7 +111,7 @@ export const FOODS = [
   { name: 'Sesam', el: 9, allergens: ['sesam'], group: 'fett', aliases: ['sesamsamen'] },
   { name: 'Kürbiskerne', el: 9, group: 'fett' },
   { name: 'Sonnenblumenkerne', el: 9, group: 'fett' },
-  { name: 'Erdnüsse', el: 9, allergens: ['nuesse'], group: 'fett', aliases: ['erdnuss'] },
+  { name: 'Erdnüsse', el: 9, allergens: ['erdnuss'], group: 'fett', aliases: ['erdnuss'] },
   { name: 'Kokosraspeln', el: 5, group: 'fett', aliases: ['kokosflocken'] },
   { name: 'Oliven', piece: 4, group: 'fett', aliases: ['schwarze oliven', 'kalamata-oliven'] },
   { name: 'Konfitüre', el: 20, group: 'suess', aliases: ['marmelade', 'fruchtaufstrich'] },
@@ -202,7 +202,9 @@ export const ALLERGEN_WORDS = {
   lupine: /lupine/,
   sulfite: /wein|rosine|trockenobst|getrocknet|dörr|essig|balsamico|sauerkraut/,
   soja: /soja|edamame|miso/,
-  nuesse: /(?<!muskat|kokos)nuss|nüsse|mandel|cashew|pistazie|pekan|macadamia|paranuss/
+  // Schalenfrüchte und Erdnuss getrennt wie in LMIV Anhang II Nr. 8 und Nr. 5 (0.3.0; vorher zusammen „nuesse“)
+  schalen: /(?<!muskat|kokos|erd)nuss|(?<!erd)nüsse|mandel|cashew|kaschu|pistazie|pekan|macadamia|paranuss|walnuss|haselnuss/,
+  erdnuss: /erdnuss|erdnüsse/
 };
 /** Allergene einer Zutatenzeile: aus der erkannten Zutat und aus Stichwörtern im Text. */
 export function allergensOfText(text) {

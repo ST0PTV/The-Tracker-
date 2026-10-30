@@ -10,6 +10,7 @@ import { entriesOf, sumEntries, addEntry, removeEntry, restoreEntry } from '../j
 import { RECIPES, TASTE_FOODS } from './recipe-data.js';
 import { RECIPES_2 } from './recipe-data-2.js';
 import { pantryInUse, recipeStock, takeIngredients, giveBack } from './pantry.js';
+import { bonusFor, tagsFor } from '../analyse/deficits.js';
 import { findFood, allergensOfText, parseIngredient, nutrientsOfText, gramsOfText, addNutrients, emptyNutrients, scaleIngredient, gramsOf, nutrientsFor } from './ingredients.js';
 
 store.define('recipes', {
@@ -31,9 +32,10 @@ export const KCAL_FALLBACK = 2000;
 // Rezept-Ernährungsform → erlaubt bei Profil-Form
 const DIET_ALLOWS = { vegan: ['vegan'], vegetarian: ['vegan', 'vegetarisch'], all: ['vegan', 'vegetarisch', 'fisch', 'fleisch'] };
 // Allergene der Rezepte → LMIV-Codes im Profil
-// Rezept-Allergen → Profil-Codes (LMIV Anhang II, 14 Hauptallergene). „nuesse“ fasst wie im Rezeptbuch Schalenfrüchte
-// und Erdnuss zusammen; deshalb sperrt jedes der beiden Häkchen alle Nuss-Rezepte.
-export const ALLERGEN_CODES = { gluten: ['gl'], laktose: ['mi'], ei: ['ei'], nuesse: ['nu', 'er'], soja: ['so'], fisch: ['fi'],
+// Rezept-Allergen → Profil-Codes (LMIV Anhang II, 14 Hauptallergene). Seit 0.3.0 getrennt: „schalen“ (Nr. 8) und
+// „erdnuss“ (Nr. 5), aus den Zutaten abgeleitet. Das alte „nuesse“ aus den Rezeptdaten des Rezeptbuchs gilt nur noch,
+// wenn sich aus den Zutaten keine Nussart ableiten lässt – dann sperrt es vorsichtshalber beide.
+export const ALLERGEN_CODES = { gluten: ['gl'], laktose: ['mi'], ei: ['ei'], nuesse: ['nu', 'er'], schalen: ['nu'], erdnuss: ['er'], soja: ['so'], fisch: ['fi'],
   krebstiere: ['kr'], weichtiere: ['we'], sellerie: ['se'], senf: ['sf'], sesam: ['sa'], sulfite: ['su'], lupine: ['lu'] };
 export const ALLERGEN_NAMES = { gl: 'Gluten', mi: 'Milch/Laktose', ei: 'Ei', nu: 'Schalenfrüchte', er: 'Erdnuss', so: 'Soja', fi: 'Fisch', kr: 'Krebstiere', we: 'Weichtiere', se: 'Sellerie', sf: 'Senf', sa: 'Sesam', su: 'Sulfite', lu: 'Lupine' };
 export const DIET_FORMS = [['all', 'Alles'], ['vegetarian', 'Vegetarisch'], ['vegan', 'Vegan']];
@@ -63,7 +65,8 @@ const algCache = new Map();
 export function allergensOf(r) {
   if (r.own) return r.allergens || [];
   if (algCache.has(r.id)) return algCache.get(r.id);
-  const a = [...new Set([...(r.allergens || []), ...(r.ingredients || []).flatMap(allergensOfText)])];
+  let a = [...new Set([...(r.allergens || []), ...(r.ingredients || []).flatMap(allergensOfText)])];
+  if (a.includes('nuesse') && (a.includes('schalen') || a.includes('erdnuss'))) a = a.filter((x) => x !== 'nuesse');
   algCache.set(r.id, a);
   return a;
 }
@@ -109,6 +112,8 @@ export function toggleAllergen(code) {
 }
 /** Tagesziel (kcal) oder Startwert 2.000 ohne Ziel. */
 export const kcalGoal = (iso = isoDate()) => getGoals(iso)?.goal || KCAL_FALLBACK;
+/** Schilder „viel …“ für ein Rezept (nur bei eingetragenem Mangel, sonst leer). */
+export const richTagsOf = (r, iso = isoDate()) => tagsFor(recipeNutrients(r), kcalGoal(iso));
 export const hasGoal = (iso = isoDate()) => !!getGoals(iso)?.goal;
 
 /** Hauptmahlzeiten laut Einstellung (bei 2 Mahlzeiten fällt eine aus). */
@@ -228,6 +233,7 @@ export function ideasFor(meal, iso = isoDate()) {
       if (isFav(r)) score += 3;
       if (cooked.has(r.id)) score -= 10;
       if (stocked) { const st = recipeStock(portionLines(r)); score += st.have.length * 0.8 + (st.all ? 3 : 0); } // Vorrat zuerst (0.2.5)
+      score += bonusFor(recipeNutrients(r), kcalGoal(iso)); // reich an dem, was laut Ärztin fehlt (0.3.0)
       score -= rejectPenalty(r);
       score += (hashStr(iso + r.id) % 100) / 60; // jeden Tag etwas Abwechslung
       return { ...x, score };

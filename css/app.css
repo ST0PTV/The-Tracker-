@@ -1075,3 +1075,19 @@ body.tt-locked #tabbar { display: none; }
 .cy-rem-row .input.cy-time { margin-left: 32px; width: 120px; flex: none; }
 .cy textarea.input { margin-bottom: 10px; }
 .cy .btn-row + p { margin-top: 10px; }
+/* ---------- Mangel (0.3.0) ---------- */
+.df-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; min-height: 60px; cursor: pointer; }
+.df-row + .df-row { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+.df-row .t { flex: 1; min-width: 0; }
+.df-row b { display: block; font-weight: 600; }
+.df-row small { display: block; font-size: 13px; color: var(--muted); margin-top: 2px; }
+.rz-rich { display: inline-block; margin: 4px 6px 0 0; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: color-mix(in srgb, var(--c-wt) 16%, transparent); color: var(--c-wt); }
+.wk-def-h { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.wk-def-l { display: flex; justify-content: space-between; font-size: 15px; }
+.wk-def-bar { height: 6px; border-radius: 3px; background: var(--ring-track); overflow: hidden; margin: 4px 0 12px; }
+.wk-def-bar i { display: block; height: 100%; background: var(--c-wt); }
+.mc-def { color: var(--c-wt); font-weight: 600; }
+.wk-def-bar { margin-top: 8px; }
+.wk-bar + .wk-def { margin-top: 12px; }
+.wk-por { margin-bottom: 10px; }

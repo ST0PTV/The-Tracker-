@@ -4,7 +4,7 @@ import { icon } from '../../core/icons.js';
 import { fmt } from '../../core/format.js';
 import { loadFoods, foodsState, foodById } from '../food/foods.js';
 import { prepareIngredients, ingredientsReady } from './ingredients.js';
-import { clearNutrientCache, recipeNutrients, kcalOfRecipe, isFav } from './recipes.js';
+import { clearNutrientCache, recipeNutrients, kcalOfRecipe, isFav, richTagsOf } from './recipes.js';
 import { gingerNode } from './ginger.js';
 
 /** Sorgt dafür, dass die Zutaten ihre BLS-Werte haben. true = bereit; sonst wird geladen und danach neu gezeichnet. */
@@ -47,6 +47,7 @@ export function recipeRow(r, { meal = null, mode = null, extra = null, factor = 
     thumb(r),
     h('span', { class: 't' }, h('b', {}, r.name),
       h('small', {}, `${time} · ${fmt(kcalOfRecipe(r))} kcal · ${macroText(r)}`),
-      extra ? h('small', { class: 'rz-extra' }, extra) : null),
+      extra ? h('small', { class: 'rz-extra' }, extra) : null,
+      ...richTagsOf(r).map((t) => h('span', { class: 'rz-rich' }, `viel ${t}`))),
     isFav(r) ? h('span', { class: 'rz-fav', 'aria-label': 'Favorit' }, icon('heart', { size: 16 })) : null);
 }
