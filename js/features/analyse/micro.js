@@ -35,8 +35,9 @@ export function microDay(entries, lookup) {
   return { vals, kcalAll, kcalKnown };
 }
 
-/** Durchschnitt pro Tag über die Tage mit Einträgen; pct = Anteil am NRV; cov = Anteil der kcal mit BLS-Werten. */
-export function microAvg(dayLists, lookup) {
+/** Durchschnitt pro Tag über die Tage mit Einträgen; pct = Anteil am Bezugswert (refOf, Standard NRV; seit 0.3.0
+ *  in der App die DGE-Werte der Person); cov = Anteil der kcal mit BLS-Werten. */
+export function microAvg(dayLists, lookup, refOf = (k) => MICRO_META[k][2]) {
   const days = dayLists.filter((l) => l.some((e) => !e.link));
   const tot = Object.fromEntries(MICRO_ORDER.map((k) => [k, 0]));
   let kAll = 0, kKnown = 0;
@@ -47,7 +48,8 @@ export function microAvg(dayLists, lookup) {
   }
   const n = days.length;
   const rows = MICRO_ORDER.map((k) => {
-    const [label, unit, nrv] = MICRO_META[k];
+    const [label, unit] = MICRO_META[k];
+    const nrv = refOf(k);
     const v = n ? tot[k] / n : 0;
     return { k, label, unit, nrv, v, pct: Math.round((v / nrv) * 100) };
   });

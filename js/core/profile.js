@@ -32,7 +32,8 @@ store.define('profile', {
   weightKg: null,
   bed: null,  // 'HH:MM' Bettzeit (Koffein-Ziel, Schlaf in den Kurven); null = Standard 23:00
   wake: null, // 'HH:MM' Aufstehen; null = Standard 07:00
-  cycle: null // 'yes' | 'no' | null – „Hast du deine Regel?“ (zeigt den Zyklus, ab 0.2.6)
+  cycle: null, // 'yes' | 'no' | null – „Hast du deine Regel?“ (zeigt den Zyklus, ab 0.2.6)
+  deficits: [] // ärztlich festgestellter Mangel, selbst eingetragen (ab 0.3.0): ['fe', 'vd', …]
 });
 store.define('goals', []); // [{ from: 'JJJJ-MM-TT', goal, preset, pf, ff, protein, carbs, fat, fiber, sugar, weight }]
 store.define('diet', { form: 'all', allergens: [] }); // form: 'all' | 'vegetarian' | 'vegan'

@@ -5,7 +5,7 @@
 // Ablehnungen), kein Vorrat- und Mangel-Bonus (0.2.5 / 0.3.0), Speicher nur über core/store.js (Schlüssel tt_week).
 import * as store from '../../core/store.js';
 import { isoDate, addDays } from '../../core/format.js';
-import { ideasFor, mainMeals, mealBudget, kcalOfRecipe, recipeById, suitable, timeMode, rs, MEAL_OF } from './recipes.js';
+import { ideasFor, mainMeals, mealBudget, kcalOfRecipe, recipeById, suitable, timeMode, rs, MEAL_OF, recipeNutrients } from './recipes.js';
 
 store.define('week', {
   meals: null,     // geplante Mahlzeiten; null = wie im Profil (Ich → Ernährung & Rezepte)
@@ -110,6 +110,19 @@ export function dayKcal(day, { onlyOk = false } = {}) {
     const s = w.slots[slotKey(day, m)], r = s && recipeById(s.id);
     return r && (!onlyOk || s.ok) ? sum + kcalOfRecipe(r) * (f[slotKey(day, m)] || 1) : sum;
   }, 0);
+}
+
+/** Mikronährstoffe eines Tags im Plan (alle Plätze mit Rezept, mit Mengenfaktoren), z. B. { fe: 11.2, vd: 3.1 }.
+ *  Zutaten ohne Wert in der Quelle zählen nicht mit (Ergebnis eher zu niedrig). */
+export function dayMicros(day, ids) {
+  const w = wk(), f = dayFactors(day), out = Object.fromEntries(ids.map((id) => [id, 0]));
+  for (const m of planMeals()) {
+    const s = w.slots[slotKey(day, m)], r = s && recipeById(s.id);
+    if (!r) continue;
+    const n = recipeNutrients(r), k = f[slotKey(day, m)] || 1;
+    for (const id of ids) out[id] += (n[id] || 0) * k;
+  }
+  return out;
 }
 
 /** Übernommenes Gericht für Tag und Mahlzeit: { recipe, factor } oder null. */

@@ -10,6 +10,8 @@ import { getGoals } from '../../core/profile.js';
 import { rs, setRs, tasteFoods, setTaste, addTasteFood, dietForm, setDietForm, allergenCodes, toggleAllergen, mainMeals,
   DIET_FORMS, ALLERGEN_NAMES, MAIN_MEALS, TIME_OPTIONS } from './recipes.js';
 import { qp } from './parts.js';
+import { deficits, setDeficit, person } from '../analyse/deficits.js';
+import { DGE, DGE_ORDER, dgeRef, dgeNote } from '../analyse/dge.js';
 
 const seg = (label, items, cur, set) => h('div', { class: 'seg', role: 'radiogroup', 'aria-label': label },
   ...items.map(([k, l]) => h('button', { type: 'button', role: 'radio', 'aria-checked': k === cur ? 'true' : 'false', onclick: () => set(k) }, l)));
@@ -78,6 +80,21 @@ function startView(rerender) {
     i > 1 ? h('a', { class: 'link rz-backstep', href: `#/rezepte/start?s=${i - 1}` }, 'Zurück') : null);
 }
 
+// Ärztlich festgestellter Mangel (0.3.0, Entwurf S2): je Nährstoff ein Schalter mit DGE-Wert der Person.
+function deficitCards(rerender) {
+  const on = deficits(), p = person();
+  const val = (id) => `${dgeRef(id, p).toLocaleString('de-DE')} ${DGE[id].unit} pro Tag (DGE)${dgeNote(id, p) ? ` · ${dgeNote(id, p)}` : ''}`;
+  return [
+    h('section', { class: 'card list df-list' }, ...DGE_ORDER.map((id) => {
+      const inp = h('input', { type: 'checkbox', role: 'switch', 'aria-label': `Mangel an ${DGE[id].name}` });
+      inp.checked = on.includes(id);
+      inp.addEventListener('change', () => { setDeficit(id, inp.checked); rerender(); });
+      return h('label', { class: 'df-row' }, h('span', { class: 't' }, h('b', {}, DGE[id].name), h('small', {}, val(id))),
+        h('span', { class: 'switch' }, inp, h('span', { class: 'slider' })));
+    })),
+    h('p', { class: 'small muted page-note' }, 'Nur eintragen, was deine Ärztin oder dein Arzt festgestellt hat. Die App bevorzugt dann Rezepte mit viel davon im Verhältnis zu ihren kcal und zeigt den Schnitt im Wochenplan. Das ersetzt keine Behandlung: Wie viel du brauchst und ob du ergänzt, klärst du ärztlich. Die DGE-Werte gelten für Gesunde nach Alter und Geschlecht (unter „Schlaf & Körper“).')];
+}
+
 /** „Ich → Ernährung & Rezepte“: alle drei Bereiche auf einer Seite. */
 export function prefsView(rerender) {
   return h('div', { class: 'me' },
@@ -85,7 +102,8 @@ export function prefsView(rerender) {
     pageHead('Ernährung & Rezepte', 'Ernährungsform, Allergene, Geschmack, Mahlzeiten und Portionen für die Rezeptvorschläge.'),
     h('h3', { class: 'sec' }, 'Ernährung'), ...dietCards(rerender),
     h('h3', { class: 'sec' }, 'Geschmack'), ...tasteCards(rerender),
-    h('h3', { class: 'sec' }, 'Mahlzeiten'), ...mealCards(rerender));
+    h('h3', { class: 'sec' }, 'Mahlzeiten'), ...mealCards(rerender),
+    h('h3', { class: 'sec' }, 'Ärztlich festgestellter Mangel'), ...deficitCards(rerender));
 }
 
 export const startRoutes = { '/rezepte/start': startView };

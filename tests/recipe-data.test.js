@@ -58,7 +58,8 @@ test('Neue Rezepte: Ernährungsform und Allergene passen zu den Zutaten, kein Fi
   for (const r of RECIPES_2) {
     assert.equal(r.diet, dietOf(r), `${r.id}: Ernährungsform`);
     assert.notEqual(r.diet, 'fisch', `${r.id}: kein Fisch`);
-    const derived = new Set(r.ingredients.flatMap(allergensOfText));
+    // Rezeptdaten nennen Nüsse als „nuesse“; die Ableitung trennt seit 0.3.0 Schalenfrüchte und Erdnuss
+    const derived = new Set(r.ingredients.flatMap(allergensOfText).map((a) => (a === 'schalen' || a === 'erdnuss' ? 'nuesse' : a)));
     assert.ok(!derived.has('fisch') && !derived.has('krebstiere') && !derived.has('weichtiere'), `${r.id}: keine Meeresfrüchte`);
     assert.ok(r.allergens.every((a) => BOOK_ALLERGENS.includes(a) && derived.has(a)), `${r.id}: angegebene Allergene ${r.allergens}`);
     assert.deepEqual([...derived].filter((a) => BOOK_ALLERGENS.includes(a)).sort(), [...r.allergens].sort(), `${r.id}: Allergene vollständig`);

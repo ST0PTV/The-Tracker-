@@ -9,7 +9,9 @@ import { openInfo, infoBtn } from '../../core/info.js';
 import { fmt, isoDate, dayLabel } from '../../core/format.js';
 import { rs, recipeById, kcalOfRecipe, kcalGoal, hasGoal, MEAL_SHORT } from './recipes.js';
 import { ensureReady, thumb, recipeHref, subnav, fmtFactor } from './parts.js';
-import { ensureWeek, wk, dayFactors, dayKcal, slotKey, setOk, setAllOk, remix, otherFor, canSwap, swap, planMeals, togglePlanMeal,
+import { deficits, person } from '../analyse/deficits.js';
+import { planAverage } from '../analyse/dge.js';
+import { ensureWeek, wk, dayFactors, dayKcal, dayMicros, slotKey, setOk, setAllOk, remix, otherFor, canSwap, swap, planMeals, togglePlanMeal,
   weekPortions, setWeekPortions, setFit, PLAN_MEALS, FIT_MIN, FIT_MAX } from './week.js';
 
 const MEAL_LONG = { breakfast: 'Frühstück', lunch: 'Mittagessen', dinner: 'Abendessen', snack: 'Snack' };
@@ -83,6 +85,20 @@ function settingsCard(rerender) {
     h('label', { class: 'check-row' }, fitBox, h('span', {}, 'Mengen an mein Tagesziel anpassen')));
 }
 
+// Ärztlich festgestellter Mangel (0.3.0, Entwurf W2): Tagesschnitt aus dem Plan je Nährstoff gegen den DGE-Wert.
+function deficitCard(days) {
+  const ids = deficits();
+  if (!ids.length) return null;
+  const rows = planAverage(days.map((d) => dayMicros(d, ids)), ids, person());
+  const num = (v) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10).toLocaleString('de-DE');
+  return h('section', { class: 'card wk-def' },
+    h('div', { class: 'wk-def-h' }, 'Aus dem Plan, Schnitt pro Tag (Schätzung)'),
+    ...rows.flatMap((x) => [
+      h('div', { class: 'wk-def-l' }, h('span', {}, x.name), h('span', {}, `${num(x.v)} / ${num(x.ref)} ${x.unit}`)),
+      h('div', { class: 'wk-def-bar', role: 'img', 'aria-label': `${x.name}: ${num(x.v)} von ${num(x.ref)} ${x.unit} pro Tag` }, h('i', { style: `width:${Math.min(100, x.pct)}%` }))]),
+    h('p', { class: 'small muted' }, `Gerichte mit viel davon kommen öfter dran. Bezug: DGE-Referenzwerte für Gesunde – bei einem Mangel legt deine Ärztin fest, wie viel du brauchst und ob du ergänzt.${ids.includes('vd') ? ' Vitamin D steckt in wenigen Lebensmitteln.' : ''} Zutaten ohne Wert zählen nicht mit.`));
+}
+
 function weekView(rerender) {
   if (!rs().started) { setTimeout(() => { location.hash = '#/rezepte/start'; }, 0); return h('div', {}); }
   const head = h('header', { class: 'page-head' }, h('h1', {}, 'Woche'));
@@ -101,6 +117,7 @@ function weekView(rerender) {
     h('div', { class: 'btn-row wk-bar' },
       h('button', { class: 'btn', type: 'button', disabled: !shown.length, onclick: () => { setAllOk(!all, today); rerender(); } }, all ? 'Keins übernehmen' : 'Alle übernehmen'),
       h('button', { class: 'btn', type: 'button', disabled: all, onclick: () => { remix(today); rerender(); } }, 'Rest neu mischen')),
+    deficitCard(days),
     shown.length ? null : h('section', { class: 'card' }, h('p', { class: 'small muted' }, 'Gerade passt kein Rezept zu deinen Einstellungen. Ändere Ernährungsform, Geschmack oder Kochzeit unter „Ich → Ernährung & Rezepte“.')),
     ...days.map((d) => {
       const f = dayFactors(d);
