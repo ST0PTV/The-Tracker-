@@ -9,6 +9,7 @@ import { getProfile, setProfile, getSleep, currentWeight } from '../../core/prof
 import { enterWeight } from '../goal/weight.js';
 
 const SEXES = [['f', 'Frau'], ['m', 'Mann'], [null, 'Keine Angabe']];
+const CYCLE = [['yes', 'Ja'], ['no', 'Nein']];
 
 export function bodyView(rerender) {
   const p = getProfile();
@@ -17,9 +18,20 @@ export function bodyView(rerender) {
   let sex = p.sex || null;
   const sexSeg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Geschlecht' });
   const drawSex = () => sexSeg.replaceChildren(...SEXES.map(([k, l]) => h('button', {
-    type: 'button', role: 'radio', 'aria-checked': k === sex ? 'true' : 'false', onclick: () => { sex = k; drawSex(); }
+    type: 'button', role: 'radio', 'aria-checked': k === sex ? 'true' : 'false', onclick: () => { sex = k; drawSexAll(); }
   }, l)));
+  let cyc = p.cycle || null;
+  const cycWrap = h('div', { class: 'cy-ask' });
+  const drawCyc = () => {
+    cycWrap.hidden = sex === 'm';
+    cycWrap.replaceChildren(h('span', { class: 'label' }, 'Hast du deine Regel?'),
+      h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Hast du deine Regel?' }, ...CYCLE.map(([k, l]) => h('button', {
+        type: 'button', role: 'radio', 'aria-checked': k === cyc ? 'true' : 'false', onclick: () => { cyc = k; drawCyc(); } }, l))),
+      h('small', { class: 'form-hint' }, 'Bei „Ja“ erscheint der Zyklus (Karte auf „Heute“, Kalender, Einstellungen unter „Ich → Zyklus“).'));
+  };
+  const drawSexAll = () => { drawSex(); drawCyc(); };
   drawSex();
+  drawCyc();
   const inp = (label, value, ph, mode = 'numeric') => h('input', { class: 'input', type: 'text', inputmode: mode, value: value ?? '', placeholder: ph, 'aria-label': label });
   const birth = inp('Geburtsjahr', p.birthYear, 'z. B. 1995');
   const height = inp('Körpergröße', p.heightCm, 'z. B. 175');
@@ -36,7 +48,7 @@ export function bodyView(rerender) {
     if (cm != null && !(cm >= 120 && cm <= 230)) { toast('Bitte eine Körpergröße zwischen 120 und 230 cm eintragen (oder leer lassen).', { error: true }); return; }
     if (kg != null && !(kg >= 30 && kg <= 300)) { toast('Bitte ein Gewicht zwischen 30 und 300 kg eintragen.', { error: true }); return; }
     if (!bed.value || !wake.value) { toast('Bitte Bett- und Aufstehzeit wählen.', { error: true }); return; }
-    setProfile({ sex, birthYear: by != null ? Math.round(by) : null, heightCm: cm != null ? Math.round(cm) : null, bed: bed.value, wake: wake.value });
+    setProfile({ sex, cycle: sex === 'm' ? null : cyc, birthYear: by != null ? Math.round(by) : null, heightCm: cm != null ? Math.round(cm) : null, bed: bed.value, wake: wake.value });
     let msg = 'Gespeichert';
     if (kg != null && (w0 == null || Math.round(kg * 10) !== Math.round(w0 * 10))) msg = enterWeight(today, kg);
     toast(msg);
@@ -48,7 +60,7 @@ export function bodyView(rerender) {
     pageHead('Schlaf & Körper', 'Für Untergrenze, Makros, Grundumsatz, Alkohol-Schätzung und die Schlafzeit in den Kurven.'),
     h('h3', { class: 'sec' }, 'Körper'),
     h('section', { class: 'card' },
-      h('span', { class: 'label' }, 'Geschlecht'), sexSeg,
+      h('span', { class: 'label' }, 'Geschlecht'), sexSeg, cycWrap,
       h('div', { class: 'two' }, field('Geburtsjahr', birth), field('Größe (cm)', height)),
       field('Gewicht heute (kg)', weight, 'Ein neuer Wert landet im Gewichtsverlauf (wie über die Gewichtskarte).')),
     h('h3', { class: 'sec' }, 'Schlaf'),

@@ -12,6 +12,10 @@ import { trainingView } from './features/training.js';
 import { ichRoutes } from './features/ich.js';
 import { analyseRoutes } from './features/analyse/routes.js';
 import { loadFoods } from './features/food/foods.js';
+import { cycleRoutes } from './features/cycle/routes.js';
+import { lockSettingsView, lockScreen } from './features/me/lock-view.js';
+import { isLocked } from './core/lock.js';
+import { closeAllSheets } from './core/sheet.js';
 
 const boot = store.init();
 applyTheme(appearanceOf(getSettings()));
@@ -22,20 +26,35 @@ const saveBar = document.getElementById('savebar');
 store.onWriteResult((ok) => { if (saveBar) saveBar.hidden = ok; });
 
 // „+“ in der Tab-Leiste: auf „Heute“ für den gewählten Tag, sonst für heute
-setTabAction((path) => openQuickAdd(path === '/' ? heuteDay() : undefined));
+setTabAction((path) => { if (!isLocked('app')) openQuickAdd(path === '/' ? heuteDay() : undefined); });
 
-const rerender = startRouter({
+const routes = {
   '/': heuteView,
   ...rezepteRoutes,
   '/training': trainingView,
   ...ichRoutes,
-  ...analyseRoutes
-});
+  ...analyseRoutes,
+  ...cycleRoutes,
+  '/ich/sperre': lockSettingsView
+};
+// PIN-Sperre für die ganze App (core/lock.js): jede Seite zeigt dann den Sperrbildschirm, ohne Tab-Leiste.
+const guarded = {};
+for (const [path, view] of Object.entries(routes)) {
+  guarded[path] = (rr) => {
+    const locked = isLocked('app');
+    document.body.classList.toggle('tt-locked', locked);
+    return locked ? lockScreen(rr, 'app') : view(rr);
+  };
+}
+const rerender = startRouter(guarded);
 
 // Ziele geändert → offene Seite neu zeichnen (z. B. Rezepte zeigen das neue Tagesziel).
 document.addEventListener('tt-profile', () => rerender());
 // Journal geändert (Eintrag, Favorit, Anzeige) → Seite neu zeichnen
 document.addEventListener('tt-journal', () => rerender());
+// Zyklus geändert oder Sperre an/aus → neu zeichnen; beim Sperren offene Sheets schließen
+document.addEventListener('tt-cycle', () => rerender());
+document.addEventListener('tt-lock', () => { if (isLocked('app') || isLocked('zyklus')) closeAllSheets(); rerender(); });
 
 // Lebensmitteldaten (ca. 1,4 MB) im Hintergrund laden, damit die Suche sofort bereit ist
 const idle = globalThis.requestIdleCallback || ((fn) => setTimeout(fn, 800));
