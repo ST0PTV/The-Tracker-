@@ -1,4 +1,4 @@
-// Übernommen aus dem Workout-Tracker (MIT, ST0PTV); ergänzt um home, book, me, scan, star, drop, cup, glass, scale, pill, bolt, target, trend, moon, palette, flask, clock, heart.
+// Übernommen aus dem Workout-Tracker (MIT, ST0PTV); ergänzt um lock, home, book, me, scan, star, drop, cup, glass, scale, pill, bolt, target, trend, moon, palette, flask, clock, heart.
 // Eigene Linien-Icons im Stil der Tab-Leiste (24er-Raster, Strich 1.8, currentColor).
 // Keine Unicode-Zeichen oder Emoji als Icons: iOS stellt z. B. „ℹ“ als farbiges Emoji dar.
 const PATHS = {
@@ -25,6 +25,7 @@ const PATHS = {
   warn: '<path d="M12 4.5L21 19.5H3z" stroke-linejoin="round"/><path d="M12 10v4.5"/><circle cx="12" cy="17.2" r="0.6" fill="currentColor"/>',
   link: '<path d="M10 13.5a4.5 4.5 0 0 0 6.4.4l2.8-2.8a4.5 4.5 0 0 0-6.4-6.4L11.3 6.2"/><path d="M14 10.5a4.5 4.5 0 0 0-6.4-.4l-2.8 2.8a4.5 4.5 0 0 0 6.4 6.4l1.5-1.5"/>',
   clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+  lock: '<rect x="5.5" y="10.5" width="13" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',

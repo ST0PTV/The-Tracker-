@@ -24,6 +24,8 @@ import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS, caffSettings } from '.
 import { waterSettingsView, caffSettingsView, alcSettingsView } from './drinks/drinks-settings.js';
 import { suppSettingsView } from './supp/supp-card.js';
 import { suppSettings } from './supp/supplements.js';
+import { cycleAvailable, cycleSettings, TRACK } from './cycle/cycle.js';
+import { lockSettings } from '../core/lock.js';
 
 const fmt = (n) => Math.round(n).toLocaleString('de-DE');
 
@@ -45,6 +47,8 @@ function ichView(rerender) {
   const W = waterSettings(), C = caffSettings(), A = alcSettings(), S = suppSettings();
   const active = S.items.filter((x) => x.on).length;
   const fmtKg = (v) => r1(v);
+  const cy = cycleSettings(), L = lockSettings();
+  const p = getProfile();
   const appSeg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Darstellung' },
     ...APPEARANCES.map(([key, label]) => h('button', {
       type: 'button', role: 'radio', 'aria-checked': s.appearance === key ? 'true' : 'false',
@@ -59,7 +63,9 @@ function ichView(rerender) {
     ...group('Über mich',
       meRow({ kind: 'body', ico: 'moon', title: 'Schlaf & Körper', href: '#/ich/koerper', sub: `${sl.bed}–${sl.wake}${w != null ? ` · ${fmtKg(w)} kg` : ''}` }),
       meRow({ kind: 'food', ico: 'book', title: 'Ernährung & Rezepte', href: '#/ich/ernaehrung',
-        sub: `${({ all: 'Alles', vegetarian: 'Vegetarisch', vegan: 'Vegan' })[dietForm()]}${allergenCodes().length ? ` · ${allergenCodes().length} ${allergenCodes().length === 1 ? 'Allergen' : 'Allergene'}` : ''} · ${recipeSettings().mealCount} Mahlzeiten` })),
+        sub: `${({ all: 'Alles', vegetarian: 'Vegetarisch', vegan: 'Vegan' })[dietForm()]}${allergenCodes().length ? ` · ${allergenCodes().length} ${allergenCodes().length === 1 ? 'Allergen' : 'Allergene'}` : ''} · ${recipeSettings().mealCount} Mahlzeiten` }),
+      p.sex !== 'm' ? meRow({ kind: 'cyc', ico: 'drop', title: 'Zyklus', href: '#/ich/zyklus',
+        sub: !cycleAvailable() ? 'aus · unter „Schlaf & Körper“ einschalten' : cy.on ? `Karte auf Heute · ${TRACK.filter(([k]) => cy.track[k]).length} von ${TRACK.length} getrackt` : 'Karte aus' }) : null),
     ...group('Tracker',
       meRow({ kind: 'water', ico: 'drop', title: 'Wasser', href: '#/ich/wasser', sub: W.enabled ? `${litres(W.goal || 1500)} l · Plus ${fmt(W.step || 250)} ml` : 'aus' }),
       meRow({ kind: 'supp', ico: 'pill', title: 'Supplements', href: '#/ich/supplements', sub: S.enabled ? (S.items.length ? `${active} aktiv` : 'noch keine angelegt') : 'aus' }),
@@ -67,6 +73,7 @@ function ichView(rerender) {
       meRow({ kind: 'alc', ico: 'glass', title: 'Alkohol', href: '#/ich/alkohol', sub: A.enabled ? `an · Abbau ${String(A.beta).replace('.', ',')} ‰/h` : 'aus' })),
     ...group('App',
       meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', right: appSeg }),
+      meRow({ kind: 'app', ico: 'lock', title: 'PIN-Sperre', href: '#/ich/sperre', sub: L.on ? (L.scope === 'app' ? 'an · ganze App' : 'an · nur Zyklus') : 'aus' }),
       meRow({ kind: 'app', ico: 'info', title: 'Quellen & Lizenzen', href: '#/ich/quellen', sub: 'Daten, Studien, übernommener Code' })),
     devCard(rerender),
     h('p', { class: 'me-foot' }, `The Tracker ${VERSION} · ${store.usageKB()} KB lokal gespeichert`));
@@ -162,7 +169,7 @@ function zielView() {
 const CREDITS = [
   ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
   ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
-  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js) und die Ginger-Zeichnung als Platzhalterbild. Zyklus folgt.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
+  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js), die Ginger-Zeichnung als Platzhalterbild und der Zyklus (zyklus.js: Rechnung, Kalender, Eintragen, Wissen, Erinnerungen, Bericht, Import, PIN mit Schein-PIN; zerlegt und an die Studienlage angepasst).', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
   ['Eigene Rezepte (ab 0.2.4)', '104 eigene Fassungen klassischer Gerichte (Fleisch, Frühstück, vegetarisch/vegan, Snacks) im Format des Rezeptbuchs, ohne Fisch und Meeresfrüchte. Keine Vorlage aus einer bestimmten Sammlung, keine Bilder. Nährwerte aus den Zutaten geschätzt (BLS 4.0).', 'The Tracker · MIT-Lizenz', 'https://github.com/ST0PTV/The-Tracker-'],
   ['Bundeslebensmittelschlüssel (BLS) 4.0', 'Nährwerte je 100 g für die Lebensmittelsuche (data/bls.json). Verändert: Auszug; freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.', 'Max Rubner-Institut (2025), Karlsruhe · CC BY 4.0 · DOI 10.25826/Data20251217-134202-0', 'https://doi.org/10.25826/Data20251217-134202-0'],
   ['Open Food Facts', 'Produktdaten zum Barcode. Nur die Barcode-Nummer wird gesendet; gefundene Produkte werden auf dem Gerät gespeichert.', 'Open Database License (ODbL) 1.0, Inhalte Database Contents License (DbCL) 1.0', 'https://world.openfoodfacts.org'],
@@ -176,6 +183,7 @@ const CREDITS = [
   ['Analyse', 'Gewichtstrend (geglätteter Mittelwert, a = 0,1), Energiebedarf aus Essen und Gewicht (Ø Aufnahme − Steigung × 7.700 kcal/kg, Spanne als 95-%-Intervall), Kalorien-Balken mit Zielband ±10 %, Monat und Jahr ohne Serie. Schätzungen, nur Anzeige. Rechnung und Aufbau aus dem Calorie-Tracker.', 'Walker (Hacker’s Diet) · MacroFactor (Methode) · ST0PTV, MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
   ['Mikronährstoffe', 'Ø pro Tag aus den BLS-Werten (Calcium, Magnesium, Eisen, Zink, Jod, Vitamin B12, Vitamin D, Folat) als Anteil am EU-Nährstoffbezugswert (NRV) – Kennzeichnungswert, keine persönliche Empfehlung. Rechnung aus dem Calorie-Tracker.', 'Verordnung (EU) Nr. 1169/2011, Anhang XIII Teil A · BLS 4.0', 'https://eur-lex.europa.eu/eli/reg/2011/1169/oj'],
   ['Magen-Modell', 'Restanteil im Magen 2^(−(t/T½)²), T½ ≈ 1,75 h für ~250 kcal, länger für große und fettreiche Mahlzeiten (Annahme), Getränke 0,4 h, Faktor 1,1/0,9 für Frauen/Männer. Grobe Schätzung. Rechnung aus dem Calorie-Tracker.', 'Abell et al. 2008 · Datz et al. 1987 · Caballero-Plasencia et al. 1999', 'https://doi.org/10.2967/jnmt.107.048116'],
+  ['Zyklus', 'Zykluslänge aus den eigenen Periodenbeginnen (Median, Spanne; ohne Daten 29 Tage), Eisprung als Spanne (Zykluslänge minus 11 bis 14 Tage), fruchtbares Fenster 5 Tage davor bis Eisprung, Hinweise nach FIGO-Normalwerten. Schätzungen, keine Verhütung, keine Diagnose. Alle Quellen mit Prüfvermerk unter „Zyklus → Wissen“.', 'Bull 2019 · Wilcox 1995 · Fehring 2006 · Munro/FIGO 2018 · Klein & Poth 2013 · McNulty 2020 · Colenso-Semple 2023', 'https://pubmed.ncbi.nlm.nih.gov/31482137/'],
   ['Standardportionen (LARN)', 'Portions-Schnellwahl im Mengen-Dialog. Rohgewicht, essbarer Anteil; gegarte Lebensmittel umgerechnet (Schätzung).', 'SINU (2024), LARN V Revisione, Porzioni standard (Werte über ATS Brescia 2025)', 'https://www.ats-brescia.it/documents/3432658/78612060/Porzioni+standard+degli+alimenti+per+la+popolazione+adulta.pdf/2ce817e7-0713-bbe6-56c7-767285a575dd']
 ];
 
