@@ -34,3 +34,21 @@ test('Laden und Entfernen lassen echte Daten stehen; nur tt_training_-Keys', () 
   assert.equal(localStorage.getItem('wt_exercises'), '[1]');
   for (let i = 0; i < localStorage.length; i++) assert.ok(/^(tt_|wt_exercises$)/.test(localStorage.key(i)), localStorage.key(i));
 });
+
+test('Figur: Standard „wie im Profil“, eigene Wahl bleibt beim Speichern anderer Einstellungen erhalten', async () => {
+  localStorage.clear();
+  const { setProfile } = await import('../js/core/profile.js');
+  setProfile({ sex: 'f' });
+  let s = store.get('settings');
+  assert.equal(s.figureChoice, 'auto');
+  assert.equal(s.figure, 'female');
+  store.set('settings', { ...store.get('settings'), restSeconds: 90 }); // wie die übernommenen Module speichern
+  assert.equal(store.get('settings').figureChoice, 'auto', 'aufgelöste Figur wird nicht gespeichert');
+  setProfile({ sex: 'm' });
+  assert.equal(store.get('settings').figure, 'male');
+  store.set('settings', { ...store.get('settings'), figureChoice: 'female' });
+  store.set('settings', { ...store.get('settings'), barKg: 15 });
+  s = store.get('settings');
+  assert.equal(s.figure, 'female'); assert.equal(s.figureChoice, 'female'); assert.equal(s.barKg, 15); assert.equal(s.restSeconds, 90);
+  assert.deepEqual(M.validateData(store.snapshot()), []);
+});

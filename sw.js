@@ -117,6 +117,7 @@ const PRECACHE = [
   'js/features/training/muscle-info.js',
   'js/features/training/muscle-pick.js',
   'js/features/training/muscle-view.js',
+  'js/features/training/next-plan.js',
   'js/features/training/onboarding.js',
   'js/features/training/plan-analysis-view.js',
   'js/features/training/plan-analysis.js',
