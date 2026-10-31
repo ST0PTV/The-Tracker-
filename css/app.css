@@ -554,7 +554,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 
 /* ---------- Tracker-Karten (Heute): ohne Eintrag groß mit „+“ auf der Linie, mit Eintrag kompakt ---------- */
 .trk { --c: var(--accent); }
-.k-water { --c: var(--c-water); } .k-caf { --c: var(--c-caf); } .k-alc { --c: var(--c-alc); } .k-wt { --c: var(--c-wt); } .k-supp { --c: var(--c-supp); } .k-food { --c: var(--accent); } .k-goal { --c: var(--c-goal); } .k-body { --c: var(--c-body); } .k-app { --c: var(--c-app); } .k-cyc { --c: var(--c-cyc); }
+.k-water { --c: var(--c-water); } .k-caf { --c: var(--c-caf); } .k-alc { --c: var(--c-alc); } .k-wt { --c: var(--c-wt); } .k-supp { --c: var(--c-supp); } .k-food { --c: var(--accent); } .k-goal { --c: var(--c-goal); } .k-body { --c: var(--c-body); } .k-app { --c: var(--c-app); } .k-cyc { --c: var(--c-cyc); } .k-train { --c: var(--accent); }
 .trk .trk-lbl { font-size: 15px; color: var(--muted); }
 .trk .trk-big { font-size: 40px; font-weight: 300; letter-spacing: -0.02em; line-height: 1.1; color: var(--c); font-variant-numeric: tabular-nums; }
 .trk .trk-big small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 3px; letter-spacing: 0; }
