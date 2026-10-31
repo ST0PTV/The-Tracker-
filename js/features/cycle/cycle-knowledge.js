@@ -57,8 +57,8 @@ const TEXTS = {
     ['Mit Pille', 'Mit der Pille war die Leistung in Studien allenfalls minimal geringer [16]. Phasen-Hinweise passen dann nicht, weil die Hormone gleichmäßig zugeführt werden.'],
     ['Was die App bewusst nicht tut', 'Keine Trainingspläne nach Phase, keine Warnung vor schwerem Training an bestimmten Tagen, keine Aussagen zum Verletzungsrisiko. Dafür ist die Datenlage zu schwach.']]],
   doctor: ['Wann abklären lassen', [
-    ['Periode bleibt aus', 'Keine Periode seit 3 Monaten bei vorher regelmäßigem Zyklus oder seit 6 Monaten bei unregelmäßigem (ohne Schwangerschaft, Stillzeit oder Hormone) [18].'],
-    ['Länge und Schwankung', 'Zyklen regelmäßig kürzer als 24 oder länger als 38 Tage, oder sie schwanken um mehr als 7 bis 9 Tage; eine Blutung länger als 8 Tage [12].'],
+    ['Periode bleibt aus', 'Keine Periode seit 3 Monaten bei vorher regelmäßigem Zyklus oder seit 6 Monaten bei unregelmäßigem (ohne Schwangerschaft, Stillzeit oder Hormone) [18]. Die App zeigt den Hinweis immer schon nach 90 Tagen.'],
+    ['Länge und Schwankung', 'Zyklen regelmäßig kürzer als 24 oder länger als 38 Tage, oder sie schwanken um mehr als 7 bis 9 Tage; eine Blutung länger als 8 Tage [12]. Die App weist schon bei drei Zyklen über 35 Tagen hin (Grenze aus dem IOC-Leitfaden REDs CAT2 für Sportlerinnen).'],
     ['Starke Blutung', 'Eine Blutung, die deinen Alltag stark einschränkt. Die Ärztin prüft dann meist auch das Blutbild auf Eisenmangel [19].'],
     ['Zwischenblutung', 'Blutung zwischen den Perioden oder nach dem Sex [20].'],
     ['Schmerzen', 'Regelschmerzen, die trotz üblicher Behandlung nicht besser werden, oder Schmerzen außerhalb der Periode oder beim Sex.'],

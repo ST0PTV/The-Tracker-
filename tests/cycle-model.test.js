@@ -166,3 +166,25 @@ test('withField: setzt, löscht leere Werte und leere Tage, entfernt Import-Mark
   d = M.withField(d, '2026-10-01', 'bleed', null);
   assert.equal(d['2026-10-01'], undefined);
 });
+
+test('Hinweise ab 0.3.2: „zu lang“ ab drei Zyklen über 35 Tagen, Ausbleiben immer nach 90 Tagen', async () => {
+  const M = await import('../js/features/cycle/model.js');
+  const mk = (starts) => Object.fromEntries(starts.flatMap((s) => [0, 1, 2].map((i) => [M.addDays(s, i), { bleed: 3 }])));
+  const chain = (first, lens) => lens.reduce((acc, n) => [...acc, M.addDays(acc[acc.length - 1], n)], [first]);
+  // drei Zyklen à 36 Tage → Hinweis (vorher erst über 38)
+  let starts = chain('2026-01-01', [36, 36, 36]);
+  let today = M.addDays(starts[starts.length - 1], 5);
+  let a = M.analyze(mk(starts), today);
+  assert.ok(M.flags(a, mk(starts), today).some((f) => f.id === 'long'));
+  starts = chain('2026-01-01', [35, 35, 35]);
+  today = M.addDays(starts[starts.length - 1], 5);
+  a = M.analyze(mk(starts), today);
+  assert.ok(!M.flags(a, mk(starts), today).some((f) => f.id === 'long'), '35 Tage selbst ist noch kein Hinweis');
+  // unregelmäßig (Schwankung > 9) und 100 Tage ohne Periode → Hinweis (vorher erst nach 180)
+  starts = chain('2025-06-01', [24, 40, 26, 38]);
+  today = M.addDays(starts[starts.length - 1], 100);
+  a = M.analyze(mk(starts), today);
+  assert.ok(a.spread > M.NORMAL_SPREAD);
+  assert.ok(M.flags(a, mk(starts), today).some((f) => f.id === 'absent'));
+  assert.equal(M.ABSENT_DAYS_IRREG, undefined);
+});
