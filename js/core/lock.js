@@ -1,10 +1,11 @@
-// PIN-Sperre für die ganze App oder nur den Zyklus (Nutzerwunsch 2026-10-29: „grundsätzliche Option für die App“).
+// PIN-Sperre für die ganze App (Nutzerwunsch 2026-10-29: „grundsätzliche Option für die App“; seit 0.3.2 ohne
+// „nur Zyklus“, Nutzerwunsch 2026-10-31: nur die ganze App, keine einzelnen Teile).
 // Idee und Ablauf (PIN, Schein-PIN mit leerem Zyklus, Sperren beim Verlassen, „PIN vergessen“) aus zyklus.js im
 // Rezeptbuch (Copyright (c) 2026 JuliaKelp, MIT); hier als eigenes Modul, Hash mit SHA-256 und Zufallssalz.
 // Wichtig: Die Sperre schützt nur den Bildschirm. Die Daten liegen weiter unverschlüsselt im Browser-Speicher und im Backup.
 import * as store from './store.js';
 
-store.define('lock', { pin: null, decoy: null, salt: null, scope: 'zyklus' }); // scope: 'app' | 'zyklus'
+store.define('lock', { pin: null, decoy: null, salt: null }); // ein altes Feld scope (bis 0.3.1) wird ignoriert
 
 let unlocked = false;
 let decoy = false;
@@ -16,14 +17,12 @@ async function hashPin(pin, salt) {
 }
 const newSalt = () => hex(globalThis.crypto.getRandomValues(new Uint8Array(12)));
 
-export const lockSettings = () => { const l = store.get('lock'); return { on: !!l.pin, decoyOn: !!l.decoy, scope: l.scope === 'app' ? 'app' : 'zyklus' }; };
+export const lockSettings = () => { const l = store.get('lock'); return { on: !!l.pin, decoyOn: !!l.decoy }; };
 export const validPin = (pin) => /^\d{4,8}$/.test(String(pin || ''));
 
-/** Gesperrt für einen Bereich? area: 'app' (alles) oder 'zyklus'. */
-export function isLocked(area = 'app') {
-  const l = lockSettings();
-  if (!l.on || unlocked) return false;
-  return l.scope === 'app' || area === 'zyklus';
+/** Ist die App gesperrt? */
+export function isLocked() {
+  return lockSettings().on && !unlocked;
 }
 /** Mit der Schein-PIN entsperrt (dann gilt der leere Zyklus-Datenbestand). */
 export const isDecoy = () => decoy && unlocked;
@@ -66,13 +65,7 @@ export function clearPin(kind = 'pin') {
   changed();
 }
 
-export function setScope(scope) {
-  if (isDecoy()) throw new Error('Das geht nur mit der richtigen PIN.');
-  store.update('lock', (x) => { x.scope = scope === 'app' ? 'app' : 'zyklus'; });
-  changed();
-}
-
-/** „PIN vergessen“: Sperre aufheben. Die Daten löscht der Aufrufer (je nach Bereich). */
+/** „PIN vergessen“: Sperre aufheben. Die Daten löscht der Aufrufer (store.wipeAll). */
 export function forgetPin() {
   store.update('lock', (x) => { x.pin = null; x.decoy = null; });
   unlocked = false; decoy = false;

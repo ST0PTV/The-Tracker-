@@ -116,7 +116,7 @@ export function cycleSettingsView(rerender) {
       h('p', { class: 'small muted' }, n ? `${n} Tage mit Einträgen gespeichert.` : 'Noch keine Einträge.')),
     h('section', { class: 'card list me-grp' },
       h('a', { class: 'me-row k-cyc', href: '#/zyklus/bericht' }, h('span', { class: 'qa-badge' }, icon('list', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'Bericht für die Ärztin'), h('small', {}, 'Zykluslängen, Blutung, Beschwerden')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 }))),
-      h('a', { class: 'me-row k-app', href: '#/ich/sperre' }, h('span', { class: 'qa-badge' }, icon('lock', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'PIN-Sperre'), h('small', {}, L.on ? (L.scope === 'app' ? 'an · ganze App' : 'an · nur Zyklus') : 'aus')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 }))),
+      h('a', { class: 'me-row k-app', href: '#/ich/sperre' }, h('span', { class: 'qa-badge' }, icon('lock', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'PIN-Sperre'), h('small', {}, L.on ? 'an · ganze App' : 'aus')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 }))),
       h('a', { class: 'me-row k-app', href: '#/zyklus/wissen' }, h('span', { class: 'qa-badge' }, icon('info', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'Wissen und Quellen')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 })))),
     n ? h('div', { class: 'cy-danger' }, confirmDel
       ? [h('p', { class: 'small' }, 'Wirklich alle Zyklusdaten löschen? Das geht nur mit einem Backup rückgängig.'),

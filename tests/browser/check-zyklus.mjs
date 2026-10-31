@@ -1,6 +1,6 @@
 // Zyklus und PIN-Sperre (0.2.6) im Browser: Regel-Frage unter „Schlaf & Körper“, leere Karte, Eintragen, Karte
 // (Streifen/Ring), Kalender (Kreise/Band), Verlauf, Wissen, Bericht, Import, Hormon-Methode blendet Fenster aus,
-// PIN für den Zyklus und für die ganze App mit Schein-PIN. Prüft fremde Keys, Konsolenfehler, null/undefined/NaN;
+// PIN für die ganze App (ab 0.3.2 ohne „nur Zyklus“) mit Schein-PIN. Prüft fremde Keys, Konsolenfehler, null/undefined/NaN;
 // Screenshots hell/dunkel. Aufruf: node tests/browser/check-zyklus.mjs
 import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
 import { join } from 'node:path';
@@ -100,32 +100,28 @@ for (const appearance of ['dark', 'light']) {
   await nav('#/ich/zyklus');
   await p.click('.chip:has-text("Keine oder Kondom")'); await p.waitForTimeout(200);
 
-  // PIN nur für den Zyklus
+  // PIN für die ganze App (es gibt keine Auswahl „nur Zyklus“ mehr) + Schein-PIN
   await nav('#/ich/sperre');
+  ok(await p.locator('.seg[aria-label="Was gesperrt wird"]').count() === 0 && !/Nur Zyklus/.test(await text()), `${appearance}: keine Auswahl „Nur Zyklus“`);
   await p.fill('input[aria-label="PIN, 4 bis 8 Ziffern"]', '2580');
   await p.fill('input[aria-label="Noch einmal"]', '2580');
   await p.click('.lock-field button:has-text("Speichern")'); await p.waitForTimeout(300);
-  await p.reload(); await p.waitForTimeout(500);
-  await nav('#/');
-  ok(/Gesperrt/.test(await p.locator('.cy-card').innerText()) && await p.locator('.cy-strip, .cy-ring').count() === 0, `${appearance}: Karte zeigt „Gesperrt“ ohne Daten`);
-  await nav('#/zyklus');
-  ok(/Zyklus gesperrt/.test(await text()), `${appearance}: Kalender gesperrt`);
-  await p.fill('.lock input', '1111'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(300);
-  ok(/stimmt nicht/.test(await text()), `${appearance}: falsche PIN abgelehnt`);
-  await p.fill('.lock input', '2580'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(300);
-  ok(await p.locator('.cy-cal').count() === 1, `${appearance}: mit PIN entsperrt`);
-
-  // Ganze App + Schein-PIN
-  await nav('#/ich/sperre');
-  await p.click('.seg[aria-label="Was gesperrt wird"] button:has-text("Ganze App")'); await p.waitForTimeout(200);
   await p.fill('input[aria-label="Schein-PIN, anders als die PIN"]', '1357');
   await p.fill('.lock-field input[aria-label="Noch einmal"]', '1357');
   await p.click('.lock-field button:has-text("Speichern")'); await p.waitForTimeout(300);
   await p.reload(); await p.waitForTimeout(500);
   ok(/The Tracker ist gesperrt/.test(await text()) && !(await p.locator('#tabbar').isVisible()), `${appearance}: ganze App gesperrt, ohne Tab-Leiste`);
   await shot('8-gesperrt');
+  await nav('#/zyklus');
+  ok(/The Tracker ist gesperrt/.test(await text()) && await p.locator('.cy-cal').count() === 0, `${appearance}: Kalender gesperrt`);
   await nav('#/rezepte');
   ok(/The Tracker ist gesperrt/.test(await text()), `${appearance}: auch Rezepte gesperrt`);
+  await p.fill('.lock input', '1111'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(300);
+  ok(/stimmt nicht/.test(await text()), `${appearance}: falsche PIN abgelehnt`);
+  await p.fill('.lock input', '2580'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(400);
+  await nav('#/zyklus');
+  ok(await p.locator('.cy-cal').count() === 1 && await p.locator('.cy-cal .cy-d.b').count() > 0, `${appearance}: mit PIN entsperrt, Kalender mit Daten`);
+  await p.reload(); await p.waitForTimeout(500);
   await p.fill('.lock input', '1357'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(400);
   await nav('#/zyklus');
   ok(await p.locator('.cy-cal .cy-d.b').count() === 0, `${appearance}: Schein-PIN zeigt leeren Kalender`);

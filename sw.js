@@ -95,7 +95,6 @@ const PRECACHE = [
   'js/features/training/body3d.js',
   'js/features/training/controls.js',
   'js/features/training/cycle-view.js',
-  'js/features/training/cycle.js',
   'js/features/training/demo.js',
   'js/features/training/device.js',
   'js/features/training/diary-view.js',

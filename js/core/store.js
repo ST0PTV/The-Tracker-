@@ -135,3 +135,13 @@ export function usageKB() {
   }
   return Math.round((chars * 2) / 102.4) / 10;
 }
+
+// Löscht alle eigenen Daten (alle Keys mit Präfix tt_, auch von Bereichen, die noch nicht geladen sind, z. B. Training).
+// Fremde Keys derselben Origin bleiben. Für „PIN vergessen“.
+export function wipeAll() {
+  const ls = storage();
+  const own = [];
+  for (let i = 0; i < ls.length; i++) { const k = ls.key(i); if (k && k.startsWith(PREFIX)) own.push(k); }
+  for (const k of own) ls.removeItem(k);
+  write('schema', SCHEMA_VERSION);
+}

@@ -1,17 +1,13 @@
-// Zyklus-Routen (#/zyklus …) und „Ich → Zyklus“. Mit PIN-Sperre zeigen alle Zyklus-Seiten zuerst den Sperrbildschirm.
-import { isLocked } from '../../core/lock.js';
-import { lockScreen } from '../me/lock-view.js';
+// Zyklus-Routen (#/zyklus …) und „Ich → Zyklus“. Die PIN-Sperre gilt für die ganze App (app.js), nicht einzeln hier.
 import { calendarView, dayView, historyView } from './cycle-views.js';
 import { knowledgeView } from './cycle-knowledge.js';
 import { cycleSettingsView, reportView } from './cycle-settings.js';
 
-const guard = (view) => (rerender) => (isLocked('zyklus') ? lockScreen(rerender, 'zyklus') : view(rerender));
-
 export const cycleRoutes = {
-  '/zyklus': guard(calendarView),
-  '/zyklus/tag': guard(dayView),
-  '/zyklus/verlauf': guard(historyView),
+  '/zyklus': calendarView,
+  '/zyklus/tag': dayView,
+  '/zyklus/verlauf': historyView,
   '/zyklus/wissen': knowledgeView,
-  '/zyklus/bericht': guard(reportView),
-  '/ich/zyklus': guard(cycleSettingsView)
+  '/zyklus/bericht': reportView,
+  '/ich/zyklus': cycleSettingsView
 };
