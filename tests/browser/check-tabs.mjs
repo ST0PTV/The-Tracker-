@@ -5,7 +5,7 @@
 import { launch, startServer, checker, appVersion, outDir, BAD_TEXT } from './lib.mjs';
 import { join } from 'node:path';
 
-const ROUTES = ['#/', '#/rezepte', '#/rezepte/woche', '#/rezepte/einkauf', '#/training', '#/ich', '#/ich/ziel', '#/ich/quellen', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/gewichtsziel', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen', '#/rezepte/start', '#/rezepte/neu', '#/ich/ernaehrung'];
+const ROUTES = ['#/', '#/rezepte', '#/rezepte/woche', '#/rezepte/einkauf', '#/training', '#/training/plaene', '#/training/uebungen', '#/training/fortschritt', '#/ich/training', '#/ich', '#/ich/ziel', '#/ich/quellen', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/gewichtsziel', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen', '#/rezepte/start', '#/rezepte/neu', '#/ich/ernaehrung'];
 const want = process.argv[2] || appVersion();
 const srv = await startServer();
 const b = await launch();

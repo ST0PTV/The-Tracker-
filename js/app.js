@@ -8,7 +8,7 @@ import './core/profile.js';
 import { heuteView, heuteDay } from './features/heute.js';
 import { openQuickAdd } from './features/quick-add.js';
 import { rezepteRoutes } from './features/rezepte.js';
-import { trainingView } from './features/training.js';
+import { trainingRoutes, TRAINING_PATHS } from './features/training.js';
 import { ichRoutes } from './features/ich.js';
 import { analyseRoutes } from './features/analyse/routes.js';
 import { loadFoods } from './features/food/foods.js';
@@ -31,7 +31,7 @@ setTabAction((path) => { if (!isLocked('app')) openQuickAdd(path === '/' ? heute
 const routes = {
   '/': heuteView,
   ...rezepteRoutes,
-  '/training': trainingView,
+  ...trainingRoutes,
   ...ichRoutes,
   ...analyseRoutes,
   ...cycleRoutes,
@@ -43,6 +43,7 @@ for (const [path, view] of Object.entries(routes)) {
   guarded[path] = (rr) => {
     const locked = isLocked('app');
     document.body.classList.toggle('tt-locked', locked);
+    document.body.classList.toggle('tt-train', !locked && TRAINING_PATHS.includes(path)); // Stil des Trainingsbereichs nur dort (css/training.css)
     return locked ? lockScreen(rr, 'app') : view(rr);
   };
 }
