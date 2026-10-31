@@ -1,7 +1,12 @@
-// Übernommen aus dem Workout-Tracker (MIT, ST0PTV); ergänzt um lock, home, book, me, scan, star, drop, cup, glass, scale, pill, bolt, target, trend, moon, palette, flask, clock, heart.
+// Übernommen aus dem Workout-Tracker (MIT, ST0PTV); ergänzt um lock, home, book, me, scan, star, drop, cup, glass, scale, pill, bolt, target, trend, moon, palette, flask, clock, heart; 0.3.1: sparkle, workout, calendar, dumbbell, cardio aus dem Workout-Tracker 3.14.
 // Eigene Linien-Icons im Stil der Tab-Leiste (24er-Raster, Strich 1.8, currentColor).
 // Keine Unicode-Zeichen oder Emoji als Icons: iOS stellt z. B. „ℹ“ als farbiges Emoji dar.
 const PATHS = {
+  sparkle: '<path d="M12 4l1.8 4.9L18.5 10.5l-4.7 1.7L12 17l-1.8-4.8-4.7-1.7 4.7-1.6z" stroke-linejoin="round"/><path d="M18.5 15.5v4M16.5 17.5h4"/>', // v3.2.0: Plan vorschlagen lassen
+  workout: '<rect x="5" y="4.5" width="14" height="16.5" rx="2"/><path d="M9 4.5h6v3H9z"/><path d="M8.8 14l2.2 2.2 4.2-4.4"/>',
+  calendar: '<rect x="4" y="5.5" width="16" height="15" rx="2.2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><circle cx="8.5" cy="14" r="0.7" fill="currentColor"/><circle cx="12" cy="14" r="0.7" fill="currentColor"/><circle cx="15.5" cy="14" r="0.7" fill="currentColor"/><circle cx="8.5" cy="17.2" r="0.7" fill="currentColor"/><circle cx="12" cy="17.2" r="0.7" fill="currentColor"/>',
+  dumbbell: '<g transform="rotate(-45 12 12)" fill="currentColor" stroke="none"><rect x="6.5" y="11" width="11" height="2" rx="1"/><rect x="4.6" y="7.2" width="2.6" height="9.6" rx="1.1"/><rect x="16.8" y="7.2" width="2.6" height="9.6" rx="1.1"/><rect x="2" y="9.2" width="2.2" height="5.6" rx="1"/><rect x="19.8" y="9.2" width="2.2" height="5.6" rx="1"/></g>',
+  cardio: '<path d="M3 12h4l2.5-6 4 12 2.5-6H21" stroke-linejoin="round"/>', // v3.8.0: Cardio-Tag im Assistenten
   target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/>',
   trend: '<path d="M4 17l5.5-5.5 3.5 3.5L20 8"/><path d="M15 8h5v5"/>',
   moon: '<path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z"/>',

@@ -1,0 +1,143 @@
+// Übernommen aus dem Workout-Tracker 3.14.0 (js/progression-view.js, MIT, ST0PTV), angepasst für The Tracker.
+// v2.4.0: Bewertungs-Sheet beim Tippen auf „Weiter“ (Variante 1B), Vorschlagskarte (2B),
+// „Willkommen zurück“ beim Start nach einer Pause (3A) und Info mit Quellen.
+import { infoBody } from './info.js';
+import { openGlossary } from './glossary.js';
+import { h } from './util.js';
+import { openSheet } from './sheet.js';
+import { icon } from './icons.js';
+import { toast } from './ui.js';
+import { fmtNum } from './input.js';
+import * as S from './session.js';
+import * as PR from './progression.js';
+import { lastPerformance } from './model.js';
+
+const kg = (x) => `${fmtNum(x)} kg`;
+
+export function openProgressionInfo(section = 'rating') {
+  const I = PR.PROGRESSION_INFO;
+  const blocks = section === 'pause'
+    ? [['Nach einer Pause', I.pause], ['So entsteht der Vorschlag', I.rules]]
+    : section === 'light'
+      ? [['Leichte Woche', I.light], ['Wiederholungsbereich', I.range]]
+      : section === 'range'
+        ? [['Wiederholungsbereich', I.range], ['Die Bewertung', I.rating], ['Leichte Woche', I.light]]
+        : [['Die Bewertung', I.rating], ['So entsteht der Vorschlag', I.rules], ['Wiederholungsbereich', I.range], ['Leichte Woche', I.light], ['Nach einer Pause', I.pause]];
+  const key = ['pause', 'light', 'range'].includes(section) ? section : 'rating';
+  openSheet(infoBody({
+    short: I.short[key],
+    details: [...blocks.flatMap(([t, lines]) => [h('h3', {}, t), h('ul', {}, lines.map((x) => h('li', {}, x)))]),
+      h('p', { class: 'muted small' }, `Bereich und leichte Woche geprüft am ${new Date(PR.RANGE_LIGHT_CHECKED_AT).toLocaleDateString('de-DE')} (Abstracts in PubMed). Schätzungen, keine medizinische Beratung.`)],
+    sources: I.sources, checked: PR.PROGRESSION_CHECKED_AT, glossary: openGlossary
+  }), { title: section === 'pause' ? 'Wiedereinstieg' : section === 'light' ? 'Leichte Woche' : 'Bewertung & Vorschlag' });
+}
+
+// Braucht diese Übung noch eine Bewertung? (Kraft/Körpergewicht, mindestens ein erledigter Arbeitssatz, noch nicht gefragt)
+export function needsRating(d) {
+  return d.exercise && d.exercise.kind !== 'cardio' && d.workDone && d.entry.rating === undefined;
+}
+
+// Sheet: drei große Tasten + „Ohne Bewertung weiter“. Schließen per X/Hintergrund bricht ab (kein Weiter).
+export function askRating(d, onDone, { change = false } = {}) {
+  let sheet = null;
+  const pick = (val) => {
+    const r = S.rateEntry(d.entry.id, val);
+    if (!r.ok) { toast(r.errors[0], { error: true }); return; }
+    sheet.close();
+    onDone();
+  };
+  sheet = openSheet(h('div', { class: 'rate-sheet' },
+    h('p', { class: 'muted small' }, 'Bezogen auf den letzten Arbeitssatz: Wie viele Wiederholungen wären noch gegangen?'),
+    h('div', { class: 'rate-list' }, Object.entries(PR.RATINGS).map(([k, x]) =>
+      h('button', { class: `btn rate-btn${d.entry.rating === k ? ' on' : ''}`, type: 'button', onclick: () => pick(k) }, h('b', {}, x.label), h('small', {}, x.hint)))),
+    h('button', { class: 'btn subtle block', type: 'button', onclick: () => pick(change ? null : 'none') }, change ? 'Bewertung entfernen' : 'Ohne Bewertung weiter'),
+    h('button', { class: 'link center-link', type: 'button', onclick: () => openProgressionInfo('rating') }, icon('info', { size: 16, cls: 'inline' }), ' Wozu die Bewertung?')
+  ), { title: `${d.exercise.name} – wie war’s?` });
+}
+
+// Kleine Zeile unter der Tabelle, wenn bewertet: zum Ändern.
+export function ratingLine(d, rerender) {
+  const r = PR.RATINGS[d.entry.rating];
+  if (!r) return null;
+  return h('button', { class: 'link rated-line', type: 'button', onclick: () => askRating(d, rerender, { change: true }) },
+    `Bewertet: ${r.label} · ändern`);
+}
+
+// Vorschlagskarte (2B): Tabelle bleibt auf dem letzten Stand, bis du „Übernehmen“ tippst.
+export function suggestionCard(d, rerender) {
+  const s = d.suggestion;
+  if (!s) return null;
+  const decide = (accept) => {
+    const r = S.decideSuggestion(d.entry.id, accept);
+    if (!r.ok) { toast(r.errors[0], { error: true }); return; }
+    rerender();
+  };
+  const head = s.kind === 'weight'
+    ? h('div', { class: 'sug-main' }, kg(s.to), h('span', { class: 'muted' }, ` statt ${fmtNum(s.from)}`))
+    : h('div', { class: 'sug-main' }, '+1 Wdh.', h('span', { class: 'muted' }, s.from > 0 ? ` bei ${kg(s.from)}` : ' je Satz'));
+  const why = s.range && s.kind === 'weight' && s.repsFrom ? `${s.reason} – mehr Gewicht, Wiederholungen zurück auf ${s.range.min}.`
+    : s.range ? `${s.reason}.`
+    : s.kind === 'weight' && s.repsFrom ? `${s.reason} – mehr Gewicht, Wiederholungen wie vorletztes Mal.`
+    : s.smallStepNote ? `${s.reason}. Der kleinste Gewichtsschritt (${kg(s.step)}) ist hier groß – erst Wiederholungen.`
+      : s.deltaKg < 0 ? `${s.reason} – einen Schritt leichter.` : `${s.reason}.`;
+  // v3.13.0 (S2, Feature-Audit): kompakter – Titel und Vorschlag in einem Block, Tasten nebeneinander, damit die
+  // Satztabelle auf kleinen iPhones ohne Scrollen sichtbar bleibt.
+  return h('div', { class: 'card sug-card' },
+    h('div', { class: 'sug-top' }, h('div', {}, h('span', { class: 'sec-lbl' }, 'Vorschlag für heute'), head),
+      h('button', { class: 'info-btn small', type: 'button', 'aria-label': 'Wie entsteht der Vorschlag?', onclick: () => openProgressionInfo(s.range ? 'range' : 'rating') }, icon('info', { size: 18 }))),
+    h('p', { class: 'muted small' }, `${why} Schätzung – du entscheidest.`),
+    h('div', { class: 'btn-row' },
+      h('button', { class: 'btn primary', type: 'button', onclick: () => decide(true) }, 'Übernehmen'),
+      h('button', { class: 'btn', type: 'button', onclick: () => decide(false) }, 'Wie zuletzt')));
+}
+
+// „Willkommen zurück“ (3A) vor dem Start eines Plans nach ≥ 21 Tagen Pause.
+export function askBreak(plan, exercisesById, sessions, info, { onReduce, onKeep }) {
+  const rows = [];
+  for (const it of plan.items) {
+    const ex = exercisesById[it.exerciseId];
+    if (!ex || ex.kind === 'cardio') continue;
+    const last = lastPerformance(ex.id, sessions, { skipLight: true });
+    const w = last ? Math.max(0, ...last.sets.filter((x) => x.type !== 'warmup').map((x) => x.weightKg || 0)) : 0;
+    if (!(w > 0)) continue;
+    rows.push({ name: ex.name, from: w, to: PR.reducedWeight(w, info.pct, PR.loadStep(ex, sessions)) });
+  }
+  const shown = rows.slice(0, 4);
+  let sheet = null;
+  sheet = openSheet(h('div', { class: 'break-sheet' },
+    h('p', {}, `Dein letztes Training ist ${PR.fmtBreak(info.days)} her. Nach einer Pause ist es sinnvoll, etwas leichter einzusteigen.`),
+    h('p', { class: 'muted small' }, `Vorschlag: Gewichte um ${info.pct} % senken (Schätzung).`),
+    shown.length ? h('div', { class: 'card list break-list' },
+      shown.map((r) => h('div', { class: 'row' }, h('span', { class: 't' }, r.name), h('span', { class: 'old' }, fmtNum(r.from)), h('span', { class: 'muted' }, '→'), h('b', { class: 'new' }, kg(r.to)))),
+      rows.length > shown.length ? h('div', { class: 'row muted small' }, `+ ${rows.length - shown.length} weitere`) : null) : null,
+    h('button', { class: 'btn primary block', type: 'button', onclick: () => { sheet.close(); onReduce(); } }, 'Leichter einsteigen'),
+    h('button', { class: 'btn block', type: 'button', onclick: () => { sheet.close(); onKeep(); } }, 'Wie zuletzt'),
+    h('button', { class: 'link center-link', type: 'button', onclick: () => openProgressionInfo('pause') }, icon('info', { size: 16, cls: 'inline' }), ' Woher kommen die Werte?')
+  ), { title: 'Willkommen zurück' });
+}
+
+// v2.30.0 (B3): Start in der leichten Woche – Vorschlag „Sätze halbieren, ~10 % weniger Gewicht“ oder normal trainieren.
+export function askLight(plan, exercisesById, sessions, { onLight, onNormal }) {
+  const rows = [];
+  for (const it of plan.items) {
+    const ex = exercisesById[it.exerciseId];
+    if (!ex || ex.kind === 'cardio') continue;
+    const last = lastPerformance(ex.id, sessions, { skipLight: true });
+    const work = last ? last.sets.filter((x) => x.type !== 'warmup') : [];
+    const n = work.length || it.targetSets || ex.defaultWorkSets || 3;
+    const w = Math.max(0, ...work.map((x) => x.weightKg || 0));
+    rows.push({ name: ex.name, sets: `${n} → ${PR.lightSetCount(n)} Sätze`, weight: w > 0 ? `${fmtNum(w)} → ${kg(PR.lightWeight(w, PR.loadStep(ex, sessions)))}` : '' });
+  }
+  const shown = rows.slice(0, 4);
+  let sheet = null;
+  sheet = openSheet(h('div', { class: 'break-sheet' },
+    h('p', {}, 'Diese Woche ist als leichte Woche markiert.'),
+    h('p', { class: 'muted small' }, `Vorschlag: Sätze halbieren, etwa ${PR.LIGHT_WEEK.pct} % weniger Gewicht (Schätzung).`),
+    shown.length ? h('div', { class: 'card list break-list' },
+      shown.map((r) => h('div', { class: 'row' }, h('span', { class: 't' }, h('b', {}, r.name), h('small', {}, r.sets)), r.weight ? h('span', { class: 'muted' }, r.weight) : null)),
+      rows.length > shown.length ? h('div', { class: 'row muted small' }, `+ ${rows.length - shown.length} weitere`) : null) : null,
+    h('button', { class: 'btn primary block', type: 'button', onclick: () => { sheet.close(); onLight(); } }, 'Leicht trainieren'),
+    h('button', { class: 'btn block', type: 'button', onclick: () => { sheet.close(); onNormal(); } }, 'Heute normal trainieren'),
+    h('button', { class: 'link center-link', type: 'button', onclick: () => openProgressionInfo('light') }, icon('info', { size: 16, cls: 'inline' }), ' Woher kommen die Werte?')
+  ), { title: 'Leichte Woche' });
+}

@@ -20,6 +20,11 @@ export function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+// Links ohne javascript:/vbscript:/data: (aus Workout-Tracker 3.14.0 übernommen).
+const URL_ATTRS = new Set(['href', 'src', 'action', 'formaction', 'xlink:href']);
+const UNSAFE_URL = /^\s*(javascript|vbscript|data):/i;
+export function safeUrl(v) { return !UNSAFE_URL.test(String(v)); }
+
 // Kleiner DOM-Helfer: h('div', {class:'card'}, 'Text', childNode)
 export function h(tag, attrs = {}, ...children) {
   const el = document.createElement(tag);
@@ -27,6 +32,7 @@ export function h(tag, attrs = {}, ...children) {
     if (val === false || val === null || val === undefined) continue;
     if (key === 'class') el.className = val;
     else if (key.startsWith('on') && typeof val === 'function') el.addEventListener(key.slice(2).toLowerCase(), val);
+    else if (URL_ATTRS.has(key) && UNSAFE_URL.test(String(val))) continue;
     else el.setAttribute(key, val === true ? '' : String(val));
   }
   for (const child of children.flat()) {

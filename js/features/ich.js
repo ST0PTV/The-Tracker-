@@ -70,7 +70,8 @@ function ichView(rerender) {
       meRow({ kind: 'water', ico: 'drop', title: 'Wasser', href: '#/ich/wasser', sub: W.enabled ? `${litres(W.goal || 1500)} l · Plus ${fmt(W.step || 250)} ml` : 'aus' }),
       meRow({ kind: 'supp', ico: 'pill', title: 'Supplements', href: '#/ich/supplements', sub: S.enabled ? (S.items.length ? `${active} aktiv` : 'noch keine angelegt') : 'aus' }),
       meRow({ kind: 'caf', ico: 'cup', title: 'Koffein', href: '#/ich/koffein', sub: C.enabled ? `an · Richtwert ${fmt(C.limit)} mg` : 'aus' }),
-      meRow({ kind: 'alc', ico: 'glass', title: 'Alkohol', href: '#/ich/alkohol', sub: A.enabled ? `an · Abbau ${String(A.beta).replace('.', ',')} ‰/h` : 'aus' })),
+      meRow({ kind: 'alc', ico: 'glass', title: 'Alkohol', href: '#/ich/alkohol', sub: A.enabled ? `an · Abbau ${String(A.beta).replace('.', ',')} ‰/h` : 'aus' }),
+      meRow({ kind: 'train', ico: 'dumbbell', title: 'Training', href: '#/ich/training', sub: 'Pause, Scheiben, Geräte, Figur' })),
     ...group('App',
       meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', right: appSeg }),
       meRow({ kind: 'app', ico: 'lock', title: 'PIN-Sperre', href: '#/ich/sperre', sub: L.on ? (L.scope === 'app' ? 'an · ganze App' : 'an · nur Zyklus') : 'aus' }),
@@ -95,17 +96,20 @@ function devCard(rerender) {
     loadDemoAlcohol(generateDemoAlcohol({ today, days: 30 }));
     // Ohne eigenes Ziel ein Beispielziel ab dem ersten Beispieltag (Gewicht nur im Ziel, nicht im Profil)
     if (!getGoals()) setGoal({ from: addDays(today, -29), goal: DEMO_GOAL, preset: 'dge', weight: 75 });
-    toast(`${count} Beispiel-Einträge für 30 Tage geladen`);
+    // Training (Phase 4): Übungen, zwei Pläne und sechs Wochen Trainings; Modul erst hier laden
+    const T = await import('./training/demo.js').catch(() => null);
+    const tn = T ? T.loadTrainingDemo() : 0;
+    toast(`${count} Beispiel-Einträge für 30 Tage${tn ? ` und ${tn} Trainings` : ''} geladen`);
     rerender();
   };
   return h('section', { class: 'card dev-card' },
     h('div', { class: 'card-head' }, h('h2', {}, 'Beispieldaten'), h('span', { class: 'qa-badge k-app' }, icon('flask', { size: 18 }))),
     h('p', { class: 'muted small' }, n
       ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
-      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee, Gewicht und ein paar Abenden mit Alkohol. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
+      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee, Gewicht, ein paar Abenden mit Alkohol und sechs Wochen Training (zwei Pläne, Rad am Samstag). Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
     h('div', { class: 'btn-row' },
       h('button', { class: 'btn', type: 'button', onclick: (e) => load(e.currentTarget) }, n ? 'Neu erzeugen' : 'Beispieldaten laden'),
-      n ? h('button', { class: 'btn', type: 'button', onclick: () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); removeDemoAlcohol(); const k = removeDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
+      n ? h('button', { class: 'btn', type: 'button', onclick: async () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); removeDemoAlcohol(); const k = removeDemo(); const T = await import('./training/demo.js').catch(() => null); T?.removeTrainingDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
 function zielView() {
@@ -167,7 +171,7 @@ function zielView() {
 
 // Quellen und Lizenzen aller übernommenen Teile. Wird mit jeder Phase ergänzt.
 const CREDITS = [
-  ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
+  ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen. Seit 0.3.1 der ganze Trainingsbereich aus Version 3.14.0 (Training, Pläne, Übungen, Fortschritt, Übungsanimationen, Körperfigur); die Studien dazu stehen in den Info-Sheets der Übungen und Animationen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
   ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
   ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js), die Ginger-Zeichnung als Platzhalterbild und der Zyklus (zyklus.js: Rechnung, Kalender, Eintragen, Wissen, Erinnerungen, Bericht, Import, PIN mit Schein-PIN; zerlegt und an die Studienlage angepasst).', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
   ['Eigene Rezepte (ab 0.2.4)', '104 eigene Fassungen klassischer Gerichte (Fleisch, Frühstück, vegetarisch/vegan, Snacks) im Format des Rezeptbuchs, ohne Fisch und Meeresfrüchte. Keine Vorlage aus einer bestimmten Sammlung, keine Bilder. Nährwerte aus den Zutaten geschätzt (BLS 4.0).', 'The Tracker · MIT-Lizenz', 'https://github.com/ST0PTV/The-Tracker-'],
