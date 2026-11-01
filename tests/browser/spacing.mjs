@@ -74,7 +74,7 @@ export async function auditFields(p, where) {
   for (let i = 0; i < n; i++) {
     const el = p.locator(sel).nth(i);
     if (!(await el.isVisible())) continue;
-    await el.evaluate((e) => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(60);
+    await el.evaluate((e) => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(60); // 0.4.0: bleibt, kürzer als das Ruhe-Fenster von settle()
     const box = await el.boundingBox();
     if (!box || box.height < 20) continue;
     const label = (await el.getAttribute('aria-label')) || (await el.getAttribute('type')) || 'Feld';

@@ -4,7 +4,7 @@
 // M3 Hinweis „Zum Home-Bildschirm“, M4 Analyse ohne Vorschlag bei 5–9 Sätzen, S1 Assistent im leeren Training-Tab,
 // S2 kompakte Vorschlagskarte, S3 Tausch-Alternativen ohne Gruppen. Nur erfundene Testdaten.
 // Aufruf: node tests/browser/check-v3130.mjs [Ordner für Screenshots]
-import { launch, startServer, checker, loadPlaywright, BAD_TEXT, startPlan } from './lib.mjs';
+import { launch, startServer, checker, loadPlaywright, BAD_TEXT, startPlan, settle } from './lib.mjs';
 import { join } from 'node:path';
 const shots = process.argv[2] || null;
 const pw = await loadPlaywright();
@@ -41,11 +41,11 @@ for (const [devName, theme] of profiles) {
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   const shot = (n) => (shots ? p.screenshot({ path: join(shots, `v3130-${devName.replace(/\W+/g, '_')}-${theme}-${n}.png`) }) : null);
-  const go = async (hash) => { await p.evaluate((x) => { location.hash = x; }, hash); await p.waitForTimeout(400); };
+  const go = async (hash) => { await p.evaluate((x) => { location.hash = x; }, hash); await settle(p, 400); };
   const closeSheets = () => p.evaluate(() => document.querySelectorAll('.sheet-close').forEach((x) => x.click()));
-  await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
   await p.evaluate(async (light) => { const st = await import('./js/features/training/store.js'); localStorage.setItem('tt_settings', JSON.stringify({ ...JSON.parse(localStorage.getItem('tt_settings') || '{}'), appearance: light ? 'light' : 'dark' })); /* The Tracker: Erscheinung app-weit */ st.set('settings', { ...st.get('settings'), appearance: light ? 'light' : 'dark' }); }, theme === 'light');
-  await p.reload(); await p.waitForTimeout(500);
+  await p.reload(); await settle(p, 500);
   if (theme === 'light') ok(await p.evaluate(() => document.documentElement.dataset.theme === 'light'), `${T}: helles Design aktiv`);
 
   // M3 + S1: neuer Nutzer
@@ -54,15 +54,15 @@ for (const [devName, theme] of profiles) {
   const assist = p.locator('#view .card.empty').getByRole('button', { name: 'Plan vorschlagen lassen' });
   ok(await assist.count() === 1, `${T}: leerer Training-Tab bietet „Plan vorschlagen lassen“`);
   await shot('1-new');
-  await assist.click(); await p.waitForTimeout(400);
+  await assist.click(); await settle(p, 400);
   ok(/Frage 1 von/.test(await p.evaluate(() => document.querySelector('.sheet')?.innerText || '')), `${T}: öffnet den Plan-Assistenten`);
-  await closeSheets(); await p.waitForTimeout(300);
+  await closeSheets(); await settle(p, 300);
 
   // Daten
-  await p.evaluate(seed); await p.reload(); await p.waitForTimeout(600);
+  await p.evaluate(seed); await p.reload(); await settle(p, 600);
 
   // M1: 4-Wochen-Raster
-  await go('#/training/fortschritt'); await p.getByRole('tab', { name: '4 Wochen' }).click(); await p.waitForTimeout(400);
+  await go('#/training/fortschritt'); await p.getByRole('tab', { name: '4 Wochen' }).click(); await settle(p, 400);
   const names = await p.evaluate(() => [...document.querySelectorAll('.a4n')].map((e) => ({ t: e.textContent, w: Math.round(e.getBoundingClientRect().width), h: Math.round(e.getBoundingClientRect().height) })));
   ok(names.length > 5 && names.every((n) => n.w >= 90 && n.h <= 40), `${T}: Muskelnamen lesbar, eine Zeile (${JSON.stringify(names.slice(0, 2))})`);
   const over = await p.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
@@ -70,20 +70,20 @@ for (const [devName, theme] of profiles) {
   await shot('2-4wochen');
 
   // M2: Fortschritt einer Halteübung
-  await p.getByRole('tab', { name: 'Je Übung' }).click(); // The Tracker: „Je Übung“ await p.waitForTimeout(300);
+  await p.getByRole('tab', { name: 'Je Übung' }).click(); // The Tracker: „Je Übung“ await settle(p, 300);
   const plankRow = p.locator('#view .prow', { hasText: 'Unterarmstütz' });
   ok(/zuletzt \d:\d\d/.test(await plankRow.innerText()), `${T}: Liste zeigt die Haltezeit („${(await plankRow.innerText()).replace(/\n/g, ' ')}“)`);
-  await plankRow.click(); await p.waitForTimeout(400);
+  await plankRow.click(); await settle(p, 400);
   const pt = await p.evaluate(() => document.querySelector('.sheet')?.innerText || '');
   ok(/Längste Haltezeit/.test(pt) && !/Max-Kraft/.test(pt) && !/× null|undefined/.test(pt), `${T}: Verlauf Plank mit längster Haltezeit, ohne Schätzung`);
-  await shot('3-plank-verlauf'); await closeSheets(); await p.waitForTimeout(300);
+  await shot('3-plank-verlauf'); await closeSheets(); await settle(p, 300);
 
   // M4: Analyse
-  await go('#/training/plaene'); await p.getByRole('button', { name: 'Pläne analysieren' }).click(); await p.waitForTimeout(3200);
+  await go('#/training/plaene'); await p.getByRole('button', { name: 'Pläne analysieren' }).click(); await p.waitForFunction(() => !document.querySelector('.an-overlay'), null, { timeout: 3200 }).catch(() => {}); await settle(p, 300); // 0.4.0: bis die Analyse-Animation weg ist (vorher feste 3200 ms)
   const at = await p.evaluate(() => document.querySelector('.sheet')?.innerText || '');
   ok(!/Für Muskelwachstum fand ACSM 2026 mehr Wirkung ab etwa 10 Sätzen pro Woche\. Orientierung, kein Muss – vor allem/.test(at), `${T}: kein Volumen-Vorschlag für den Assistenten-Plan`);
   ok(/Knapp unter 10 Sätzen pro Woche/.test(at), `${T}: neutraler Hinweis „Knapp unter 10 Sätzen“`);
-  await shot('4-analyse'); await closeSheets(); await p.waitForTimeout(300);
+  await shot('4-analyse'); await closeSheets(); await settle(p, 300);
 
   // S2 + S3: Training
   await go('#/training');
@@ -95,7 +95,7 @@ for (const [devName, theme] of profiles) {
     return st.get('plans').find((pl) => (pl.items || []).some((i) => ex[i.exerciseId] && isTimed(ex[i.exerciseId])))?.name || null;
   });
   ok(!!holdPlan, `${T}: Vorbedingung – ein Plan enthält eine Halteübung (${holdPlan})`);
-  await startPlan(p, holdPlan); await p.waitForTimeout(600);
+  await startPlan(p, holdPlan); await settle(p, 600);
   const sug = await p.locator('.sug-card').count();
   const firstRow = await p.evaluate(() => { const r = document.querySelector('.setrow'); return r ? Math.round(r.getBoundingClientRect().bottom) : 9999; });
   const vh = await p.evaluate(() => innerHeight);
@@ -105,14 +105,14 @@ for (const [devName, theme] of profiles) {
   if (devName === 'Pixel 7') ok(firstRow < vh - 60, `${T}: erster Satz ohne Scrollen sichtbar (unten ${firstRow} von ${vh})`);
   else console.log(`info ${T}: erster Satz endet bei ${firstRow} von ${vh} px (320×568)`);
   await shot('5-session');
-  await p.getByRole('button', { name: /Tauschen/ }).first().click(); await p.waitForTimeout(250);
+  await p.getByRole('button', { name: /Tauschen/ }).first().click(); await settle(p, 250);
   const swapT = await p.locator('.swap-list').innerText();
   ok(/Aus dem Startpool/.test(swapT) || (await p.locator('.swap-list .row').count()) >= 2, `${T}: Tauschen bietet Alternativen ohne Gruppen`);
   await shot('6-tauschen');
   const poolRow = p.locator('.swap-list .row', { hasText: 'Aus dem Startpool' }).first();
   if (await poolRow.count()) {
     const name = (await poolRow.locator('b').innerText()).trim();
-    await poolRow.click(); await p.waitForTimeout(400);
+    await poolRow.click(); await settle(p, 400);
     ok(await p.evaluate(async (n) => (await import('./js/features/training/exercises.js')).listExercises().some((e) => e.name === n), name) && (await p.locator('h2.exh, #view h2').first().innerText()).includes(name), `${T}: Pool-Alternative „${name}“ übernommen und getauscht`);
   }
 
@@ -135,19 +135,19 @@ for (const [devName, theme] of profiles) {
   const hold = p.locator('.setrow input[aria-label*="Haltezeit"]').first();
   ok(await hold.count() === 1, `${T}: Eingabe Haltezeit`);
   await hold.fill('47'); await hold.dispatchEvent('change');
-  await p.locator('.setrow .ck').first().click(); await p.waitForTimeout(300);
+  await p.locator('.setrow .ck').first().click(); await settle(p, 300);
   const saved = await p.evaluate(async () => { const S = await import('./js/features/training/session.js'); const s = S.activeSession(); return s.entries.flatMap((e) => e.sets).find((x) => x.durationSec === 47 && x.completedAt) ? true : false; });
   ok(saved, `${T}: Satz mit 47 s gespeichert und erledigt`);
   ok(await p.locator('.sug-card').count() === 0, `${T}: kein Wdh.-Vorschlag bei der Halteübung`);
   ok(await p.locator('.setrow + .quick, .quick').count() === 0, `${T}: keine Drop-/Rest-Pause-Knöpfe bei der Halteübung`);
   await shot('7-plank');
-  await p.evaluate(async () => (await import('./js/features/training/session.js')).discard()); await p.waitForTimeout(200);
+  await p.evaluate(async () => (await import('./js/features/training/session.js')).discard()); await settle(p, 200);
 
   // M2: eigene Übung „Messen in“
-  await p.evaluate(async () => { const v = await import('./js/features/training/exercises-view.js'); v.openEditor(null, () => {}); }); await p.waitForTimeout(300);
+  await p.evaluate(async () => { const v = await import('./js/features/training/exercises-view.js'); v.openEditor(null, () => {}); }); await settle(p, 300);
   const mi = p.locator('.sheet [aria-label="Messen in"]');
   ok(await mi.count() === 1 && (await mi.locator('button.on').innerText()) === 'Wiederholungen', `${T}: Editor: „Messen in“ für eigene Übungen, Standard Wiederholungen`);
-  await mi.getByRole('radio', { name: 'Sekunden' }).click(); await p.waitForTimeout(100);
+  await mi.getByRole('radio', { name: 'Sekunden' }).click(); await settle(p, 100);
   ok((await mi.locator('button.on').innerText()) === 'Sekunden', `${T}: auf Sekunden umschaltbar`);
   await closeSheets();
 

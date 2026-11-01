@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // v2.34.0: Browser-Prüfung – „Worauf achten“-Box (Variante B) im Info-Sheet einer Pool-Übung.
 // Nur erfundene Testdaten. Aufruf: node tests/browser/check-v234.mjs   (Screenshots in WT_OUT/v234)
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -16,9 +16,9 @@ p.on('pageerror', (e) => errs.push(String(e)));
 p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 
 const open = async (ref) => {
-  await p.goto(srv.url + '/index.html#/training/uebungen'); await p.reload(); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training/uebungen'); await p.reload(); await settle(p, 400);
   await p.evaluate(async (r) => (await import('./js/features/training/exercises-view.js')).openEvidence(r), ref);
-  await p.waitForTimeout(500);
+  await settle(p, 500);
 };
 const info = () => p.evaluate(() => {
   const s = [...document.querySelectorAll('.sheet .info')].pop();
@@ -47,12 +47,12 @@ ok([...refd].every((n) => i.nums.includes(n)), `B: jede Nummer [n] steht in der 
 ok(!BAD_TEXT.test(i.text), 'B: kein null/undefined/NaN');
 // ab 2.34.0 (Aufräumen): je Hinweis eine Zeile; ausführlich und Quellen eingeklappt
 ok(i.text.includes('Brustmuskelriss') && !i.text.includes('Belegt ist das beschriebene Risiko'), 'B: Box zeigt Kurzzeilen, Ausführliches eingeklappt');
-await p.locator('.sheet details.more summary').last().click(); await p.waitForTimeout(200);
+await p.locator('.sheet details.more summary').last().click(); await settle(p, 200);
 const opened = await p.evaluate(() => [...document.querySelectorAll('.sheet .info')].pop().innerText);
 ok(opened.includes('Belegt ist das beschriebene Risiko') && opened.includes('nachgebenden Phase'), 'B: Details aufgeklappt zeigen den ausführlichen Text');
 await p.screenshot({ path: join(out, '1-bench.png') });
 await p.evaluate(() => { const i = [...document.querySelectorAll('.sheet .info')].pop(); i.querySelector('details.more').open = true; i.querySelector('.sources').scrollIntoView(); });
-await p.waitForTimeout(200);
+await settle(p, 200);
 await p.screenshot({ path: join(out, '2-bench-sources.png') });
 
 await open('deadlift');

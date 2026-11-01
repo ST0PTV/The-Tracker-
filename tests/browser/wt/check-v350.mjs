@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // v3.5.0: Mobility-Bereich unter Routinen, Abstand im Routinen-Editor, Gesamtdauer für Routine und Plan. Dunkel und hell.
 // Aufruf: node tests/browser/check-v350.mjs [Ordner für Screenshots]
-import { launch, startServer, checker } from './lib.mjs';
+import { launch, startServer, checker, settle } from './lib.mjs';
 
 const shots = process.argv[2] || null;
 const srv = await startServer();
@@ -15,12 +15,12 @@ for (const theme of ['dark', 'light']) {
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto(srv.url + '/index.html#/training/plaene'); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training/plaene'); await settle(p, 400);
   if (theme === 'light') await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   const tag = theme;
 
   // Mobility-Bereich
-  await p.getByRole('tab', { name: 'Routinen' }).click(); await p.waitForTimeout(300);
+  await p.getByRole('tab', { name: 'Routinen' }).click(); await settle(p, 300);
   const secs = await p.evaluate(() => [...document.querySelectorAll('.routines .sec')].map((x) => x.innerText.trim()));
   ok(JSON.stringify(secs.map((s) => s.toLowerCase())) === JSON.stringify(["aufwärmen", "cool-down", "mobility"]), `${tag}: drei Bereiche ${JSON.stringify(secs)}`);
   const mob = await p.evaluate(() => [...document.querySelectorAll('.routines section')].pop().innerText);
@@ -28,14 +28,16 @@ for (const theme of ['dark', 'light']) {
   if (shots) await p.screenshot({ path: `${shots}/v350-${theme}-routines.png`, fullPage: true });
 
   // Kopie der Vorlage bearbeiten: Dauer ändern, Abstand prüfen
-  await p.getByText('Mobilitätsprogramm 15 min').first().click(); await p.waitForTimeout(300);
+  await p.getByText('Mobilitätsprogramm 15 min').first().click(); await settle(p, 300);
   ok(/Mobility ·/.test(await p.evaluate(lastSheet)), `${tag}: Detail zeigt „Mobility“`);
   const copyBtn = p.getByRole('button', { name: /Kopie|bearbeiten/i }).first();
-  await copyBtn.click(); await p.waitForTimeout(400);
+  await copyBtn.click(); await settle(p, 400);
   const dur0 = await p.evaluate(() => document.querySelector('.rt-total .step')?.innerText || document.querySelector('.rt-total')?.innerText || '');
   ok(/(^|\s)15 min/.test(dur0) && !/≈|Schätzung/.test(dur0), `${tag}: Gesamtdauer 15 min ohne ≈ und Schätzung (${dur0.replace(/\n/g, ' ')})`);
-  await p.getByRole('button', { name: /Gesamtdauer.*(weniger|minus|−)/i }).first().click().catch(async () => { await p.locator('.rt-total button').first().click(); });
-  await p.waitForTimeout(300);
+  // The Tracker 0.4.0: erst zählen statt .catch() – sonst 30 s Wartezeit, bis der Ersatz-Knopf greift (gleiche Reihenfolge)
+  const minusBtn = p.getByRole('button', { name: /Gesamtdauer.*(weniger|minus|−)/i }).first();
+  await ((await minusBtn.count()) ? minusBtn : p.locator('.rt-total button').first()).click();
+  await settle(p, 300);
   const dur1 = await p.evaluate(() => document.querySelector('.rt-total')?.innerText || '');
   ok(/(^|\s)(9|10|11) min/.test(dur1) && !/≈|Schätzung/.test(dur1), `${tag}: nach − etwa 10 min (${dur1.replace(/\n/g, ' ')})`);
   const reps = await p.evaluate(() => [...document.querySelectorAll('.rt-item .step')].map((x) => x.innerText.replace(/\s+/g, ' ')).slice(0, 3));
@@ -49,8 +51,8 @@ for (const theme of ['dark', 'light']) {
   await p.locator('.routine-edit .addline').last().scrollIntoViewIfNeeded();
   if (shots) await p.screenshot({ path: `${shots}/v350-${theme}-editor.png` });
   ok(!/object HTML/.test(await p.evaluate(lastSheet)), `${tag}: kein [object HTML…] im Editor`);
-  await p.getByRole('button', { name: 'Abbrechen' }).last().click(); await p.waitForTimeout(300);
-  await p.evaluate(() => { for (const s of document.querySelectorAll('.sheet-close')) s.click(); }); await p.waitForTimeout(300);
+  await p.getByRole('button', { name: 'Abbrechen' }).last().click(); await settle(p, 300);
+  await p.evaluate(() => { for (const s of document.querySelectorAll('.sheet-close')) s.click(); }); await settle(p, 300);
 
   // Plan-Dauer
   const planId = await p.evaluate(async () => {
@@ -60,16 +62,16 @@ for (const theme of ['dark', 'light']) {
     const pl = P.getPlan(r.plan.id); P.savePlan({ ...pl, items: pl.items.map((it) => ({ ...it, targetSets: 3 })) });
     return r.plan.id;
   });
-  await p.evaluate(() => { location.hash = '#/training'; }); await p.waitForTimeout(200);
-  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await p.waitForTimeout(300);
-  await p.getByRole('tab', { name: 'Pläne' }).click().catch(() => {}); await p.waitForTimeout(200);
-  await p.getByText('Dauer-Test').first().click(); await p.waitForTimeout(300);
+  await p.evaluate(() => { location.hash = '#/training'; }); await settle(p, 200);
+  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await settle(p, 300);
+  const plTab = p.getByRole('tab', { name: 'Pläne' }); if (await plTab.count()) await plTab.click(); await settle(p, 200); // The Tracker 0.4.0: zählen statt .catch() (sonst bis 30 s)
+  await p.getByText('Dauer-Test').first().click(); await settle(p, 300);
   const head = await p.evaluate(lastSheet);
   const m0 = Number((head.match(/· (\d+) min/) || [])[1]);
   ok(m0 > 0, `${tag}: Plan zeigt ${m0} min`);
-  await p.getByRole('button', { name: /Bearbeiten/ }).first().click(); await p.waitForTimeout(300);
+  await p.getByRole('button', { name: /Bearbeiten/ }).first().click(); await settle(p, 300);
   ok(await p.locator('.plan-dur').count() === 1, `${tag}: Gesamtdauer im Bearbeiten-Modus`);
-  await p.locator('.plan-dur button').first().click(); await p.waitForTimeout(300);
+  await p.locator('.plan-dur button').first().click(); await settle(p, 300);
   const m1 = Number(((await p.evaluate(() => document.querySelector('.plan-dur').innerText)).match(/(\d+) min/) || [])[1]);
   ok(m1 < m0, `${tag}: Plan kürzer (${m0} → ${m1} min)`);
   const sets = await p.evaluate((id) => import('./js/features/training/plans.js').then((P) => P.getPlan(id).items.map((it) => it.targetSets)), planId);

@@ -3,7 +3,7 @@
 // v3.6.1: 3D-Körper scharf – volle Pixeldichte (3×), geglätteter Umriss (Überabtastung), nach dem Drehen
 // wieder volle Qualität, große Ansicht schnell genug. Dunkel und hell. Nur erfundene Testdaten.
 // Aufruf: node tests/browser/check-v361.mjs [Ordner für Screenshots]
-import { launch, startServer, checker } from './lib.mjs';
+import { launch, startServer, checker, settle } from './lib.mjs';
 const shots = process.argv[2] || null;
 const srv = await startServer(); const b = await launch(); const { ok, done } = checker();
 
@@ -21,7 +21,7 @@ for (const theme of ['dark', 'light']) {
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
   await p.evaluate(async () => {
     const lib = await import('./js/features/training/exercises.js');
     const P = await import('./js/features/training/plans.js');
@@ -29,8 +29,8 @@ for (const theme of ['dark', 'light']) {
     P.addExercises(pl.id, ['bench-press-barbell', 'shoulder-press-dumbbell', 'triceps-pushdown'].map((r) => lib.addFromPool(r).exercise.id));
     P.setPlanDays(pl.id, [(new Date().getDay() + 6) % 7]);
   });
-  await p.reload(); await p.waitForTimeout(800);
-  if (theme === 'light') { await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light')); await p.reload(); await p.waitForTimeout(800); await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light')); }
+  await p.reload(); await settle(p, 800);
+  if (theme === 'light') { await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light')); await p.reload(); await p.waitForTimeout(800); await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light')); } // 0.4.0: feste Pause bleibt (Canvas: Glättung)
   const sel = '.start-card canvas.body3d';
   const s = await p.evaluate(edgeStats, sel);
   ok(s.w === s.cssW * 3, `${theme}: Karte zeichnet mit 3× (${s.w} px für ${s.cssW} CSS-px)`);
@@ -41,18 +41,18 @@ for (const theme of ['dark', 'light']) {
   const box = await p.locator(sel).boundingBox();
   await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2); await p.mouse.down();
   for (let i = 1; i <= 8; i++) await p.mouse.move(box.x + box.width / 2 + i * 8, box.y + box.height / 2);
-  await p.mouse.up(); await p.waitForTimeout(300);
+  await p.mouse.up(); await p.waitForTimeout(300); // 0.4.0: feste Pause bleibt (Canvas: Glättung nach dem Drehen)
   const s2 = await p.evaluate(edgeStats, sel);
   ok(s2.soft > s2.solid * 0.01, `${theme}: nach dem Drehen wieder geglättet (${s2.soft} Kantenpixel)`);
   ok(!/Training starten|Satz/.test(await p.evaluate(() => [...document.querySelectorAll('.sheet')].pop()?.innerText || '')), `${theme}: Wischen öffnet nichts`);
 
   // Große Ansicht: Tipp öffnet sie, Zeichnen in voller Qualität bleibt schnell
-  await p.locator(sel).click(); await p.waitForTimeout(500);
+  await p.locator(sel).click(); await p.waitForTimeout(500); // 0.4.0: feste Pause bleibt (Canvas)
   const big = await p.evaluate(() => [...document.querySelectorAll('.sheet canvas.body3d')].pop() ? 'ok' : 'fehlt');
   ok(big === 'ok', `${theme}: große Ansicht offen`);
   const bs = await p.evaluate(edgeStats, '.sheet canvas.body3d');
   ok(bs.w === bs.cssW * 3 && bs.soft > bs.solid * 0.01, `${theme}: große Ansicht 3× und geglättet (${bs.w} px, ${bs.soft} Kantenpixel)`);
-  for (const lbl of ['Seite', 'Hinten']) { await p.locator('.body-seg button', { hasText: lbl }).click(); await p.waitForTimeout(500); }
+  for (const lbl of ['Seite', 'Hinten']) { await p.locator('.body-seg button', { hasText: lbl }).click(); await p.waitForTimeout(500); } // 0.4.0: feste Pause bleibt (Canvas)
   if (shots) { const bx = await p.locator('.sheet canvas.body3d').boundingBox(); await p.screenshot({ path: `${shots}/v361-${theme}-back.png`, clip: { x: bx.x - 4, y: bx.y - 4, width: bx.width + 8, height: bx.height + 8 } }); }
   ok(errs.length === 0, `${theme}: keine Konsolenfehler ${errs.slice(0, 2).join(' | ')}`);
   await p.context().close();

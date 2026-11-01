@@ -33,7 +33,8 @@ npm test         # Node-Tests (Speicher, Profil, Suche, Portionen, Journal, Beis
 npm run check    # Syntax aller JS-Dateien + jede App-Datei im Precache von sw.js
 npm run privacy  # Scan nach persönlichen Strings (eigene Begriffe in .privacy-terms.local)
 npm run test:browser            # Browser-Abläufe inkl. Scanner (Test-Kamera, simulierte Open-Food-Facts-Antwort) und echter Texterkennung (Playwright außerhalb des Repos)
-npm run release -- check        # Vorabcheck vor einem Release
+npm run test:browser:fast       # alle Browser-Checks parallel (Standard 4 gleichzeitig; --jobs N, Filter z. B. "v31")
+npm run release -- check        # Vorabcheck vor einem Release (nutzt den parallelen Runner; --serial = einzeln)
 ```
 
 ## Datenschutz

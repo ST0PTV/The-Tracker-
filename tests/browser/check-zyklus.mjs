@@ -2,7 +2,7 @@
 // (Streifen/Ring), Kalender (Kreise/Band), Verlauf, Wissen, Bericht, Import, Hormon-Methode blendet Fenster aus,
 // PIN für die ganze App (ab 0.3.2 ohne „nur Zyklus“) mit Schein-PIN. Prüft fremde Keys, Konsolenfehler, null/undefined/NaN;
 // Screenshots hell/dunkel. Aufruf: node tests/browser/check-zyklus.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -24,25 +24,25 @@ for (const appearance of ['dark', 'light']) {
     localStorage.setItem('tt_settings', JSON.stringify({ appearance: a }));
     localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f' }));
   }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(500);
+  await p.reload(); await settle(p, 500);
   const shot = (name) => p.screenshot({ path: join(out, `${appearance}-${name}.png`) });
   const text = () => p.evaluate(() => document.body.innerText);
   const zy = () => p.evaluate(() => JSON.parse(localStorage.getItem('tt_zyklus') || '{}'));
-  const nav = async (hash) => { await p.evaluate((x) => { location.hash = x; }, hash); await p.waitForTimeout(350); };
+  const nav = async (hash) => { await p.evaluate((x) => { location.hash = x; }, hash); await settle(p, 350); };
 
   // Ohne Regel-Frage: keine Karte
   ok(await p.locator('.cy-card').count() === 0, `${appearance}: ohne „Regel = Ja“ keine Zyklus-Karte`);
   await nav('#/ich/koerper');
   await p.click('.seg[aria-label="Hast du deine Regel?"] button:has-text("Ja")');
-  await p.click('button:has-text("Speichern")'); await p.waitForTimeout(300);
+  await p.click('button:has-text("Speichern")'); await settle(p, 300);
   ok((await p.evaluate(() => JSON.parse(localStorage.getItem('tt_profile')).cycle)) === 'yes', `${appearance}: Regel-Frage gespeichert (tt_profile.cycle)`);
   await nav('#/');
   ok(await p.locator('.cy-card.cy-empty').count() === 1, `${appearance}: leere Zyklus-Karte auf „Heute“`);
 
   // Eintragen über das „+“ der Karte
-  await p.click('.cy-empty .trk-plus'); await p.waitForTimeout(350);
-  await p.click('.cy-bleed .chip:has-text("Mittel")'); await p.waitForTimeout(200);
-  await p.click('.chip:has-text("Unterleibskrämpfe")'); await p.waitForTimeout(200);
+  await p.click('.cy-empty .trk-plus'); await settle(p, 350);
+  await p.click('.cy-bleed .chip:has-text("Mittel")'); await settle(p, 200);
+  await p.click('.chip:has-text("Unterleibskrämpfe")'); await settle(p, 200);
   let z = await zy();
   ok(z.days && z.days[isoN(0)] && z.days[isoN(0)].bleed === 3 && z.days[isoN(0)].body.includes('Unterleibskrämpfe'), `${appearance}: Blutung und Körper eingetragen`);
   await shot('1-tag');
@@ -51,7 +51,7 @@ for (const appearance of ['dark', 'light']) {
   await nav('#/ich/zyklus');
   const lines = [-84, -56, -28].map((n) => `${isoN(n)} bis ${isoN(n + 4)}`).join('\n');
   await p.fill('textarea[aria-label="Daten einfügen"]', lines);
-  await p.click('button:text-is("Übernehmen")'); await p.waitForTimeout(300);
+  await p.click('button:text-is("Übernehmen")'); await settle(p, 300);
   z = await zy();
   ok(Object.values(z.days).filter((e) => e.imp).length === 15, `${appearance}: 15 Tage importiert`);
   await nav('#/');
@@ -63,16 +63,16 @@ for (const appearance of ['dark', 'light']) {
   // Kalender Kreise, Verlauf, Wissen, Bericht
   await nav('#/zyklus');
   const nb = await p.locator('.cy-cal.circles .cy-d.b').count();
-  await p.click('button[aria-label="Nächster Monat"]'); await p.waitForTimeout(200);
+  await p.click('button[aria-label="Nächster Monat"]'); await settle(p, 200);
   const nf = await p.locator('.cy-cal .cy-d.f').count() + await p.locator('.cy-cal .cy-d.p').count();
-  await p.click('button[aria-label="Vormonat"]'); await p.waitForTimeout(200);
+  await p.click('button[aria-label="Vormonat"]'); await settle(p, 200);
   ok(nb >= 1 && nf >= 1, `${appearance}: Kalender Kreise mit Periode, nächster Monat mit Fenster/erwartet`);
   ok(/Nächste Perioden/i.test(await text()) && /keine Verhütung/.test(await text()), `${appearance}: Vorschau und Hinweis „keine Verhütung“`);
   await shot('3-kalender-kreise');
   await nav('#/zyklus/verlauf');
   ok(/Tage typisch/.test(await text()) && await p.locator('.cy-chart .bar').count() === 3, `${appearance}: Verlauf mit 3 Zyklen`);
   await nav('#/zyklus/wissen');
-  for (const t of ['Schleim', 'Muttermund', 'Training', 'Abklären']) { await p.click(`.cy-tabs .chip:has-text("${t}")`); await p.waitForTimeout(150); }
+  for (const t of ['Schleim', 'Muttermund', 'Training', 'Abklären']) { await p.click(`.cy-tabs .chip:has-text("${t}")`); await settle(p, 150); }
   ok(/Wann abklären/.test(await text()) && await p.locator('.cy-refs li').count() >= 20, `${appearance}: Wissen mit 5 Themen und Quellen`);
   ok(!/Eisprung heute|du hast heute deinen Eisprung/i.test(await text()), `${appearance}: nie „Eisprung heute“`);
   await shot('4-wissen');
@@ -84,7 +84,7 @@ for (const appearance of ['dark', 'light']) {
   // Stile umschalten
   await nav('#/ich/zyklus');
   await p.click('.seg[aria-label="Kartenstil"] button:has-text("Ring")');
-  await p.click('.seg[aria-label="Kalenderstil"] button:has-text("Band")'); await p.waitForTimeout(200);
+  await p.click('.seg[aria-label="Kalenderstil"] button:has-text("Band")'); await settle(p, 200);
   await nav('#/');
   ok(await p.locator('.cy-ringcard .cy-ring').count() === 1, `${appearance}: Karte Ring`);
   await shot('6-heute-ring');
@@ -94,35 +94,35 @@ for (const appearance of ['dark', 'light']) {
 
   // Hormonelle Methode: kein Fenster
   await nav('#/ich/zyklus');
-  await p.click('.chip:has-text("Ring oder Pflaster")'); await p.waitForTimeout(200);
+  await p.click('.chip:has-text("Ring oder Pflaster")'); await settle(p, 200);
   await nav('#/zyklus');
   ok(await p.locator('.cy-cal .cy-d.f').count() === 0 && /Entzugsblutung/.test(await text()), `${appearance}: Ring/Pflaster blendet Fenster aus`);
   await nav('#/ich/zyklus');
-  await p.click('.chip:has-text("Keine oder Kondom")'); await p.waitForTimeout(200);
+  await p.click('.chip:has-text("Keine oder Kondom")'); await settle(p, 200);
 
   // PIN für die ganze App (es gibt keine Auswahl „nur Zyklus“ mehr) + Schein-PIN
   await nav('#/ich/sperre');
   ok(await p.locator('.seg[aria-label="Was gesperrt wird"]').count() === 0 && !/Nur Zyklus/.test(await text()), `${appearance}: keine Auswahl „Nur Zyklus“`);
   await p.fill('input[aria-label="PIN, 4 bis 8 Ziffern"]', '2580');
   await p.fill('input[aria-label="Noch einmal"]', '2580');
-  await p.click('.lock-field button:has-text("Speichern")'); await p.waitForTimeout(300);
+  await p.click('.lock-field button:has-text("Speichern")'); await settle(p, 300);
   await p.fill('input[aria-label="Schein-PIN, anders als die PIN"]', '1357');
   await p.fill('.lock-field input[aria-label="Noch einmal"]', '1357');
-  await p.click('.lock-field button:has-text("Speichern")'); await p.waitForTimeout(300);
-  await p.reload(); await p.waitForTimeout(500);
+  await p.click('.lock-field button:has-text("Speichern")'); await settle(p, 300);
+  await p.reload(); await settle(p, 500);
   ok(/The Tracker ist gesperrt/.test(await text()) && !(await p.locator('#tabbar').isVisible()), `${appearance}: ganze App gesperrt, ohne Tab-Leiste`);
   await shot('8-gesperrt');
   await nav('#/zyklus');
   ok(/The Tracker ist gesperrt/.test(await text()) && await p.locator('.cy-cal').count() === 0, `${appearance}: Kalender gesperrt`);
   await nav('#/rezepte');
   ok(/The Tracker ist gesperrt/.test(await text()), `${appearance}: auch Rezepte gesperrt`);
-  await p.fill('.lock input', '1111'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(300);
+  await p.fill('.lock input', '1111'); await p.click('.lock button:has-text("Entsperren")'); await settle(p, 300);
   ok(/stimmt nicht/.test(await text()), `${appearance}: falsche PIN abgelehnt`);
-  await p.fill('.lock input', '2580'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(400);
+  await p.fill('.lock input', '2580'); await p.click('.lock button:has-text("Entsperren")'); await settle(p, 400);
   await nav('#/zyklus');
   ok(await p.locator('.cy-cal').count() === 1 && await p.locator('.cy-cal .cy-d.b').count() > 0, `${appearance}: mit PIN entsperrt, Kalender mit Daten`);
-  await p.reload(); await p.waitForTimeout(500);
-  await p.fill('.lock input', '1357'); await p.click('.lock button:has-text("Entsperren")'); await p.waitForTimeout(400);
+  await p.reload(); await settle(p, 500);
+  await p.fill('.lock input', '1357'); await p.click('.lock button:has-text("Entsperren")'); await settle(p, 400);
   await nav('#/zyklus');
   ok(await p.locator('.cy-cal .cy-d.b').count() === 0, `${appearance}: Schein-PIN zeigt leeren Kalender`);
   z = await zy();

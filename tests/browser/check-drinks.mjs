@@ -1,7 +1,7 @@
 // Getränke und Supplements im Browser: Wasser „+“ und Löschen mit Rückgängig, Koffein-Getränk mit Vorschau,
 // Verlauf mit Beispieldaten, Supplement anlegen und abhaken (Farbe je Theme). Prüft Konsolenfehler und fremde Keys.
 // Aufruf: node tests/browser/check-drinks.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -20,11 +20,11 @@ for (const appearance of ['dark', 'light']) {
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(srv.url + '/index.html');
   await p.evaluate(([a, f]) => { localStorage.clear(); for (const [k, v] of Object.entries(f)) localStorage.setItem(k, v); localStorage.setItem('tt_settings', JSON.stringify({ appearance: a })); }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(300);
+  await p.reload(); await settle(p, 300);
   const shot = (name, full = false) => p.screenshot({ path: join(out, `${appearance}-${name}.png`), fullPage: full });
   const text = () => p.evaluate(() => document.body.innerText);
   const bar = (sel = '.trk.water') => p.getAttribute(`${sel} .trk-bar`, 'aria-label');
-  const closeSheet = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300); } };
+  const closeSheet = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await settle(p, 300); } };
 
   // Leere Karte (Entwurf V1): große Zahl, „+“ auf der Linie, nicht antippbar
   ok(await p.locator('.trk.water:not(.on) .trk-div .trk-plus').count() === 1 && (await p.innerText('.trk.water .trk-big')).startsWith('0,00'), `${appearance}: Wasser leer mit „+“ auf der Linie`);
@@ -33,40 +33,40 @@ for (const appearance of ['dark', 'light']) {
   await shot('0-leer', true);
 
   // Wasser: 2 × „+“ (250 ml) auf der Karte, dann Details: „+ 500 ml“ = 1.000 ml
-  await p.click('.trk.water button[aria-label="250 ml Wasser eintragen"]'); await p.waitForTimeout(150);
+  await p.click('.trk.water button[aria-label="250 ml Wasser eintragen"]'); await settle(p, 150);
   ok(await p.locator('.toast .toast-act').count() === 1, `${appearance}: „+“ trägt sofort ein, mit Rückgängig`);
-  await p.click('.trk.water button[aria-label="250 ml Wasser eintragen"]'); await p.waitForTimeout(150);
+  await p.click('.trk.water button[aria-label="250 ml Wasser eintragen"]'); await settle(p, 150);
   ok(await p.locator('.trk.water.on').count() === 1 && (await bar()) === '500 von 1.500 ml', `${appearance}: mit Eintrag kompakt mit Balken (${await bar()})`);
-  await p.click('.trk.water'); await p.waitForTimeout(300);
+  await p.click('.trk.water'); await settle(p, 300);
   ok(await p.locator('.sheet .trk-sheet.k-water').count() === 1, `${appearance}: Tipp auf die Karte öffnet die Details`);
-  await p.click('.sheet .chip:has-text("+ 500 ml")'); await p.waitForTimeout(200);
+  await p.click('.sheet .chip:has-text("+ 500 ml")'); await settle(p, 200);
   ok((await bar('.sheet')) === '1.000 von 1.500 ml', `${appearance}: Details aktualisieren sich (${await bar('.sheet')})`);
-  await p.click('.sheet button[aria-label="500 ml Wasser löschen"]'); await p.waitForTimeout(200);
+  await p.click('.sheet button[aria-label="500 ml Wasser löschen"]'); await settle(p, 200);
   ok((await bar('.sheet')) === '500 von 1.500 ml', `${appearance}: nach Löschen 500 ml`);
-  await p.click('.toast button:has-text("Rückgängig")'); await p.waitForTimeout(200);
+  await p.click('.toast button:has-text("Rückgängig")'); await settle(p, 200);
   ok((await bar('.sheet')) === '1.000 von 1.500 ml', `${appearance}: Rückgängig stellt 500 ml wieder her`);
   await p.click('.sheet .chip:has-text("Andere Menge")');
   await p.fill('.sheet input[aria-label="Andere Menge in ml"]', '5');
-  await p.click('.sheet .code-row button:has-text("Eintragen")'); await p.waitForTimeout(150);
+  await p.click('.sheet .code-row button:has-text("Eintragen")'); await settle(p, 150);
   ok((await text()).includes('10–3.000'), `${appearance}: 5 ml wird abgelehnt`);
   await shot('1b-wasser-details');
   await closeSheet();
   ok((await p.innerText('.trk.water .trk-pill')) === 'noch 0,50 l', `${appearance}: Hinweis „noch 0,50 l“`);
   // „+“-Menü: Wasser-Knopf trägt direkt ein
-  await p.click('.tab-plus'); await p.waitForTimeout(300);
-  await p.click('.qa-quick'); await p.waitForTimeout(200);
+  await p.click('.tab-plus'); await settle(p, 300);
+  await p.click('.qa-quick'); await settle(p, 200);
   ok((await p.innerText('.qa-row:has-text("Wasser") small')) === 'heute 1,25 l', `${appearance}: „+ 250 ml“ im Menü trägt ein (${await p.innerText('.qa-row:has-text("Wasser") small')})`);
   await closeSheet();
-  await p.click('.trk.water'); await p.waitForTimeout(300);
-  await p.click('.sheet button[aria-label="250 ml Wasser löschen"] >> nth=-1'); await p.waitForTimeout(200);
+  await p.click('.trk.water'); await settle(p, 300);
+  await p.click('.sheet button[aria-label="250 ml Wasser löschen"] >> nth=-1'); await settle(p, 200);
   await closeSheet();
-  await p.waitForTimeout(2600);
+  await p.waitForTimeout(2600); // 0.4.0: feste Pause bleibt (Zweck nicht eindeutig, unverändert)
 
   // Koffein: Filterkaffee aus der Liste, 08:00, eintragen
-  await p.click('button[aria-label="Koffein-Getränk hinzufügen"]'); await p.waitForTimeout(250);
+  await p.click('button[aria-label="Koffein-Getränk hinzufügen"]'); await settle(p, 250);
   ok((await text()).includes("dann erscheint die Vorschau"), `${appearance}: Sheet ohne Wahl zeigt Hinweis statt Vorschau`);
-  await p.locator('.sheet .caf-pick .row').first().click(); await p.waitForTimeout(150);
-  await p.fill('.sheet input[aria-label="Uhrzeit"]', '08:00'); await p.dispatchEvent('.sheet input[aria-label="Uhrzeit"]', 'change'); await p.waitForTimeout(150);
+  await p.locator('.sheet .caf-pick .row').first().click(); await settle(p, 150);
+  await p.fill('.sheet input[aria-label="Uhrzeit"]', '08:00'); await p.dispatchEvent('.sheet input[aria-label="Uhrzeit"]', 'change'); await settle(p, 150);
   ok(await p.locator('.sheet .caf-prev svg').count() === 1, `${appearance}: Vorschau-Kurve sichtbar`);
   ok(/Zur Bettzeit .* mg/.test(await p.innerText('.sheet .caf-prev')), `${appearance}: Vorschau nennt Pegel zur Bettzeit`);
   const lock = await p.evaluate(() => { const sb = document.querySelector('.sheet-body'), sh = document.querySelector('.sheet'); return [getComputedStyle(sb).overflowX, getComputedStyle(sh).touchAction, sb.scrollWidth <= sb.clientWidth]; });
@@ -74,7 +74,7 @@ for (const appearance of ['dark', 'light']) {
   await shot('2-koffein-sheet');
   const mgSaved = await p.inputValue('.sheet input[aria-label="Koffein in mg"]');
   const mlSaved = Number(await p.inputValue('.sheet input[aria-label="Menge in ml"]'));
-  await p.locator('.sheet button.primary').click(); await p.waitForTimeout(300);
+  await p.locator('.sheet button.primary').click(); await settle(p, 300);
   ok(await p.locator('.sheet').count() === 0, `${appearance}: Sheet nach Eintragen zu`);
   const st = await p.evaluate(() => JSON.parse(localStorage.getItem('tt_caffeine')));
   const day = Object.values(st.log)[0] || [];
@@ -82,7 +82,7 @@ for (const appearance of ['dark', 'light']) {
   ok((await bar()) === `${(1000 + mlSaved).toLocaleString('de-DE')} von 1.500 ml`, `${appearance}: Kaffee zählt zum Wasser (${await bar()})`);
   ok(await p.locator('.trk.caf.on .chart-box svg').count() === 1, `${appearance}: Kurve erscheint auf der Karte nach dem Eintrag`);
   await shot('1-heute', true);
-  await p.click('.trk.caf'); await p.waitForTimeout(300);
+  await p.click('.trk.caf'); await settle(p, 300);
   let t = await text();
   ok(t.includes('jetzt im Körper') && !t.includes('(geschätzt)') && t.includes('Heute aufgenommen'), `${appearance}: Details mit Tageswerten, ohne „(geschätzt)“`);
   ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
@@ -97,11 +97,11 @@ for (const appearance of ['dark', 'light']) {
     const d = generateDemoDrinks({ today: isoDate() });
     loadDemoWater(d.water); loadDemoCaffeine(d.caff);
   });
-  await p.waitForTimeout(200);
-  await p.click('.sheet button:has-text("Verlauf (30 Tage)")'); await p.waitForTimeout(400);
+  await settle(p, 200);
+  await p.click('.sheet button:has-text("Verlauf (30 Tage)")'); await settle(p, 400);
   ok(await p.locator('.sheet .heat-box svg .hc').count() >= 30 * 12, `${appearance}: Heatmap mit 30 Tagen`);
   const before = await p.innerText('.sheet .heat-detail');
-  await p.locator('.sheet .heat-box svg .hit').nth(3).click(); await p.waitForTimeout(150);
+  await p.locator('.sheet .heat-box svg .hit').nth(3).click(); await settle(p, 150);
   ok((await p.innerText('.sheet .heat-detail')) !== before, `${appearance}: Tippen auf einen Tag wechselt die Details`);
   t = await p.locator('.sheet').last().innerText();
   ok(t.includes('Ø Pegel zur Bettzeit') && !BAD_TEXT.test(t), `${appearance}: Durchschnitte ohne null/NaN`);
@@ -110,30 +110,30 @@ for (const appearance of ['dark', 'light']) {
 
   // Supplements: leer → anlegen → Vitamin D3 → abhaken
   ok((await text()).includes('Noch keine angelegt.'), `${appearance}: Supplements starten leer`);
-  await p.click('.supp a:has-text("Anlegen")'); await p.waitForTimeout(250);
-  await p.click('button:has-text("+ Supplement hinzufügen")'); await p.waitForTimeout(250);
+  await p.click('.supp a:has-text("Anlegen")'); await settle(p, 250);
+  await p.click('button:has-text("+ Supplement hinzufügen")'); await settle(p, 250);
   await shot('4-katalog');
-  await p.locator('.sheet .plain-btn:has-text("Vitamin D3")').click(); await p.waitForTimeout(300);
+  await p.locator('.sheet .plain-btn:has-text("Vitamin D3")').click(); await settle(p, 300);
   ok(await p.locator('.sheet input[aria-label="Name"]').count() === 1, `${appearance}: nach Wahl öffnet die Bearbeitung`);
-  await p.locator('.sheet button:has-text("Speichern")').click(); await p.waitForTimeout(250);
-  if (await p.locator('.sheet').count()) { await p.locator('.sheet button[aria-label="Schließen"]').first().click(); await p.waitForTimeout(200); }
+  await p.locator('.sheet button:has-text("Speichern")').click(); await settle(p, 250);
+  if (await p.locator('.sheet').count()) { await p.locator('.sheet button[aria-label="Schließen"]').first().click(); await settle(p, 200); }
   const col = await p.evaluate(() => getComputedStyle(document.querySelector('.supp-ico')).color);
   ok(col === D3[appearance], `${appearance}: Icon in Katalogfarbe für ${appearance} (${col})`);
   await shot('5-supp-einstellungen');
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/'); await settle(p, 250);
   ok((await p.innerText('.supp .count')) === '0/1', `${appearance}: Zähler 0/1`);
-  await p.click('.supp-pill'); await p.waitForTimeout(150);
+  await p.click('.supp-pill'); await settle(p, 150);
   ok((await p.innerText('.supp .count')) === '1/1' && (await p.getAttribute('.supp-pill', 'aria-pressed')) === 'true', `${appearance}: abgehakt 1/1`);
   await shot('6-supp-heute');
 
   // Einstellungen Getränke: Ziel ändern, Karte ausblenden
-  await p.goto(srv.url + '/index.html#/ich/getraenke'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/ich/getraenke'); await settle(p, 250);
   ok((await p.evaluate(() => location.hash)) === '#/ich', `${appearance}: alte Adresse „Getränke“ leitet auf „Ich“ um`);
-  await p.goto(srv.url + '/index.html#/ich/wasser'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/ich/wasser'); await settle(p, 250);
   await p.fill('input[aria-label="Tagesziel"]', '2000'); await p.dispatchEvent('input[aria-label="Tagesziel"]', 'change');
-  await p.waitForTimeout(100);
-  await p.goto(srv.url + '/index.html#/ich/koffein'); await p.waitForTimeout(250);
-  await p.fill('input[aria-label="Halbwertszeit"]', '20'); await p.dispatchEvent('input[aria-label="Halbwertszeit"]', 'change'); await p.waitForTimeout(100);
+  await settle(p, 100);
+  await p.goto(srv.url + '/index.html#/ich/koffein'); await settle(p, 250);
+  await p.fill('input[aria-label="Halbwertszeit"]', '20'); await p.dispatchEvent('input[aria-label="Halbwertszeit"]', 'change'); await settle(p, 100);
   const cs = await p.evaluate(() => [JSON.parse(localStorage.getItem('tt_water')).goal, JSON.parse(localStorage.getItem('tt_caffeine')).halfLife]);
   ok(cs[0] === 2000 && cs[1] === 5, `${appearance}: Ziel gespeichert, ungültige Halbwertszeit abgelehnt (${cs})`);
   const fit = await p.evaluate(() => [...document.querySelectorAll('.card')].every((c) => { const r = c.getBoundingClientRect(); return [...c.querySelectorAll('input')].every((i) => { const q = i.getBoundingClientRect(); return q.left >= r.left && q.right <= r.right + 0.5; }); }));
@@ -141,7 +141,7 @@ for (const appearance of ['dark', 'light']) {
   ok(fit && cols, `${appearance}: Felder in „Koffein“ liegen in der Karte, Spalten gleich breit`);
   await shot('7-koffein');
   await p.uncheck('input[aria-label="Koffein-Karte anzeigen"]');
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/'); await settle(p, 250);
   ok(await p.locator('button[aria-label="Koffein-Getränk hinzufügen"]').count() === 0, `${appearance}: Koffein-Karte ausgeblendet`);
 
   const keys = await p.evaluate(() => Object.fromEntries(Object.keys(localStorage).map((k) => [k, localStorage.getItem(k)])));

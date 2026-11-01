@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // v2.33.0: Browser-Prüfung – drehbarer 3D-Körper auf den Plankarten, Plan des Tages oben, große Ansicht.
 // Nur erfundene Testdaten. Aufruf: node tests/browser/check-v233.mjs   (Screenshots in WT_OUT/v233)
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -17,7 +17,7 @@ p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 const shot = (name) => p.screenshot({ path: join(out, `${name}.png`) });
 const text = () => p.evaluate(() => document.body.innerText);
 
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
 await p.evaluate(async () => {
   const lib = await import('./js/features/training/exercises.js');
   const P = await import('./js/features/training/plans.js');
@@ -29,7 +29,7 @@ await p.evaluate(async () => {
   mk('Push', ['bench-press-barbell', 'shoulder-press-dumbbell', 'triceps-pushdown'], [today]);
   mk('Nur Cardio', ['treadmill-running'], []);
 });
-await p.reload(); await p.waitForTimeout(800);
+await p.reload(); await settle(p, 800);
 
 // ab 2.34.0 (Startseite A): Plan von heute als große Karte, übrige als kompakte Zeilen
 const cards = await p.evaluate(() => [...document.querySelectorAll('.start-card, .start-row')].map((c) => ({ name: c.querySelector('.pc-top b, .t > b').textContent, today: c.classList.contains('today'), canvas: !!c.querySelector('canvas.body3d'), svg: !!c.querySelector('.plan-fig svg') })));
@@ -57,7 +57,7 @@ const box = await p.locator('.start-card.today canvas.body3d').boundingBox();
 await p.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
 await p.mouse.down();
 for (let i = 1; i <= 8; i++) await p.mouse.move(box.x + box.width / 2 + i * 8, box.y + box.height / 2);
-await p.mouse.up(); await p.waitForTimeout(300);
+await p.mouse.up(); await p.waitForTimeout(300); // 0.4.0: feste Pause bleibt (Canvas: Figur nach dem Drehen)
 const after = await p.evaluate(() => document.querySelector('.start-card.today canvas.body3d').toDataURL());
 ok(before !== after, 'K: Wischen dreht die Figur');
 ok(await p.locator('.sheet').count() === 0, 'K: Wischen öffnet keine große Ansicht');
@@ -65,28 +65,28 @@ ok(!(await p.evaluate(async () => (await import('./js/features/training/session.
 await shot('2-turned');
 
 // Tippen öffnet die große Ansicht
-await p.locator('.start-card.today canvas.body3d').click(); await p.waitForTimeout(500);
+await p.locator('.start-card.today canvas.body3d').click(); await settle(p, 500);
 const st = await p.locator('.sheet').last().innerText();
 ok(st.includes('Hauptmuskeln') && st.includes('Brust') && st.includes('Trizeps'), 'G: große Ansicht mit Hauptmuskeln');
 ok(st.includes('Mitbeteiligt'), 'G: mitbeteiligte Muskeln');
 ok(await p.locator('.sheet canvas.body3d').count() === 1, 'G: große drehbare Figur');
 await shot('3-sheet-front');
-await p.locator('.sheet .body-seg button', { hasText: 'Hinten' }).click(); await p.waitForTimeout(600);
+await p.locator('.sheet .body-seg button', { hasText: 'Hinten' }).click(); await settle(p, 600);
 await shot('4-sheet-back');
-await p.locator('.sheet .body-seg button', { hasText: 'Seite' }).click(); await p.waitForTimeout(600);
+await p.locator('.sheet .body-seg button', { hasText: 'Seite' }).click(); await settle(p, 600);
 await shot('5-sheet-side');
 ok(!BAD_TEXT.test(await text()), 'kein null/undefined/NaN');
-await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+await p.keyboard.press('Escape'); await settle(p, 300);
 
 // Weibliche Figur
 await p.evaluate(async () => { const s = await import('./js/features/training/store.js'); s.set('settings', { ...s.get('settings'), figure: 'female' }); });
-await p.reload(); await p.waitForTimeout(800);
+await p.reload(); await p.waitForTimeout(800); // 0.4.0: feste Pause bleibt (Canvas: Figur neu gezeichnet)
 ok(await p.locator('.start-card canvas.body3d, .start-row canvas.body3d').count() === 3, 'K: weibliche Figur ebenfalls 3D');
 await shot('6-female');
 
 // Starten funktioniert weiter
-await p.locator('.start-card.today button', { hasText: 'Starten' }).click(); await p.waitForTimeout(600);
-if (await p.locator('.sheet button', { hasText: /normal/i }).count()) { await p.locator('.sheet button', { hasText: /normal/i }).first().click(); await p.waitForTimeout(400); }
+await p.locator('.start-card.today button', { hasText: 'Starten' }).click(); await settle(p, 600);
+if (await p.locator('.sheet button', { hasText: /normal/i }).count()) { await p.locator('.sheet button', { hasText: /normal/i }).first().click(); await settle(p, 400); }
 ok(!!(await p.evaluate(async () => (await import('./js/features/training/session.js')).activeSession())), 'Starten startet das Training');
 
 ok(errs.length === 0, `keine Konsolenfehler ${errs.slice(0, 3).join(' | ')}`);

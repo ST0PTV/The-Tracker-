@@ -5,7 +5,7 @@
 //   npm run release -- 2.14.0 "Kurztext"        Version setzen, prüfen, auf dem wip-Branch committen,
 //                                               dann als EIN Commit auf main zusammenfassen (lokal)
 //   npm run release -- 2.14.0 "Kurztext" --push zusätzlich main pushen (erst nach "deploy" des Nutzers)
-//   Optionen: --no-browser (Tab-Check überspringen)
+//   Optionen: --no-browser (Browser-Checks überspringen), --serial (Browser-Checks einzeln nacheinander statt parallel)
 //
 // Was das Skript NICHT tut: Doku in Drive, iPhone-Checkliste, Mockups. Ohne .privacy-terms.local bricht es ab.
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
@@ -89,11 +89,9 @@ run('npm test', 'npm', ['test', '--silent']);
 if (!existsSync(join(ROOT, '.privacy-terms.local'))) fail('.privacy-terms.local fehlt: aus Drive (Tools/privacy-terms.local.txt) anlegen, nie nur mit dem generischen Scan pushen.');
 run('npm run privacy', 'npm', ['run', '--silent', 'privacy']);
 if (!skipBrowser) {
-  run('Browser: Tabs und Version', 'node', ['tests/browser/check-tabs.mjs', checkOnly ? current : next]);
-  // Alle weiteren Abläufe (tests/browser/check-*.mjs außer check-tabs)
-  for (const f of readdirSync(join(ROOT, 'tests/browser')).filter((x) => /^check-.+\.mjs$/.test(x) && x !== 'check-tabs.mjs').sort()) {
-    run(`Browser: ${f}`, 'node', [`tests/browser/${f}`]);
-  }
+  // 0.4.0: alle Browser-Checks (tests/browser/check-*.mjs und wt/check-*.mjs) über den parallelen Runner, keiner wird übersprungen.
+  // check-tabs prüft die neue Version. --serial lässt sie einzeln nacheinander laufen (--jobs 1).
+  run('Browser: alle Checks', 'node', ['scripts/run-browser-checks.mjs', '--version', checkOnly ? current : next, ...(flags.has('--serial') ? ['--jobs', '1'] : [])]);
 }
 
 if (checkOnly) { console.log('\nVorabcheck bestanden.'); process.exit(0); }

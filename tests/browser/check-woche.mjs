@@ -3,7 +3,7 @@
 // Abhaken, Filter, Grundzutaten), Rezeptseite (Einplanen, Mengenfaktor aus dem Plan), Vorschlag unter Rezepte.
 // Prüft fremde Keys, Konsolenfehler, null/undefined/NaN; Screenshots hell/dunkel.
 // Aufruf: node tests/browser/check-woche.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -25,13 +25,13 @@ for (const appearance of ['dark', 'light']) {
     localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f', weightKg: 64, heightCm: 168 }));
     localStorage.setItem('tt_recipes', JSON.stringify({ started: true, portions: 2 }));
   }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(300);
-  await p.goto(srv.url + '/index.html#/rezepte/woche'); await p.waitForTimeout(1500);
+  await p.reload(); await settle(p, 300);
+  await p.goto(srv.url + '/index.html#/rezepte/woche'); await settle(p, 1500);
   const shot = (name, full = false) => p.screenshot({ path: join(out, `${appearance}-${name}.png`), fullPage: full });
   const text = () => p.evaluate(() => document.body.innerText);
   const hash = () => p.evaluate(() => location.hash);
   const week = () => p.evaluate(() => JSON.parse(localStorage.getItem('tt_week') || '{}'));
-  const close = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(250); } };
+  const close = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await settle(p, 250); } };
 
   // Plan
   ok(await p.locator('.wk-day').count() === 7 && await p.locator('.wk-row').count() === 21, `${appearance}: 7 Tage × 3 Mahlzeiten`);
@@ -39,7 +39,7 @@ for (const appearance of ['dark', 'light']) {
   ok(!BAD_TEXT.test(await text()), `${appearance}: Woche ohne null/undefined/NaN`);
   ok(/≈ [\d.]+ kcal/.test(await p.innerText('.wk-dh span')), `${appearance}: Tagessumme`);
   await shot('1-woche');
-  await p.locator('.wk-ok').nth(0).click(); await p.locator('.wk-ok').nth(2).click(); await p.waitForTimeout(150);
+  await p.locator('.wk-ok').nth(0).click(); await p.locator('.wk-ok').nth(2).click(); await settle(p, 150);
   let w = await week();
   ok(Object.values(w.slots).filter((s) => s.ok).length === 2 && /2 von 21 übernommen/.test(await text()), `${appearance}: Kreis übernimmt (tt_week)`);
   ok(await p.locator('.wk-ok').nth(0).getAttribute('aria-checked') === 'true', `${appearance}: Kreis zeigt Haken`);
@@ -47,37 +47,37 @@ for (const appearance of ['dark', 'light']) {
   // Sheet: Anderes Rezept, Tauschen
   const nameOf = (i) => p.locator('.wk-main b').nth(i).innerText();
   const n1 = await nameOf(1);
-  await p.locator('.wk-main').nth(1).click(); await p.waitForTimeout(300);
+  await p.locator('.wk-main').nth(1).click(); await settle(p, 300);
   ok(await p.locator('.sheet .btn:has-text("Übernehmen")').count() === 1 && await p.locator('.wk-swap .chip').count() >= 1, `${appearance}: Sheet mit Übernehmen und Tauschen`);
   await shot('2-sheet');
-  await p.click('.sheet button:has-text("Anderes Rezept")'); await p.waitForTimeout(250);
+  await p.click('.sheet button:has-text("Anderes Rezept")'); await settle(p, 250);
   ok((await nameOf(1)) !== n1, `${appearance}: Anderes Rezept (${n1} → ${await nameOf(1)})`);
   const a0 = await nameOf(0);
-  await p.locator('.wk-main').nth(0).click(); await p.waitForTimeout(300);
-  await p.locator('.wk-swap .chip').first().click(); await p.waitForTimeout(250);
+  await p.locator('.wk-main').nth(0).click(); await settle(p, 300);
+  await p.locator('.wk-swap .chip').first().click(); await settle(p, 250);
   ok((await nameOf(0)) !== a0 && (await text()).includes(a0), `${appearance}: Tauschen`);
   await close();
 
   // Alle übernehmen, Rest neu mischen
-  await p.click('.wk-bar button:has-text("Rest neu mischen")'); await p.waitForTimeout(200);
+  await p.click('.wk-bar button:has-text("Rest neu mischen")'); await settle(p, 200);
   ok(/2 von 21 übernommen/.test(await text()), `${appearance}: Mischen behält Übernommenes`);
-  await p.click('.wk-bar button:has-text("Alle übernehmen")'); await p.waitForTimeout(200);
+  await p.click('.wk-bar button:has-text("Alle übernehmen")'); await settle(p, 200);
   ok(/21 von 21 übernommen/.test(await text()) && await p.locator('.wk-row.prop').count() === 0, `${appearance}: Alle übernehmen`);
 
   // Einstellungen
-  await p.click('.wk-set .chip:has-text("Snack")'); await p.waitForTimeout(250);
+  await p.click('.wk-set .chip:has-text("Snack")'); await settle(p, 250);
   ok(await p.locator('.wk-row').count() === 28, `${appearance}: Snack dazu → 4 Zeilen pro Tag`);
-  await p.click('.wk-set .chip:has-text("Snack")'); await p.waitForTimeout(250);
+  await p.click('.wk-set .chip:has-text("Snack")'); await settle(p, 250);
   const kcalFit = await p.innerText('.wk-dh span');
-  await p.click('.wk-set .check-row input'); await p.waitForTimeout(200);
+  await p.click('.wk-set .check-row input'); await settle(p, 200);
   ok((await week()).fit === false && !/× Menge/.test(await text()), `${appearance}: Mengen nicht anpassen → keine Faktoren (${kcalFit} → ${await p.innerText('.wk-dh span')})`);
-  await p.click('.wk-set .check-row input'); await p.waitForTimeout(200);
-  await p.click('.wk-set button[aria-label="Eine Portion mehr"]'); await p.waitForTimeout(150);
+  await p.click('.wk-set .check-row input'); await settle(p, 200);
+  await p.click('.wk-set button[aria-label="Eine Portion mehr"]'); await settle(p, 150);
   ok((await week()).portions === 3, `${appearance}: Portionen für den Einkauf`);
   await shot('3-woche-voll', true);
 
   // Einkauf
-  await p.click('.rz-sub a:has-text("Einkauf")'); await p.waitForTimeout(400);
+  await p.click('.rz-sub a:has-text("Einkauf")'); await settle(p, 400);
   ok((await hash()) === '#/rezepte/einkauf' && await p.locator('.sh-dish').count() === 21, `${appearance}: Einkauf zeigt 21 Gerichte`);
   const rows = await p.locator('.sh-row').count();
   ok(rows > 15 && /3 Portionen/.test(await text()), `${appearance}: ${rows} Zutaten, 3 Portionen`);
@@ -85,33 +85,33 @@ for (const appearance of ['dark', 'light']) {
   ok(/Hast du meistens da/i.test(await text()), `${appearance}: Grundzutaten getrennt`);
   const first = await p.locator('.sh-row b').first().innerText();
   ok(/^\d|^[½¼¾]/.test(first), `${appearance}: Zeile mit Menge (${first})`);
-  await p.locator('.sh-row').first().click(); await p.waitForTimeout(150);
+  await p.locator('.sh-row').first().click(); await settle(p, 150);
   ok(await p.locator('.sh-row').first().getAttribute('aria-checked') === 'true' && Object.keys((await week()).bought).length === 1, `${appearance}: Abhaken`);
   await shot('4-einkauf');
-  await p.click('.sh-chips .chip:has-text("Offen")'); await p.waitForTimeout(150);
+  await p.click('.sh-chips .chip:has-text("Offen")'); await settle(p, 150);
   ok(await p.locator('.sh-row').count() === rows - 1, `${appearance}: Filter Offen`);
-  await p.click('.sh-chips .chip:has-text("Erledigt")'); await p.waitForTimeout(150);
+  await p.click('.sh-chips .chip:has-text("Erledigt")'); await settle(p, 150);
   ok(await p.locator('.sh-row').count() === 1, `${appearance}: Filter Erledigt`);
-  await p.click('.sh-chips .chip:has-text("Alles")'); await p.waitForTimeout(150);
-  await p.click('.sh-reset'); await p.waitForTimeout(150);
+  await p.click('.sh-chips .chip:has-text("Alles")'); await settle(p, 150);
+  await p.click('.sh-reset'); await settle(p, 150);
   ok(Object.keys((await week()).bought).length === 0, `${appearance}: Haken entfernen`);
 
   // Rezeptseite: Faktor aus dem Plan, Einplanen
-  await p.locator('.sh-dish').first().click(); await p.waitForTimeout(400);
+  await p.locator('.sh-dish').first().click(); await settle(p, 400);
   ok(/#\/rezepte\/rezept\?id=/.test(await hash()), `${appearance}: Gericht öffnet Rezept`);
   const f = new URLSearchParams((await hash()).split('?')[1]).get('f');
   if (f) ok(/Laut Wochenplan/.test(await text()) && /Gekocht – [\d,]+ Portionen/.test(await text()), `${appearance}: Faktor ${f} auf der Rezeptseite`);
-  await p.click('.rp-acts .chip:has-text("Einplanen")'); await p.waitForTimeout(300);
+  await p.click('.rp-acts .chip:has-text("Einplanen")'); await settle(p, 300);
   ok(await p.locator('.wk-days .chip').count() === 7, `${appearance}: Einplanen zeigt 7 Tage`);
   await shot('5-einplanen');
   const onBefore = await p.locator('.wk-days .chip.on').count();
-  await p.locator('.wk-days .chip:not(.on)').first().click(); await p.waitForTimeout(150);
+  await p.locator('.wk-days .chip:not(.on)').first().click(); await settle(p, 150);
   ok(await p.locator('.wk-days .chip.on').count() === onBefore + 1, `${appearance}: Tag eingeplant`);
   await close();
 
   // Rezepte: Vorschlag aus dem Wochenplan zuerst
   await p.evaluate(() => { const w = JSON.parse(localStorage.getItem('tt_week')); for (const s of Object.values(w.slots)) s.ok = true; localStorage.setItem('tt_week', JSON.stringify(w)); });
-  await p.goto(srv.url + '/index.html#/rezepte?m=dinner'); await p.waitForTimeout(600);
+  await p.goto(srv.url + '/index.html#/rezepte?m=dinner'); await settle(p, 600);
   ok(/aus dem Wochenplan/.test(await p.locator('.rz-list').first().locator('.rz-row').first().innerText()), `${appearance}: geplantes Abendessen steht bei den Vorschlägen zuerst`);
   await shot('6-rezepte');
 

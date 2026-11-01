@@ -2,7 +2,7 @@
 // Version unter „Ich“, nur eigene Speicher-Keys (tt_), hell und dunkel.
 // Nach Workout-Tracker/tests/browser/check-tabs.mjs (MIT, ST0PTV).
 // Aufruf: node tests/browser/check-tabs.mjs [erwartete-Version]   (Standard: VERSION aus js/core/version.js)
-import { launch, startServer, checker, appVersion, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, appVersion, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const ROUTES = ['#/', '#/rezepte', '#/rezepte/woche', '#/rezepte/einkauf', '#/training', '#/training/plaene', '#/training/uebungen', '#/training/fortschritt', '#/ich/training', '#/ich', '#/ich/ziel', '#/ich/quellen', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/gewichtsziel', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen', '#/rezepte/start', '#/rezepte/neu', '#/ich/ernaehrung'];
@@ -26,12 +26,12 @@ for (const appearance of ['dark', 'light']) {
     localStorage.setItem('wt_settings', '{"fremd":1}');
     localStorage.setItem('tt_settings', JSON.stringify({ appearance: a }));
   }, appearance);
-  await p.reload(); await p.waitForTimeout(400); // neu starten, damit die App mit diesem Speicherstand bootet
+  await p.reload(); await settle(p, 400); // neu starten, damit die App mit diesem Speicherstand bootet
   const theme = await p.evaluate(() => document.documentElement.getAttribute('data-theme'));
   ok((theme === 'light') === (appearance === 'light'), `${appearance}: Erscheinung beim Start gesetzt`);
 
   for (const r of ROUTES) {
-    await p.goto(srv.url + '/index.html' + r); await p.waitForTimeout(400);
+    await p.goto(srv.url + '/index.html' + r); await settle(p, 400);
     const t = await p.evaluate(() => document.body.innerText);
     ok(!BAD_TEXT.test(t), `${appearance} ${r}: kein null/undefined/NaN im Text`);
     const active = await p.locator('.tab[aria-current="page"]').count();
@@ -41,7 +41,7 @@ for (const appearance of ['dark', 'light']) {
   }
 
   // Tab-Leiste wie im Workout-Tracker: volle Breite, deckend in der Streifenfarbe, vier Tabs, erhöhter Knopf mit „+“ in der Mitte
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(300);
+  await p.goto(srv.url + '/index.html#/'); await settle(p, 300);
   const bar = async () => p.evaluate(() => {
     const t = document.querySelector('.tabbar').getBoundingClientRect(), k = document.querySelector('.tab-plus').getBoundingClientRect();
     const cs = getComputedStyle(document.querySelector('.tabbar')), tabs = [...document.querySelectorAll('.tabbar .tab')].map((e) => e.getBoundingClientRect());

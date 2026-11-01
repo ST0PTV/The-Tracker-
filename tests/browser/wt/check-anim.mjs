@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // Öffnet Technik-Animationen (männliche und weibliche Figur) und das Datenblatt, prüft Karte, Text und Konsole.
 // Aufruf: node tests/browser/check-anim.mjs <ref1,ref2,...>      (Ausgabe: Screenshots in WT_OUT/shots)
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 
 // The Tracker: ohne Argument jede zehnte Animation aus anim-index.js (13 von 121, Seiten-, Front- und Rückansicht).
 const { ANIM_REFS } = await import('../../../js/features/training/anim-index.js');
@@ -19,9 +19,9 @@ for (const sex of ['male', 'female']) {
   const p = await ctx.newPage(); const errs = [];
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   p.on('pageerror', (e) => errs.push(String(e)));
-  await p.goto(srv.url + '/index.html'); await p.waitForTimeout(800);
+  await p.goto(srv.url + '/index.html'); await settle(p, 800);
   for (const ref of refs) {
-    await p.goto(srv.url + '/index.html#/training'); await p.reload(); await p.waitForTimeout(500);
+    await p.goto(srv.url + '/index.html#/training'); await p.reload(); await settle(p, 500);
     const r = await p.evaluate(async ([ref, badSrc]) => {
       const m = await import('./js/features/training/anim-view.js'); m.openAnimation(ref);
       await new Promise((res) => setTimeout(res, 1200));

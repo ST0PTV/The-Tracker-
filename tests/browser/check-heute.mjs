@@ -1,7 +1,7 @@
 // Heute (Entwürfe V1/V5, M2): leere Mahlzeiten ausgeblendet, Tracker-Karten leer groß / mit Eintrag kompakt,
 // „+“-Menü in der Tab-Leiste (Reihenfolge, Farben), „Schnell – nur kcal“, Alkohol erst mit Eintrag sichtbar.
 // Aufruf: node tests/browser/check-heute.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -18,10 +18,10 @@ for (const appearance of ['dark', 'light']) {
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(srv.url + '/index.html');
   await p.evaluate(([a, f]) => { localStorage.clear(); for (const [k, v] of Object.entries(f)) localStorage.setItem(k, v); localStorage.setItem('tt_settings', JSON.stringify({ appearance: a })); localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f', weightKg: 64, heightCm: 168 })); }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(300);
+  await p.reload(); await settle(p, 300);
   const shot = (name, full = false) => p.screenshot({ path: join(out, `${appearance}-${name}.png`), fullPage: full });
   const text = () => p.evaluate(() => document.body.innerText);
-  const close = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300); } };
+  const close = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await settle(p, 300); } };
 
   // Leerer Tag
   let t = await text();
@@ -33,7 +33,7 @@ for (const appearance of ['dark', 'light']) {
 
   // „+“-Menü
   ok(await p.locator('.tabbar .tab-plus').count() === 1 && await p.locator('.tabbar .tab').count() === 4, `${appearance}: „+“ mittig in der Tab-Leiste`);
-  await p.click('.tab-plus'); await p.waitForTimeout(300);
+  await p.click('.tab-plus'); await settle(p, 300);
   const rows = await p.locator('.qa-grp').nth(1).locator('.qa-row b').allInnerTexts();
   ok(rows.join(',') === 'Wasser,Supplements,Koffein,Alkohol,Gewicht', `${appearance}: Tracker-Reihenfolge (${rows.join(', ')})`);
   ok((await p.locator('.qa-grp').first().locator('.qa-row b').allInnerTexts()).join(',') === 'Lebensmittel,Scannen,Schnell,Rezept', `${appearance}: Gruppe Essen`);
@@ -50,10 +50,10 @@ for (const appearance of ['dark', 'light']) {
     j.addQuick(addDays(isoDate(), -1), 400, 'dinner', 'Vortag Abend');
     j.addQuick(isoDate(), 300, 'lunch', 'Heute Mittag');
   });
-  await p.click('.tab-plus'); await p.waitForTimeout(300);
+  await p.click('.tab-plus'); await settle(p, 300);
   const metrics = async () => p.evaluate(() => ({ top: Math.round(document.querySelector('.sheet').getBoundingClientRect().top), trk: Math.round([...document.querySelectorAll('.qa-grp')][1].getBoundingClientRect().top),
     copy: !!document.querySelector('.qa-row .t b') && [...document.querySelectorAll('.qa-row b')].some((x) => x.textContent === 'Wie am Vortag') }));
-  const pick = async (label) => { await p.click(`.qa-meal button:has-text("${label}")`); await p.waitForTimeout(150); };
+  const pick = async (label) => { await p.click(`.qa-meal button:has-text("${label}")`); await settle(p, 150); };
   await pick('Mittag'); const noCopy = await metrics();
   await pick('Abend'); const withCopy = await metrics();
   await pick('Snack'); const noCopy2 = await metrics();
@@ -62,35 +62,35 @@ for (const appearance of ['dark', 'light']) {
   ok(withCopy.trk > noCopy.trk && noCopy2.trk === noCopy.trk, `${appearance}: Tracker-Gruppe rutscht nach unten, wenn die Zeile erscheint (${noCopy.trk} → ${withCopy.trk})`);
   await shot('2b-menu-vortag');
   await close();
-  await p.evaluate(() => { localStorage.removeItem('tt_days'); }); await p.reload(); await p.waitForTimeout(300);
+  await p.evaluate(() => { localStorage.removeItem('tt_days'); }); await p.reload(); await settle(p, 300);
 
   // Schnell – nur kcal
   await viaPlus(p, 'Schnell', 'Snacks');
   await p.fill('.sheet input[aria-label="Energie in kcal"]', '250');
   await p.fill('.sheet input[aria-label="Bezeichnung"]', 'Kuchen');
-  await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Eintragen")'); await settle(p, 300);
   t = await text();
   ok(await p.locator('.card.meal').count() === 1 && t.includes('Kuchen') && t.includes('250 kcal'), `${appearance}: Snacks erscheinen mit dem Schnell-Eintrag`);
   ok(t.includes('nur kcal'), `${appearance}: Eintrag als „nur kcal“ gekennzeichnet`);
-  await p.locator('.entry:has-text("Kuchen")').click(); await p.waitForTimeout(250);
+  await p.locator('.entry:has-text("Kuchen")').click(); await settle(p, 250);
   await p.fill('.sheet input[aria-label="Energie in kcal"]', '300');
-  await p.click('.sheet button:has-text("Speichern")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Speichern")'); await settle(p, 300);
   ok((await text()).includes('300 kcal'), `${appearance}: Schnell-Eintrag bearbeitet`);
 
   // Alkohol über das Menü
   await viaPlus(p, 'Alkohol');
-  await p.locator('.sheet .caf-pick .row').nth(1).click(); await p.waitForTimeout(150); // Pils 0,5 l
-  await p.fill('.sheet input[aria-label="Uhrzeit"]', '00:10'); await p.dispatchEvent('.sheet input[aria-label="Uhrzeit"]', 'change'); await p.waitForTimeout(150);
+  await p.locator('.sheet .caf-pick .row').nth(1).click(); await settle(p, 150); // Pils 0,5 l
+  await p.fill('.sheet input[aria-label="Uhrzeit"]', '00:10'); await p.dispatchEvent('.sheet input[aria-label="Uhrzeit"]', 'change'); await settle(p, 150);
   ok(/Höchstwert ca\. [\d,]+ ‰/.test(await p.innerText('.sheet .caf-prev')), `${appearance}: Vorschau nennt den Höchstwert`);
   ok((await p.inputValue('.sheet input[aria-label="Bezeichnung"]')) === 'Pils 500 ml', `${appearance}: Name ohne Komma`);
   await shot('3-alkohol-sheet');
-  await p.locator('.sheet button.primary').click(); await p.waitForTimeout(700);
+  await p.locator('.sheet button.primary').click(); await settle(p, 700);
   ok((await p.locator('.sheet').last().innerText()).includes('nicht geeignet, um die Fahrtüchtigkeit zu beurteilen'), `${appearance}: Warnhinweis beim ersten Getränk`);
   await close();
   ok(await p.locator('.trk.alc.on .chart-box svg').count() === 1, `${appearance}: Alkohol-Karte mit Kurve nach dem Eintrag`);
   t = await text();
   ok(t.includes('Pils 500 ml') && t.includes('190 kcal'), `${appearance}: kcal als verknüpfter Snack (${t.includes('190 kcal')})`);
-  await p.click('.trk.alc'); await p.waitForTimeout(300);
+  await p.click('.trk.alc'); await settle(p, 300);
   const det = await p.locator('.sheet').last().innerText();
   ok(det.includes('Schätzung') && det.includes('19 g Alkohol'), `${appearance}: Details mit Schätzung und Gramm`);
   const pkTxt = (det.match(/Höchstwert\s+([\d,]+) ‰/) || [])[1];
@@ -98,16 +98,16 @@ for (const appearance of ['dark', 'light']) {
   ok(!BAD_TEXT.test(det), `${appearance}: Details ohne null/NaN`);
   await shot('4-alkohol-details');
   await close();
-  await p.waitForTimeout(3000);
+  await p.waitForFunction(() => !document.querySelector('.toast.show'), null, { timeout: 3000 }).catch(() => {}); await settle(p, 300); // 0.4.0: bis der Hinweis weg ist (vorher feste 3000 ms)
   await shot('5-heute', true);
   const fit = await p.evaluate(() => [...document.querySelectorAll('.card')].every((c) => { const r = c.getBoundingClientRect(); return [...c.querySelectorAll('*')].every((e) => { const q = e.getBoundingClientRect(); return !q.width || (q.left >= r.left - 1 && q.right <= r.right + 1); }); }));
   ok(fit, `${appearance}: nichts ragt aus den Karten`);
 
   // Alkohol ausschalten → weder Karte noch Menü-Zeile
-  await p.goto(srv.url + '/index.html#/ich/alkohol'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/ich/alkohol'); await settle(p, 250);
   await p.uncheck('input[aria-label="Alkohol im „+“-Menü (Karte erscheint mit dem ersten Eintrag)"]');
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(250);
-  await p.click('.tab-plus'); await p.waitForTimeout(300);
+  await p.goto(srv.url + '/index.html#/'); await settle(p, 250);
+  await p.click('.tab-plus'); await settle(p, 300);
   ok(await p.locator('.trk.alc').count() === 0 && await p.locator('.qa-row:has-text("Alkohol")').count() === 0, `${appearance}: ausgeschaltet ohne Karte und Menü-Zeile`);
   await close();
 

@@ -3,16 +3,16 @@
 // v3.11.0: Plan-Assistent – Kraft + Cardio am selben Tag (4. Zustand im Tageszyklus, Frage „Wie lange Cardio …“ nur dann),
 // Vorschau mit „… + Cardio“, Cardio-Auswahl nach Ziel/Geräten (#311), Übernehmen mit Cardio-Minuten im Plan.
 // iPhone SE (320 px) und Pixel 7, dunkel und hell. Aufruf: node tests/browser/check-v3110.mjs [Ordner für Screenshots]
-import { launch, startServer, checker, loadPlaywright, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, loadPlaywright, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 const shots = process.argv[2] || null;
 const pw = await loadPlaywright();
 const srv = await startServer(); const b = await launch(); const { ok, done } = checker();
 const states = (p) => p.evaluate(() => [...document.querySelectorAll('.as-day')].map((e) => (e.classList.contains('kc') ? 'K' : e.classList.contains('k') ? 'k' : e.classList.contains('c') ? 'c' : '-')).join(''));
-const tap = async (p, d) => { await p.locator('.as-day').nth(d).click(); await p.waitForTimeout(60); };
+const tap = async (p, d) => { await p.locator('.as-day').nth(d).click(); await settle(p, 60); };
 const setWeek = async (p, want) => { for (let d = 0; d < 7; d++) for (let i = 0; i < 4 && (await states(p))[d] !== want[d]; i++) await tap(p, d); };
 const sheetText = (p) => p.evaluate(() => document.querySelector('.sheet')?.innerText || '');
-const next = async (p) => { await p.getByRole('button', { name: /^(Weiter|Vorschlag ansehen)$/ }).click(); await p.waitForTimeout(180); };
+const next = async (p) => { await p.getByRole('button', { name: /^(Weiter|Vorschlag ansehen)$/ }).click(); await settle(p, 180); };
 
 for (const devName of ['iPhone SE', 'Pixel 7']) for (const theme of ['dark', 'light']) {
   const { defaultBrowserType, ...opts } = pw.devices[devName];
@@ -23,11 +23,11 @@ for (const devName of ['iPhone SE', 'Pixel 7']) for (const theme of ['dark', 'li
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   const shot = (n) => (shots ? p.screenshot({ path: join(shots, `v3110-${devName.replace(/\W+/g, '_')}-${theme}-${n}.png`) }) : null);
-  await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
   await p.evaluate(async (light) => { const st = await import('./js/features/training/store.js'); localStorage.setItem('tt_settings', JSON.stringify({ ...JSON.parse(localStorage.getItem('tt_settings') || '{}'), appearance: light ? 'light' : 'dark' })); /* The Tracker: Erscheinung app-weit */ st.set('settings', { ...st.get('settings'), onboarded: true, hints: false, appearance: light ? 'light' : 'dark' }); }, theme === 'light');
-  await p.reload(); await p.waitForTimeout(400);
+  await p.reload(); await settle(p, 400);
   if (theme === 'light') ok(await p.evaluate(() => document.documentElement.dataset.theme === 'light'), `${T}: helles Design aktiv`);
-  await p.evaluate(async () => { const v = await import('./js/features/training/assistant-view.js'); v.openAssistant(() => {}); }); await p.waitForTimeout(400);
+  await p.evaluate(async () => { const v = await import('./js/features/training/assistant-view.js'); v.openAssistant(() => {}); }); await settle(p, 400);
   ok(/Frage 1 von 5/.test(await sheetText(p)), `${T}: ohne Kombi-Tag 5 Fragen`);
   await next(p);
   // Zyklus mit dem vierten Zustand
@@ -54,7 +54,7 @@ for (const devName of ['iPhone SE', 'Pixel 7']) for (const theme of ['dark', 'li
   await next(p); // Cardio-Dauer
   t = await sheetText(p);
   ok(/Wie lange Cardio nach dem Krafttraining\?/.test(t) && /Frage 4 von 6/.test(t), `${T}: Frage zur Cardio-Dauer erscheint`);
-  await p.locator('.sheet .as-opt', { hasText: '30 min' }).click(); await p.waitForTimeout(120);
+  await p.locator('.sheet .as-opt', { hasText: '30 min' }).click(); await settle(p, 120);
   await shot('combo-q');
   await next(p); await next(p); await next(p);
   t = await sheetText(p);
@@ -64,25 +64,25 @@ for (const devName of ['iPhone SE', 'Pixel 7']) for (const theme of ['dark', 'li
   ok(await p.locator('.sheet [role=tab] svg').count() === 1, `${T}: Kombi-Tab mit Cardio-Symbol`);
   ok(await p.evaluate(() => [...document.querySelectorAll('.sheet [role=tab]')].every((b) => b.getClientRects().length && b.scrollHeight <= 46)), `${T}: Tab-Beschriftungen einzeilig`);
   ok(await p.evaluate(() => { const s = document.querySelector('.sheet .as-seg'); return !s || s.scrollWidth <= s.clientWidth + 1; }), `${T}: Tabs passen in die Breite`);
-  await p.locator('.sheet [role=tab][aria-label="Ganzkörper A + Cardio"]').click(); await p.waitForTimeout(150);
+  await p.locator('.sheet [role=tab][aria-label="Ganzkörper A + Cardio"]').click(); await settle(p, 150);
   t = await sheetText(p);
   ok(/Ganzkörper A \+ Cardio · Mo/.test(t), `${T}: Kombi-Fassung am Montag`);
   const rows = await p.locator('.sheet .as-list .row').allInnerTexts();
   ok(/Fahrradergometer/.test(rows.at(-1)) && /ca\. 30 min/.test(rows.at(-1)), `${T}: letzter Eintrag Cardio 30 min (${rows.at(-1).replace(/\n/g, ' ')})`);
   ok(/Ausdauer pro Woche/.test(t) && /ca\. 75 min/.test(t), `${T}: Ausdauer pro Woche 45 + 30 = 75 min`);
   await shot('preview');
-  await p.locator('.sheet [role=tab][aria-label="Ausdauer"]').click(); await p.waitForTimeout(150);
+  await p.locator('.sheet [role=tab][aria-label="Ausdauer"]').click(); await settle(p, 150);
   ok(/Gehen \(zügig, draußen\)/.test(await sheetText(p)), `${T}: reiner Cardio-Tag bei Muskelaufbau ohne Rad: zügiges Gehen`);
   // Übernehmen → Plan „Ganzkörper A + Cardio“ mit „ca. 30 min“ beim Cardio-Eintrag
-  await p.getByRole('button', { name: 'Übernehmen' }).click(); await p.waitForTimeout(600);
-  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await p.waitForTimeout(500);
-  await p.locator('#view .pcard', { hasText: 'Ganzkörper A + Cardio' }).click(); await p.waitForTimeout(500);
+  await p.getByRole('button', { name: 'Übernehmen' }).click(); await settle(p, 600);
+  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await settle(p, 500);
+  await p.locator('#view .pcard', { hasText: 'Ganzkörper A + Cardio' }).click(); await settle(p, 500);
   t = await sheetText(p);
   ok(/Fahrradergometer/.test(t) && /ca\. 30 min/.test(t) && !/Fahrradergometer\s*1 Satz/.test(t), `${T}: Plan zeigt beim Cardio „ca. 30 min“ statt Sätze`);
   ok(/4 Übungen · 6 Sätze/.test(t), `${T}: Kopfzeile zählt Cardio nicht als Satz (${(t.match(/\d+ Übungen · \d+ Sätze[^\n]*/) || [''])[0]})`);
   const sum = (t.match(/· (\d+) min/) || [])[1];
   ok(Number(sum) >= 50, `${T}: Dauer im Plan schließt die 30 min Cardio ein (${sum} min)`);
-  await p.locator('.sheet button', { hasText: 'Bearbeiten' }).first().click(); await p.waitForTimeout(400);
+  await p.locator('.sheet button', { hasText: 'Bearbeiten' }).first().click(); await settle(p, 400);
   const dur = await p.evaluate(() => document.querySelector('.sheet .plan-dur .step-val')?.innerText || 'kein Regler');
   ok(/\d+ min/.test(dur) && parseInt(dur, 10) >= 50, `${T}: Gesamtdauer schließt die 30 min Cardio ein (${dur})`);
   await shot('plan');

@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // v2.33.1: Browser-Prüfung – Abstand zwischen Aufwärmen, „Übungen hinzufügen“ und Cool-down im Plan-Editor.
 // Nur erfundene Testdaten. Aufruf: node tests/browser/check-v2331.mjs   (Screenshots in WT_OUT/v2331)
-import { launch, startServer, checker, outDir } from './lib.mjs';
+import { launch, startServer, checker, outDir, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -16,7 +16,7 @@ p.on('pageerror', (e) => errs.push(String(e)));
 p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 const shot = (name) => p.screenshot({ path: join(out, `${name}.png`) });
 
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
 await p.evaluate(async () => {
   const lib = await import('./js/features/training/exercises.js');
   const P = await import('./js/features/training/plans.js');
@@ -37,18 +37,18 @@ const gaps = () => p.evaluate(() => {
 });
 
 // Neuer, leerer Plan (Übungen-Taste immer sichtbar)
-await p.goto(srv.url + '/index.html#/training/plaene'); await p.waitForTimeout(500);
-await p.locator('.pcard', { hasText: 'Leer' }).first().click(); await p.waitForTimeout(500);
+await p.goto(srv.url + '/index.html#/training/plaene'); await settle(p, 500);
+await p.locator('.pcard', { hasText: 'Leer' }).first().click(); await settle(p, 500);
 let g = await gaps();
 ok(g && g.below >= 12, `A: leerer Plan – Abstand unter „Übungen hinzufügen“ ≥ 12 px (${g && g.below})`);
 ok(g && Math.abs(g.above - g.below) <= 2, `A: Abstand oben und unten gleich (${g && g.above} / ${g && g.below})`);
 await shot('1-empty-plan');
-await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+await p.keyboard.press('Escape'); await settle(p, 300);
 
 // Plan mit Übungen im Bearbeiten-Modus
-await p.locator('.pcard', { hasText: 'Mit Übungen' }).first().click(); await p.waitForTimeout(500);
+await p.locator('.pcard', { hasText: 'Mit Übungen' }).first().click(); await settle(p, 500);
 const edit = p.locator('.sheet').last().locator('button', { hasText: /Bearbeiten/ }).first();
-if (await edit.count()) { await edit.click(); await p.waitForTimeout(400); }
+if (await edit.count()) { await edit.click(); await settle(p, 400); }
 g = await gaps();
 ok(g && g.below >= 12, `A: Bearbeiten-Modus – Abstand unter „Übungen hinzufügen“ ≥ 12 px (${g && g.below})`);
 await shot('2-edit-plan');
