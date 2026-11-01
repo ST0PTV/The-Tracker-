@@ -10,7 +10,7 @@
 // Was das Skript NICHT tut: Doku in Drive, iPhone-Checkliste, Mockups. Ohne .privacy-terms.local bricht es ab.
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { execSync, spawnSync } from 'node:child_process';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
@@ -71,7 +71,7 @@ if (!checkOnly) {
 // --- Prüfungen ---------------------------------------------------------------
 step('Platzhalter-Texte in der Oberfläche');
 const walk = (d) => readdirSync(d).flatMap((n) => { const p = join(d, n); return statSync(p).isDirectory() ? walk(p) : [p]; });
-const jsFiles = walk(join(ROOT, 'js')).filter((f) => f.endsWith('.js')).map((f) => relative(ROOT, f));
+const jsFiles = walk(join(ROOT, 'js')).filter((f) => f.endsWith('.js')).map((f) => relative(ROOT, f).split(sep).join('/'));
 const uiFiles = ['index.html', ...jsFiles];
 const todo = [];
 for (const f of uiFiles) readFileSync(join(ROOT, f), 'utf8').split('\n').forEach((l, i) => { if (/(folgt|kommt) in v\d/i.test(l)) todo.push(`${f}:${i + 1}: ${l.trim()}`); });

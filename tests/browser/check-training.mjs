@@ -35,7 +35,7 @@ for (const appearance of ['dark', 'light']) {
       ok(cur === r, `${appearance} ${r}: Unterreiter aktiv`);
       ok(t.includes('(Beispiel)') || r === '#/training/uebungen' || r === '#/training/fortschritt', `${appearance} ${r}: Beispieldaten sichtbar`);
     }
-    await p.screenshot({ path: join(out, `${appearance}${r.replace(/[#/]+/g, '_')}.png`) });
+    await p.screenshot({ path: join(out, `${appearance}${r.replace(/[^\w-]+/g, '_')}.png`) });
   }
   ok(loaded.includes('main.js') && loaded.includes('training.css') && !loaded.includes('anim-data.js'), `${appearance}: Trainingsbereich geladen, Animationsdaten noch nicht`);
 

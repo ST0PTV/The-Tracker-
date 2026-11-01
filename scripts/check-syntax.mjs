@@ -1,9 +1,11 @@
 // Syntaxprüfung aller JS-Dateien (node --check) und Abgleich: Jede App-Datei muss im Precache von sw.js stehen.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('..', import.meta.url).pathname;
+// fileURLToPath statt .pathname: sonst "/C:/…" unter Windows.
+const root = fileURLToPath(new URL('..', import.meta.url));
 const walk = (dir) => readdirSync(dir).flatMap((n) => {
   const p = join(dir, n);
   return statSync(p).isDirectory() ? walk(p) : [p];
@@ -21,7 +23,7 @@ for (const f of files) {
 
 const sw = readFileSync(join(root, 'sw.js'), 'utf8');
 for (const f of walk(join(root, 'js'))) {
-  const rel = relative(root, f);
+  const rel = relative(root, f).split(sep).join('/');
   if (!sw.includes(`'${rel}'`)) { failed++; console.error(`Fehlt im Precache von sw.js: ${rel}`); }
 }
 

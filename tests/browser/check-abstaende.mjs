@@ -35,7 +35,7 @@ for (const appearance of ['dark', 'light']) {
 
   for (const r of ROUTES) {
     await p.goto(srv.url + '/index.html' + r); await p.waitForTimeout(300);
-    await check(r, r.replace(/[#/]+/g, '_') || 'root');
+    await check(r, r.replace(/[^\w-]+/g, '_') || 'root');
   }
   // Gewichtsziel mit Plan
   await p.goto(srv.url + '/index.html#/ich/gewichtsziel'); await p.waitForTimeout(250);

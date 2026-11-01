@@ -18,7 +18,8 @@ const shot = (name) => p.screenshot({ path: join(out, `${name}.png`) });
 const text = () => p.evaluate(() => document.body.innerText);
 // The Tracker: „Ich → Training“ hat kein <section>; dann zählt die ganze Seite (#view).
 const words = () => p.evaluate(() => (document.querySelector('#view section') || document.querySelector('#view')).innerText.split(/\s+/).filter(Boolean).length);
-const go = async (hash) => { await p.goto(srv.url + '/index.html' + hash); await p.reload(); await p.waitForTimeout(500); };
+// The Tracker: networkidle statt fester Wartezeit, unter Windows laden die Module langsamer.
+const go = async (hash) => { await p.goto(srv.url + '/index.html' + hash); await p.reload({ waitUntil: 'networkidle' }); await p.waitForTimeout(300); };
 
 // The Tracker: keine Willkommenskarte und kein Rundgang (Tutorial kommt am Ende für die ganze App, Entscheidung 2026-10-31).
 

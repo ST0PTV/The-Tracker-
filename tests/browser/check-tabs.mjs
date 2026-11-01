@@ -37,7 +37,7 @@ for (const appearance of ['dark', 'light']) {
     const active = await p.locator('.tab[aria-current="page"]').count();
     ok(active === 1, `${appearance} ${r}: genau ein aktiver Reiter`);
     if (r === '#/ich') ok(t.includes(want), `Version ${want} unter „Ich“ sichtbar`);
-    await p.screenshot({ path: join(out, `${appearance}-${r.replace(/[#/]+/g, '_') || 'root'}.png`) });
+    await p.screenshot({ path: join(out, `${appearance}-${r.replace(/[^\w-]+/g, '_') || 'root'}.png`) });
   }
 
   // Tab-Leiste wie im Workout-Tracker: volle Breite, deckend in der Streifenfarbe, vier Tabs, erhöhter Knopf mit „+“ in der Mitte

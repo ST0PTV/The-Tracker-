@@ -84,6 +84,9 @@ export async function auditFields(p, where) {
       const cs = await el.evaluate((e) => { const c = getComputedStyle(e); return [c.display, c.alignItems, c.height]; });
       if (cs[0] !== 'flex' || cs[1] !== 'center') out.push(`${where}: „${label}“ – Zeit-/Datumsfeld ohne Zentrierung (display ${cs[0]}, align-items ${cs[1]})`);
     }
+    // Nur Kleinbuchstaben ohne Oberlänge (z. B. „g“, „mg“): die Tinte sitzt von Natur aus tief, je nach Schrift über 3 px (Windows).
+    const shown = await el.evaluate((e) => (e.tagName === 'SELECT' ? e.options[e.selectedIndex]?.text : e.value || e.placeholder) || '');
+    if (shown && !/[A-ZÄÖÜ0-9bdfhklt]/.test(shown)) continue;
     const png = await el.screenshot();
     const r = await p.evaluate(async (b64) => {
       const img = new Image(); img.src = 'data:image/png;base64,' + b64; await img.decode();
