@@ -50,6 +50,7 @@ export function trainingSettingsView(rerender) {
         label: 'Standard-Pause',
         onStep: (v, d) => { const next = stepRest(v, d); return save({ restSeconds: next }) ? next : null; }
       })),
+      onOff('Karte auf „Heute“', 'todayCard', rerender),
       onOff('Bildschirm anlassen', 'keepAwake', rerender),
       wakeLockSupported() ? null : h('p', { class: 'muted small' }, 'Auf diesem Gerät ohne Wirkung.'),
       onOff('Scheiben pro Seite', 'plateMath', rerender),
@@ -69,13 +70,14 @@ export function trainingSettingsView(rerender) {
     h('div', { class: 'card' },
       cardHead('Anzeige'),
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Figur' },
-        [['male', 'Männlich'], ['female', 'Weiblich']].map(([k, label]) => {
-          const on = (settings.figure || 'male') === k;
+        [['auto', 'Wie Profil'], ['male', 'Männlich'], ['female', 'Weiblich']].map(([k, label]) => {
+          const on = settings.figureChoice === k;
           return h('button', { type: 'button', role: 'radio', class: on ? 'on' : '', 'aria-checked': String(on), onclick: () => {
             if (on) return;
-            if (save({ figure: k })) rerender();
+            if (save({ figureChoice: k })) rerender();
           } }, label);
         })),
+      settings.figureChoice === 'auto' ? h('p', { class: 'muted small' }, `Figur: ${settings.figure === 'female' ? 'weiblich' : 'männlich'} – aus „Schlaf & Körper“.`) : null,
       onOff('Hinweise anzeigen', 'hints', rerender),
       h('div', { class: 'btn-row' }, h('button', { class: 'btn', type: 'button', onclick: openGlossary }, 'Begriffe'))));
 }

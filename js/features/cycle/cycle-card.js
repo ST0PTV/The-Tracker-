@@ -5,7 +5,6 @@
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { trackerCard } from '../../core/tracker-card.js';
-import { isLocked } from '../../core/lock.js';
 import { isoDate } from '../../core/format.js';
 import * as M from './model.js';
 import { cycleActive, cycleSettings, cycleAnalysis, cycleDays, dayEntry, showFertile } from './cycle.js';
@@ -61,11 +60,6 @@ function reminderLines(a, today, c) {
 /** Karte auf „Heute“ (nur am heutigen Tag, nur wenn der Zyklus an ist). */
 export function cycleCard(iso, today = isoDate()) {
   if (!cycleActive() || iso !== today) return null;
-  if (isLocked('zyklus')) {
-    return h('section', { class: 'card cy-card k-cyc' }, h('div', { class: 'cy-hd' },
-      h('div', {}, h('div', { class: 'trk-lbl' }, 'Zyklus'), h('div', { class: 'small muted' }, 'Gesperrt')),
-      h('a', { class: 'btn small-btn', href: '#/zyklus' }, 'Entsperren')));
-  }
   const c = cycleSettings();
   const a = cycleAnalysis(today);
   const rem = reminderLines(a, today, c);

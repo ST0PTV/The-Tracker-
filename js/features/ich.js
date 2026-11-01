@@ -12,7 +12,7 @@ import { VERSION } from '../core/version.js';
 import { isoDate, addDays, r1 } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
 import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
-import { generateDemo, generateDemoDrinks, generateDemoWeights, generateDemoAlcohol, DEMO_GOAL } from './dev/demo.js';
+import { generateDemo, generateDemoDrinks, generateDemoWeights, generateDemoAlcohol, generateDemoCycle, DEMO_GOAL } from './dev/demo.js';
 import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS, alcSettings } from './drinks/alcohol.js';
 import { wgoalView } from './goal/wgoal-view.js';
 import { WG_REFS, wgDateFmt } from './goal/weightgoal.js';
@@ -24,7 +24,7 @@ import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS, caffSettings } from '.
 import { waterSettingsView, caffSettingsView, alcSettingsView } from './drinks/drinks-settings.js';
 import { suppSettingsView } from './supp/supp-card.js';
 import { suppSettings } from './supp/supplements.js';
-import { cycleAvailable, cycleSettings, TRACK } from './cycle/cycle.js';
+import { cycleAvailable, cycleSettings, TRACK, loadDemoCycle, removeDemoCycle } from './cycle/cycle.js';
 import { lockSettings } from '../core/lock.js';
 
 const fmt = (n) => Math.round(n).toLocaleString('de-DE');
@@ -74,7 +74,7 @@ function ichView(rerender) {
       meRow({ kind: 'train', ico: 'dumbbell', title: 'Training', href: '#/ich/training', sub: 'Pause, Scheiben, Geräte, Figur' })),
     ...group('App',
       meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', right: appSeg }),
-      meRow({ kind: 'app', ico: 'lock', title: 'PIN-Sperre', href: '#/ich/sperre', sub: L.on ? (L.scope === 'app' ? 'an · ganze App' : 'an · nur Zyklus') : 'aus' }),
+      meRow({ kind: 'app', ico: 'lock', title: 'PIN-Sperre', href: '#/ich/sperre', sub: L.on ? 'an · ganze App' : 'aus' }),
       meRow({ kind: 'app', ico: 'info', title: 'Quellen & Lizenzen', href: '#/ich/quellen', sub: 'Daten, Studien, übernommener Code' })),
     devCard(rerender),
     h('p', { class: 'me-foot' }, `The Tracker ${VERSION} · ${store.usageKB()} KB lokal gespeichert`));
@@ -99,17 +99,18 @@ function devCard(rerender) {
     // Training (Phase 4): Übungen, zwei Pläne und sechs Wochen Trainings; Modul erst hier laden
     const T = await import('./training/demo.js').catch(() => null);
     const tn = T ? T.loadTrainingDemo() : 0;
-    toast(`${count} Beispiel-Einträge für 30 Tage${tn ? ` und ${tn} Trainings` : ''} geladen`);
+    const cy = loadDemoCycle(generateDemoCycle({ today }));
+    toast(`${count} Beispiel-Einträge für 30 Tage${tn ? `, ${tn} Trainings` : ''}${cy.added ? (cy.visible ? ' und 5 Zyklen' : '; Zyklen nur sichtbar, wenn unter „Schlaf & Körper“ nicht „Mann“ gewählt ist') : ''} geladen`);
     rerender();
   };
   return h('section', { class: 'card dev-card' },
     h('div', { class: 'card-head' }, h('h2', {}, 'Beispieldaten'), h('span', { class: 'qa-badge k-app' }, icon('flask', { size: 18 }))),
     h('p', { class: 'muted small' }, n
       ? `${fmt(n)} Beispiel-Einträge vorhanden. Echte Einträge bleiben beim Entfernen erhalten.`
-      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee, Gewicht, ein paar Abenden mit Alkohol und sechs Wochen Training (zwei Pläne, Rad am Samstag). Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
+      : 'Füllt die letzten 30 Tage mit erfundenen Mahlzeiten aus dem Bundeslebensmittelschlüssel, Wasser, Kaffee, Gewicht, ein paar Abenden mit Alkohol, sechs Wochen Training (zwei Pläne, Rad am Samstag) und fünf Zyklen. Ohne eigenes Tagesziel wird ein Beispielziel (2.150 kcal) gesetzt.'),
     h('div', { class: 'btn-row' },
       h('button', { class: 'btn', type: 'button', onclick: (e) => load(e.currentTarget) }, n ? 'Neu erzeugen' : 'Beispieldaten laden'),
-      n ? h('button', { class: 'btn', type: 'button', onclick: async () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); removeDemoAlcohol(); const k = removeDemo(); const T = await import('./training/demo.js').catch(() => null); T?.removeTrainingDemo(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
+      n ? h('button', { class: 'btn', type: 'button', onclick: async () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); removeDemoAlcohol(); const k = removeDemo(); const T = await import('./training/demo.js').catch(() => null); T?.removeTrainingDemo(); removeDemoCycle(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
 function zielView() {

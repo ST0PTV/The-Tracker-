@@ -77,7 +77,9 @@ for (const appearance of ['dark', 'light']) {
   await p.goto(srv.url + '/index.html#/analyse/monat'); await p.waitForTimeout(300);
   const y = await p.evaluate(async () => { const F = await import('./js/core/format.js'); return F.addDays(F.isoDate(), -1); });
   ok(await p.locator('.cal-d:not(.empty)').count() === new Date(Number(y.slice(0, 4)), Number(new Date().getMonth()) + 1, 0).getDate(), `${appearance}: Kalender mit allen Tagen des Monats`);
-  ok(await p.locator('.am-row').count() === 3, `${appearance}: Ø Makros`);
+  // Am Monatsersten hat der laufende Monat noch keine Beispieltage (sie reichen bis gestern): dann keine Ø-Zeilen.
+  const firstOfMonth = new Date().getDate() === 1;
+  ok(await p.locator('.am-row').count() === (firstOfMonth ? 0 : 3), `${appearance}: Ø Makros${firstOfMonth ? ' (Monatserster: keine)' : ''}`);
   await shot('4-monat');
   if (y.slice(0, 7) === (await p.evaluate(() => new Date().toISOString().slice(0, 7)))) {
     await p.click(`.cal-d[aria-label^="${Number(y.slice(8))}. "]`); await p.waitForTimeout(300);

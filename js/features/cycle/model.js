@@ -29,10 +29,13 @@ export const NORMAL_MIN = 24;
 export const NORMAL_MAX = 38;
 export const NORMAL_SPREAD = 9;
 export const NORMAL_BLEED = 8;
-// Ausbleiben: 3 Monate bei vorher regelmäßigem, 6 Monate bei unregelmäßigem Zyklus (Klein & Poth 2013, AFP; per
-// PubMed geprüft 2026-10-29, Abstract). Grenzen 24/38/9/8 aus FIGO 2018, geprüft nur über eine Sekundärquelle (MSD).
+// Hinweis „zu lang“ ab 35 Tagen (Nutzerentscheidung 2026-10-31, wie IOC REDs CAT2 im Workout-Tracker; FIGO nennt 38 als
+// Obergrenze des Normalen – das Band im Verlauf bleibt 24–38). Offen für die Recherche am Ende (Unverified 0.3.2).
+export const WARN_LONG = 35;
+// Ausbleiben: Hinweis nach 90 Tagen ohne Periode, auch bei unregelmäßigem Zyklus (Nutzerentscheidung 2026-10-31; vorher
+// 6 Monate bei unregelmäßigem nach Klein & Poth 2013, AFP, Abstract). Grenzen 24/38/9/8 aus FIGO 2018, geprüft nur über
+// eine Sekundärquelle (MSD). Eigenes Schwankungsfenster und abschaltbare Hinweise kommen nach der Recherche.
 export const ABSENT_DAYS = 90;
-export const ABSENT_DAYS_IRREG = 180;
 
 export const METHODS = [
   ['none', 'Keine oder Kondom'],
@@ -195,10 +198,9 @@ export function flags(a, days, today, { method, phase } = {}) {
   if (paused(phase) || hormonal(method) || !a.last) return [];
   const out = [];
   const since = diff(a.last, today);
-  const limit = a.usable.length >= 3 && a.spread > NORMAL_SPREAD ? ABSENT_DAYS_IRREG : ABSENT_DAYS;
-  if (since > limit) out.push({ id: 'absent', text: `Seit ${since} Tagen keine Periode eingetragen.` });
+  if (since > ABSENT_DAYS) out.push({ id: 'absent', text: `Seit ${since} Tagen keine Periode eingetragen.` });
   const recent = a.usable.slice(-3);
-  if (recent.length >= 3 && recent.every((n) => n > NORMAL_MAX)) out.push({ id: 'long', text: `Die letzten 3 Zyklen waren länger als ${NORMAL_MAX} Tage.` });
+  if (recent.length >= 3 && recent.every((n) => n > WARN_LONG)) out.push({ id: 'long', text: `Die letzten 3 Zyklen waren länger als ${WARN_LONG} Tage.` });
   if (recent.length >= 3 && recent.every((n) => n < NORMAL_MIN)) out.push({ id: 'short', text: `Die letzten 3 Zyklen waren kürzer als ${NORMAL_MIN} Tage.` });
   if (a.usable.length >= 3 && a.spread > NORMAL_SPREAD) out.push({ id: 'spread', text: `Deine Zyklen schwanken um ${a.spread} Tage.` });
   if (a.bleedLens.slice(-2).some((n) => n > NORMAL_BLEED)) out.push({ id: 'bleed', text: `Eine Periode dauerte länger als ${NORMAL_BLEED} Tage.` });

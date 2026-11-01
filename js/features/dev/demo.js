@@ -162,3 +162,26 @@ export function generateDemoAlcohol({ today, days = 30, seed = 2029 }) {
   }
   return out;
 }
+
+/**
+ * Beispiel-Zyklen (0.3.2): vier abgeschlossene Zyklen (29, 27, 31, 28 Tage) und der laufende seit 9 Tagen.
+ * Blutung je 5 Tage (Mittel, Stark, Mittel, Leicht, Schmier), Schmerz und Krämpfe an den ersten Tagen.
+ * Erfunden, nicht aus echten Daten. Gibt { 'JJJJ-MM-TT': Eintrag } mit demo: true zurück.
+ */
+export function generateDemoCycle({ today, lengths = [29, 27, 31, 28], dayNo = 10 }) {
+  const out = {};
+  const starts = [addDays(today, -(dayNo - 1))];
+  for (const len of [...lengths].reverse()) starts.unshift(addDays(starts[0], -len));
+  const BLEED = [3, 4, 3, 2, 1];
+  starts.forEach((s, ci) => {
+    BLEED.forEach((b, i) => {
+      const iso = addDays(s, i);
+      if (iso > today) return;
+      const e = { bleed: b, demo: true };
+      if (i === 0) { e.pain = ci === starts.length - 2 ? 'Stark' : 'Mittel'; e.body = ['Unterleibskrämpfe']; }
+      if (i === 1) { e.pain = 'Leicht'; e.body = ['Unterleibskrämpfe', 'Rückenschmerzen']; e.mood = ['Müde']; }
+      out[iso] = e;
+    });
+  });
+  return out;
+}

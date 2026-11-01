@@ -20,6 +20,7 @@ import { alcCard, openAlcohol } from './drinks/alcohol-card.js';
 import { alcEntries } from './drinks/alcohol.js';
 import { openQuick } from './quick-add.js';
 import { cycleCard } from './cycle/cycle-card.js';
+import { trainingTodayCard } from './training/today-card.js';
 
 let day = null;       // gewählter Tag (nur für diese Sitzung)
 let dayAnchor = null; // Datum, an dem „day“ gesetzt wurde: neuer Kalendertag → zurück auf heute
@@ -103,6 +104,7 @@ export function heuteView(rerender) {
     dayNav(iso, today, rerender),
     dayCard(iso, today),
     cycleCard(iso, today),
+    trainingTodayCard(iso, today),
     suppCard(iso, today),
     ...MEALS.map((m) => mealCard(iso, m, entries, prevEntries, rerender)),
     hint,

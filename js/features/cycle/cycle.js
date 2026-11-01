@@ -3,7 +3,7 @@
 // Einstellungen daneben. Neu: Kartenstil und Kalenderstil (Nutzerwunsch 2026-10-29), Methoden feiner (model.js).
 // Mit der Schein-PIN (core/lock.js) gilt ein eigener, leerer Datenbestand (decoyDays).
 import * as store from '../../core/store.js';
-import { getProfile } from '../../core/profile.js';
+import { getProfile, setProfile } from '../../core/profile.js';
 import { isDecoy } from '../../core/lock.js';
 import { isoDate } from '../../core/format.js';
 import * as M from './model.js';
@@ -98,3 +98,30 @@ export function wipeCycleDays() {
 export const cycleAnalysis = (today = isoDate()) => M.analyze(cycleDays(), today);
 /** Fruchtbare Tage zeigen? (Schalter an, keine hormonelle Methode, Phase normal) */
 export function showFertile() { const c = raw(); return !!c.fert && !M.hormonal(c.method) && !M.paused(c.phase); }
+
+// Beispieldaten (Entwicklung, 0.3.2): Einträge mit demo: true im echten Datenbestand (nicht im Schein-Bestand).
+// Tage mit echten Einträgen bleiben unberührt. Ist „Hast du deine Regel?“ noch offen und nicht „Mann“ gewählt,
+// wird es auf „Ja“ gesetzt und beim Entfernen zurückgesetzt (profile.demoCycle merkt sich das).
+export const demoCycleCount = () => Object.values(raw().days).filter((e) => e && e.demo).length;
+
+export function removeDemoCycle() {
+  const n = demoCycleCount();
+  store.update('zyklus', (c) => { for (const [k, e] of Object.entries(c.days || {})) if (e && e.demo) delete c.days[k]; });
+  if (getProfile().demoCycle) setProfile({ cycle: null, demoCycle: null });
+  changed();
+  return n;
+}
+
+/** Lädt Beispiel-Zyklen; gibt { added, visible } zurück (visible: Zyklus danach sichtbar). */
+export function loadDemoCycle(map) {
+  removeDemoCycle();
+  let added = 0;
+  store.update('zyklus', (c) => {
+    c.days = c.days || {};
+    for (const [k, e] of Object.entries(map)) if (!c.days[k]) { c.days[k] = { ...e, demo: true }; added++; }
+  });
+  const p = getProfile();
+  if (p.cycle !== 'yes' && p.sex !== 'm') setProfile({ cycle: 'yes', demoCycle: true });
+  changed();
+  return { added, visible: cycleAvailable() };
+}

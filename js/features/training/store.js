@@ -4,8 +4,10 @@
 import * as core from '../../core/store.js';
 import { clone } from '../../core/util.js';
 import { DEFAULT_SETTINGS } from './model.js';
+import { getProfile } from '../../core/profile.js';
 
-const DEFAULTS = { exercises: [], groups: [], plans: [], sessions: [], routines: [], settings: DEFAULT_SETTINGS };
+// 0.3.2: Figur standardmäßig „wie im Profil“ (figure: 'auto'); eigene Wahl 'male' | 'female' bleibt möglich.
+const DEFAULTS = { exercises: [], groups: [], plans: [], sessions: [], routines: [], settings: { ...DEFAULT_SETTINGS, figure: 'auto' } };
 export const COLLECTIONS = ['exercises', 'groups', 'plans', 'sessions', 'routines'];
 export const KEYS = Object.keys(DEFAULTS);
 const coreKey = (key) => `training_${key}`;
@@ -15,14 +17,26 @@ function known(key) {
   if (!(key in DEFAULTS)) throw new Error(`Unbekannter Speicher-Key: ${key}`);
 }
 
+// Figur aus dem Profil: „Frau“ → weibliche Figur, sonst männliche (Logik der Muskelkarte ist gleich).
+export const figureFromProfile = () => (getProfile().sex === 'f' ? 'female' : 'male');
+
 export function get(key) {
   known(key);
   const value = core.get(coreKey(key));
-  return key === 'settings' ? { ...clone(DEFAULT_SETTINGS), ...value } : value;
+  if (key !== 'settings') return value;
+  const s = { ...clone(DEFAULT_SETTINGS), ...value };
+  // Die übernommenen Module lesen settings.figure als 'male' | 'female'; die Wahl selbst steht in figureChoice.
+  s.figureChoice = s.figure === 'male' || s.figure === 'female' ? s.figure : 'auto';
+  s.figure = s.figureChoice === 'auto' ? figureFromProfile() : s.figureChoice;
+  return s;
 }
 
 export function set(key, value) {
   known(key);
+  if (key === 'settings' && value && 'figureChoice' in value) {
+    const { figureChoice, ...rest } = value;
+    value = { ...rest, figure: figureChoice };
+  }
   return core.set(coreKey(key), value);
 }
 

@@ -1,23 +1,70 @@
 // Übernommen aus dem Workout-Tracker 3.14.0 (js/cycle-view.js, MIT, ST0PTV), angepasst für The Tracker.
-// Zyklus (v2.24.0, Variante C, Nutzerwahl): Einstellungen, eine kleine Zeile auf dem Trainings-Start, Details im Sheet.
+// Zyklus (v2.24.0, Variante C, Nutzerwahl): eine kleine Zeile auf dem Trainings-Start, Details im Sheet.
+// The Tracker 0.3.2: Daten, Vorhersage und Hinweise kommen nur aus dem Zyklus-Bereich (features/cycle, Nutzerwahl 2026-10-31:
+// Sheet bleibt im Aussehen, schreibt aber dorthin). Kein eigener Speicher mehr (wt_cycle wird nie gelesen), keine eigenen
+// Zyklus-Einstellungen (die stehen unter „Ich → Zyklus“). Schein-PIN: cycle.js liefert dann den leeren Datenbestand.
 // Beschwerden statt Phasen: keine Trainingsempfehlung nach Zyklusphase, kein Eisprung-Datum, keine Diagnosen,
 // keine Verletzungs- oder Kalorienaussagen. Der „leichte Tag“ ist jederzeit frei wählbar und kommt nie automatisch.
 import { infoBody } from './info.js';
 import { h } from './util.js';
-import * as store from './store.js';
 import { openSheet } from './sheet.js';
 import { icon } from './icons.js';
 import { toast } from './ui.js';
-import { switchInput } from './controls.js';
-import * as C from './cycle.js';
+import { cycleActive, cycleSettings, cycleAnalysis, cycleDays, dayEntry, setDayField } from '../cycle/cycle.js';
+import * as M from '../cycle/model.js';
+import { isoDate } from '../../core/format.js';
 import { TEMPLATES } from './routine-data.js';
 import { startRun } from './routine-view.js';
 
 const LIGHT_ROUTINE = 'tpl:cd-relax-10'; // Gehen und Dehnen, 10 min
 const fmt = (k) => new Date(`${k}T12:00:00`).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
-// 0.3.1: Zyklus noch nicht angebunden (kommt in 0.3.2 aus features/cycle); bis dahin gilt „aus“.
-const load = () => C.normalizeCycle(null);
-const save = (c) => { if (!store.set('cycle', c)) { toast('Speichern fehlgeschlagen.', { error: true }); return false; } return true; };
+
+// Beschwerden des Workout-Trackers → Felder im Tageseintrag von The Tracker (cycle-views.js: BODY, MOOD, pain, bleed).
+export const SYMPTOMS = {
+  cramps: { label: 'Krämpfe', f: 'body', v: 'Unterleibskrämpfe' },
+  tired: { label: 'Müde', f: 'mood', v: 'Müde' },
+  headache: { label: 'Kopfschmerzen', f: 'body', v: 'Kopfweh' },
+  mood: { label: 'Stimmung', f: 'mood', v: 'Stimmungsschwankungen' },
+  sleep: { label: 'Schlecht geschlafen', f: 'body', v: 'Schlecht geschlafen' },
+  bloating: { label: 'Blähbauch', f: 'body', v: 'Blähbauch' },
+  heavy: { label: 'Sehr starke Blutung', f: 'bleed', v: 4 },
+  pain: { label: 'Starke Schmerzen', f: 'pain', v: 'Stark' }
+};
+const PERIOD_BLEED = 3; // „Periode hat begonnen“ = Blutung „Mittel“ (wie der Import in features/cycle)
+
+/** Ist die Beschwerde im Eintrag gesetzt? */
+export function symptomOn(entry, key) {
+  const s = SYMPTOMS[key];
+  if (s.f === 'body' || s.f === 'mood') return (entry[s.f] || []).includes(s.v);
+  return entry[s.f] === s.v;
+}
+
+/** Neuer Feldwert, wenn die Beschwerde umgeschaltet wird: [Feld, Wert]. Blutung „Stark“ aus → zurück auf „Mittel“. */
+export function toggledField(entry, key) {
+  const s = SYMPTOMS[key];
+  const on = symptomOn(entry, key);
+  if (s.f === 'body' || s.f === 'mood') {
+    const list = entry[s.f] || [];
+    return [s.f, on ? list.filter((x) => x !== s.v) : [...list, s.v]];
+  }
+  if (s.f === 'bleed') return ['bleed', on ? PERIOD_BLEED : s.v];
+  return [s.f, on ? null : s.v];
+}
+
+/** Zustand für Zeile und Sheet, nur aus dem Zyklus-Bereich. */
+export function cycleState(today = isoDate()) {
+  if (!cycleActive()) return { mode: 'off' };
+  const c = cycleSettings();
+  const days = cycleDays();
+  const a = cycleAnalysis(today);
+  const e = days[today] || {};
+  const inPeriod = M.isBleed(e) || (M.isBleed(days[M.addDays(today, -1)]) && !!a.last && a.dayNo <= M.NORMAL_BLEED);
+  const flags = M.flags(a, days, today, { method: c.method, phase: c.phase }).map((f) => f.text);
+  return { mode: a.last ? 'on' : 'nodata', a, c, e, today, inPeriod, bleedToday: M.isBleed(e), flags,
+    next: a.last ? M.nextText(a, today, { phase: c.phase }) : '', hormonal: M.hormonal(c.method) };
+}
+
+const write = (iso, f, v) => { try { return setDayField(iso, f, v); } catch (err) { toast(err.message, { error: true }); return false; } };
 
 export const CYCLE_INFO = {
   checkedAt: '2026-10-22',
@@ -49,96 +96,63 @@ export const CYCLE_INFO = {
 function openCycleInfo() {
   openSheet(infoBody({
     short: CYCLE_INFO.short, details: [h('ul', {}, CYCLE_INFO.points.map((t) => h('li', {}, t))),
-      h('p', { class: 'muted small' }, 'Den ersten Periodentag trägst du im Training-Tab über die Zeile „Zyklus“ ein. Ausschalten behält deine Einträge; löschen kannst du sie dort einzeln.')],
+      h('p', { class: 'muted small' }, 'Einträge aus dem Training landen im Zyklus von The Tracker (Kalender unter „Heute“ bzw. „Ich → Zyklus“). Dort stellst du den Zyklus auch ein oder aus und löschst Einträge.')],
     sources: CYCLE_INFO.sources, checked: CYCLE_INFO.checkedAt
   }), { title: 'Zyklus: so funktioniert es' });
 }
 
 function statusText(st) {
-  if (st.mode === 'combined') return st.inPeriod ? `Blutung · Tag ${st.day}` : 'Beschwerden eintragen';
   if (st.mode === 'nodata') return 'Ersten Periodentag eintragen';
-  if (st.inPeriod) return `Tag ${st.day} · Periode`;
-  return `Tag ${st.day}`;
+  return `Tag ${st.a.dayNo}${st.inPeriod ? ' · Periode' : ''}`;
 }
 
-// Kleine Zeile auf dem Trainings-Start (nur wenn aktiviert); Hinweis-Karte nur bei Auslöser.
+// Kleine Zeile auf dem Trainings-Start (nur wenn der Zyklus an ist); Hinweis-Karte nur bei Auslöser.
 export function cycleStartCards(rerender) {
-  const c = load();
-  const st = C.cycleStatus(c);
+  const st = cycleState();
   if (st.mode === 'off') return [];
-  const flags = C.redFlags(c);
   return [
     h('button', { type: 'button', class: 'card cyc-line', onclick: () => openCycleSheet(rerender) },
       h('span', {}, h('i', { class: `cyc-dot${st.inPeriod ? ' on' : ''}` }), `Zyklus: ${statusText(st)}`),
-      h('span', { class: 'cyc-right' }, st.checkDue ? h('small', { class: 'muted' }, 'Angaben prüfen') : null, icon('chevron', { size: 18 }))),
-    flags.length ? h('div', { class: 'card cyc-flag', role: 'note' }, h('b', {}, 'Hinweis'), flags.map((f) => h('p', { class: 'small' }, C.RED_FLAG_TEXT[f]))) : null
+      h('span', { class: 'cyc-right' }, icon('chevron', { size: 18 }))),
+    st.flags.length ? h('div', { class: 'card cyc-flag', role: 'note' }, h('b', {}, 'Hinweis'), st.flags.map((f) => h('p', { class: 'small' }, f))) : null
   ].filter(Boolean);
 }
 
 export function openCycleSheet(rerender) {
   let sheet = null;
   const body = h('div', { class: 'cyc-sheet' });
-  const update = (next) => { if (save(next)) { draw(); rerender(); } };
+  const update = (iso, f, v) => { if (write(iso, f, v)) { draw(); rerender(); } };
   const draw = () => {
-    const c = load();
-    const st = C.cycleStatus(c);
-    const today = C.dayKey();
-    const tags = C.symptomsOn(c, today);
-    const flags = C.redFlags(c);
-    let nextLine = null;
-    if (st.mode === 'calendar') nextLine = `Nächste Periode etwa ${fmt(st.next.from)} – ${fmt(st.next.to)} (Schätzung${st.basedOn ? ` aus ${st.basedOn + 1} eingetragenen Perioden` : ' aus deiner Angabe'})`;
-    else if (st.mode === 'other') nextLine = 'Mit dieser Verhütungsmethode ist die nächste Blutung nicht vorhersagbar.';
-    else if (st.mode === 'combined') nextLine = 'Mit Pille, Ring oder Pflaster gibt es keine natürlichen Zyklusphasen – deshalb keine Schätzung.';
-    const recent = [...c.periods].reverse().slice(0, 4);
+    const st = cycleState();
+    if (st.mode === 'off') { sheet?.close(); return; }
+    const { today, e } = st;
+    const nextLine = st.next ? `${st.next} (Schätzung aus deinen Einträgen)` : null;
+    const recent = st.mode === 'nodata' ? [] : [...st.a.starts].reverse().slice(0, 4);
     body.replaceChildren(
       h('div', { class: 'cyc-big' }, statusText(st)),
       nextLine ? h('p', { class: 'muted small' }, nextLine) : null,
       h('h3', {}, 'Wie fühlst du dich heute?'),
-      h('div', { class: 'chips wrap' }, Object.entries(C.SYMPTOMS).map(([k, label]) => h('button', { type: 'button', class: `chip${tags.includes(k) ? ' on' : ''}`, 'aria-pressed': String(tags.includes(k)), onclick: () => update(C.toggleSymptom(c, k, today)) }, label))),
+      h('div', { class: 'chips wrap' }, Object.entries(SYMPTOMS).map(([k, s]) => {
+        const on = symptomOn(e, k);
+        return h('button', { type: 'button', class: `chip${on ? ' on' : ''}`, 'aria-pressed': String(on), onclick: () => update(today, ...toggledField(dayEntry(today), k)) }, s.label);
+      })),
       h('p', { class: 'muted small' }, 'Trainiere so, wie du dich fühlst – die Phase allein ändert nichts am Aufbau.'),
-      flags.length ? h('div', { class: 'card cyc-flag', role: 'note' }, h('b', {}, 'Hinweis'), flags.map((f) => h('p', { class: 'small' }, C.RED_FLAG_TEXT[f]))) : null,
+      st.flags.length ? h('div', { class: 'card cyc-flag', role: 'note' }, h('b', {}, 'Hinweis'), st.flags.map((f) => h('p', { class: 'small' }, f))) : null,
       h('button', { class: 'btn block', type: 'button', onclick: () => {
         const r = TEMPLATES.find((t) => t.id === LIGHT_ROUTINE);
         if (!r) return;
         sheet?.close(); startRun(r, { returnTo: '#/training' });
       } }, 'Leichter Tag: Entspannen 10 min'),
-      st.inPeriod && st.mode !== 'nodata'
-        ? h('button', { class: 'btn block', type: 'button', onclick: () => update(C.endPeriod(c, today)) }, 'Periode beendet (heute)')
-        : h('button', { class: 'btn primary block', type: 'button', onclick: () => update(C.startPeriod(c, today)) }, st.mode === 'combined' ? 'Blutung hat begonnen (heute)' : 'Periode hat begonnen (heute)'),
+      st.bleedToday
+        ? h('button', { class: 'btn block', type: 'button', onclick: () => update(today, 'bleed', null) }, 'Heute doch keine Blutung')
+        : h('button', { class: 'btn primary block', type: 'button', onclick: () => update(today, 'bleed', PERIOD_BLEED) }, st.inPeriod ? 'Blutung heute eintragen' : st.hormonal ? 'Blutung hat begonnen (heute)' : 'Periode hat begonnen (heute)'),
       h('label', { class: 'field cyc-date' }, h('span', {}, 'Anderer Tag:'),
-        h('input', { class: 'input', type: 'date', max: today, onchange: (e) => { if (e.target.value) update(C.startPeriod(c, e.target.value)); } })),
+        h('input', { class: 'input', type: 'date', max: today, onchange: (ev) => { if (ev.target.value) update(ev.target.value, 'bleed', PERIOD_BLEED); } })),
       recent.length ? h('div', {}, h('h3', {}, 'Eingetragen'),
-        h('div', { class: 'card list' }, recent.map((p) => h('div', { class: 'row' },
-          h('span', { class: 't' }, `${fmt(p.start)}${p.end ? ` – ${fmt(p.end)}` : ''}`),
-          h('button', { class: 'link small', type: 'button', 'aria-label': `Eintrag ${fmt(p.start)} löschen`, onclick: () => update(C.removePeriod(c, p.start)) }, 'Löschen'))))) : null,
-      st.checkDue ? h('div', { class: 'card' }, h('p', { class: 'small' }, `Angaben noch aktuell? ${c.avgLength} Tage Zyklus, ${c.bleedDays} Tage Blutung, ${C.CONTRACEPTION[c.contraception]}.`),
-        h('button', { class: 'btn block', type: 'button', onclick: () => update({ ...c, checkedAt: today }) }, 'Passt')) : null,
+        h('div', { class: 'card list' }, recent.map((d) => h('div', { class: 'row' }, h('span', { class: 't' }, `Beginn ${fmt(d)}`))))) : null,
+      h('a', { class: 'btn block', href: `#/zyklus/tag?d=${today}`, onclick: () => sheet?.close() }, 'Alle Angaben für heute'),
       h('button', { class: 'link small center-btn', type: 'button', onclick: openCycleInfo }, 'So funktioniert es · Quellen'));
   };
   draw();
   sheet = openSheet(body, { title: 'Zyklus' });
-}
-
-// Einstellungen → Zyklus (optional, standardmäßig aus).
-export function cycleSettingsCard(rerender) {
-  const c = load();
-  const set = (patch) => { if (save({ ...c, ...patch })) rerender(); };
-  const num = (label, key, [lo, hi]) => h('div', { class: 'field' }, h('label', { for: `cyc-${key}` }, label),
-    h('input', { id: `cyc-${key}`, class: 'input', type: 'number', inputmode: 'numeric', min: lo, max: hi, value: c[key], onchange: (e) => {
-      const v = Number(e.target.value);
-      if (!Number.isInteger(v) || v < lo || v > hi) { toast(`Bitte ${lo}–${hi} eingeben.`, { error: true }); e.target.value = c[key]; return; }
-      set({ [key]: v });
-    } }));
-  return h('div', { class: 'card' },
-    h('div', { class: 'title-row' }, h('h2', {}, 'Zyklus (optional)'),
-      h('button', { class: 'info-btn', type: 'button', 'aria-label': 'Zyklus: so funktioniert es', onclick: openCycleInfo }, icon('info', { size: 18 }))),
-    h('label', { class: 'set-line' }, h('span', { class: 'set-label' }, 'Zyklus berücksichtigen'),
-      switchInput('Zyklus berücksichtigen', !!c.enabled, (v) => set({ enabled: v, checkedAt: v ? C.dayKey() : c.checkedAt }))),
-    c.enabled ? h('div', { class: 'cyc-fields' },
-      num('Zykluslänge (Tage, ca.)', 'avgLength', C.LIMITS.avgLength),
-      num('Blutung (Tage, ca.)', 'bleedDays', C.LIMITS.bleedDays),
-      h('div', { class: 'field' }, h('label', { for: 'cyc-contra' }, 'Verhütung'),
-        h('select', { id: 'cyc-contra', class: 'input', onchange: (e) => set({ contraception: e.target.value }) },
-          Object.entries(C.CONTRACEPTION).map(([k, label]) => h('option', { value: k, selected: c.contraception === k }, label)))),
-      h('p', { class: 'muted small' }, 'Periodentage trägst du im Training-Tab ein.')) : null);
 }
