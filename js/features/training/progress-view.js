@@ -260,7 +260,8 @@ function exerciseList() {
 
 export function progressView(rerender = () => {}) {
   const seg = h('div', { class: 'seg ex-seg', role: 'tablist', 'aria-label': 'Ansicht' },
-    [['exercises', 'Übungen'], ['sessions', 'Trainings'], ['muscles', 'Muskeln'], ['analysis', '4 Wochen']].map(([k, label]) =>
+    // The Tracker 0.3.3: „Je Übung“ statt „Übungen“, damit der Reiter nicht wie der Unterreiter „Übungen“ darüber heißt.
+    [['exercises', 'Je Übung'], ['sessions', 'Trainings'], ['muscles', 'Muskeln'], ['analysis', '4 Wochen']].map(([k, label]) =>
       h('button', { type: 'button', role: 'tab', class: tabState.mode === k ? 'on' : '', 'aria-selected': String(tabState.mode === k),
         onclick: () => { if (tabState.mode !== k) { tabState.mode = k; rerender(); } } }, label)));
   return h('section', { class: 'progress' },

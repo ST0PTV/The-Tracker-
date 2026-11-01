@@ -1,19 +1,103 @@
-/* Trainingsbereich (Phase 4): Regeln aus css/glass.css des Workout-Trackers 3.14.0 (MIT, ST0PTV),
-   automatisch auf die Selektoren reduziert, die app.css noch nicht hat, und auf body.tt-train begrenzt
-   (die Klasse setzt js/app.js nur auf Seiten des Trainingsbereichs; so bleiben alle anderen Seiten unverändert).
-   Farben nur über Tokens aus app.css. Wird erst mit dem Trainingsbereich geladen (features/training.js). */
+/* Trainingsbereich (Phase 4): alle Regeln aus css/glass.css des Workout-Trackers 3.14.0 (MIT, ST0PTV), begrenzt auf
+   body.tt-train (die Klasse setzt js/app.js nur auf Seiten des Trainingsbereichs; so bleiben alle anderen Seiten unverändert).
+   Seit 0.3.3 auch die Regeln, deren Selektor app.css schon hat (z. B. .info-btn, .chip, vergrößerte Trefferflächen) – im
+   Trainingsbereich gilt das Design des Workout-Trackers. Ausgenommen: Hülle der App (Tab-Leiste, Seitenkopf, Sheet-Rahmen,
+   Toast, #view). Farben nur über Tokens aus app.css. Wird erst mit dem Trainingsbereich geladen (features/training.js). */
+body.tt-train :root[data-theme="light"] {--strip: #F2F2F7;
+  color-scheme: light;
+  --bg: #F2F2F7;
+  --surface: #FFFFFF;
+  --surface-2: #E9E9EE;
+  --surface-3: #D8D8DC;
+  --sheet-bg: #F2F2F7;
+  --sheet-surface: #FFFFFF;
+  --sheet-surface-2: #E9E9EE;
+  --fill: rgba(120, 120, 128, 0.12);
+  --seg-on: #FFFFFF;
+  --line: #D8D8DC;
+  --text: #000000;
+  --muted: #6C6C70;
+  --faint: #8A8A8E;
+  --accent: #1C1F23;
+  --on-accent: #FFFFFF;
+  --warn: #B25000;
+  --danger: #D70015;
+  --fig-base: #D5D9DE;
+  --fig-body: #FFFFFF;
+  --fig-rest: #E6E9ED;
+  --fig-edge: #9AA0A8;
+  --fig-gap: #FFFFFF;
+  --fig3d-base: #E9ECEF;
+  --fig3d-rest: #DCE0E5;
+  --fig3d-line: rgba(17, 20, 24, 0.16);
+  --stage-bg: #F2F2F7;}
+body.tt-train .bg {display: none;}
+body.tt-train .view {position: absolute; inset: 0;
+  overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain;
+  padding: calc(var(--safe-top) + 12px) max(16px, calc(50% - 304px)) calc(var(--tabbar-h) + var(--safe-bottom) + 24px);
+  outline: none;}
+body.tt-train .sub {color: var(--muted); margin: 0 0 16px; font-size: 15px; line-height: 1.4;}
+body.tt-train .muted {color: var(--muted);}
+body.tt-train .small {font-size: 13px;}
+body.tt-train .card {background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;}
+body.tt-train .card p {margin: 0 0 10px; line-height: 1.45;}
+body.tt-train .card p:last-child {margin-bottom: 0;}
+body.tt-train .stats {display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;}
+body.tt-train .stat {text-align: center; padding: 12px 6px; border-radius: 10px; background: var(--fill);}
+body.tt-train .stat b {display: block; font-size: 22px; font-variant-numeric: tabular-nums;}
+body.tt-train .stat span {font-size: 12px; color: var(--muted);}
+body.tt-train .btn {appearance: none; border: 0;
+  min-height: var(--tap); padding: 0 20px; border-radius: 999px;
+  background: var(--tint-bg); color: var(--accent);
+  font: inherit; font-size: 17px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;}
+body.tt-train .btn:active {opacity: 0.7;}
+body.tt-train .btn.primary {background: var(--accent); color: var(--on-accent);}
+body.tt-train .btn {white-space: nowrap;}
+body.tt-train .btn-row > .btn, body.tt-train .nav2 .btn {padding: 0 14px;}
+body.tt-train .btn.block {width: 100%;}
+body.tt-train .btn-row {display: flex; gap: 8px; flex-wrap: wrap;}
+body.tt-train .btn-row > .btn {flex: 1 1 140px;}
+body.tt-train :is(.btn, .chip, .seg button, .icon-btn, .info-btn, .row, .tab, .play, .dots):focus-visible {outline: 2px solid var(--accent); outline-offset: 2px;}
+body.tt-train .empty {text-align: center; padding: 28px 16px;}
+body.tt-train .empty .big {font-size: 40px; margin-bottom: 6px;}
+body.tt-train .kv {display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; font-size: 17px;}
 body.tt-train .kv + .kv {border-top: 1px solid var(--line);}
+body.tt-train .small {font-size: 13px;}
+body.tt-train .muted {color: var(--muted);}
+body.tt-train .warn {color: var(--warn);}
+body.tt-train .search {display: flex; align-items: center; gap: 8px; height: var(--tap); border-radius: 14px; padding: 0 14px; margin-bottom: 10px;
+  background: var(--glass); border: 1px solid var(--glass-border); color: var(--muted);}
+body.tt-train .search-input {flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--text); font: inherit; font-size: 16px;}
+body.tt-train .search-input::placeholder {color: var(--muted);}
 body.tt-train .chips-line {display: flex; align-items: center; gap: 8px; margin-bottom: 4px;}
 body.tt-train .chips-line .chips {flex: 1;}
+body.tt-train .chips {display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 8px; scrollbar-width: none; -webkit-overflow-scrolling: touch;}
 body.tt-train .chips::-webkit-scrollbar {display: none;}
+body.tt-train .chip {flex: none; min-height: 36px; padding: 0 13px; border-radius: 999px; font-size: 14px; cursor: pointer;
+  background: var(--chip-bg); border: 1px solid var(--glass-border); color: var(--text); display: inline-flex; align-items: center;}
+body.tt-train .chip.on {background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 600;}
 body.tt-train .chip.static {cursor: default;}
 body.tt-train .chip.small {min-height: 30px; font-size: 13px; padding: 0 10px;}
 body.tt-train .chip:disabled {opacity: 0.35; cursor: not-allowed;}
 body.tt-train .wrap {display: flex; flex-wrap: wrap; gap: 6px; align-items: center;}
 body.tt-train .chip-pair {display: inline-flex; align-items: center; gap: 2px;}
+body.tt-train .info-btn {flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--chip-bg);
+  color: var(--accent); font-size: 16px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;}
 body.tt-train .chip-pair .info-btn {width: 30px; height: 30px; font-size: 14px;}
+body.tt-train .sec {font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 14px 4px 6px;}
+body.tt-train .card.list {padding: 0; overflow: hidden;}
+body.tt-train .row {display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; min-height: 56px; text-align: left;
+  background: none; border: 0; cursor: pointer;}
 body.tt-train button.row:active {background: color-mix(in srgb, var(--text) 5%, transparent);}
+body.tt-train .card.list .row + .row {border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent);}
+body.tt-train .row .t {flex: 1; min-width: 0; display: block; text-align: left;}
 body.tt-train .row .t.plain {background: none; border: 0; padding: 0; cursor: pointer;}
+body.tt-train .row b {display: block; font-size: 16px; font-weight: 600;}
+body.tt-train .row small {display: block; font-size: 13px; color: var(--muted); margin-top: 2px;}
 body.tt-train .row i {display: block; font-size: 13px; color: var(--accent); margin-top: 3px; font-style: normal; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 body.tt-train .chev {color: var(--muted); font-size: 20px; flex: none;}
 body.tt-train .eq {font-size: 11px; padding: 2px 7px; border-radius: 6px; background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--text); margin-left: 6px; vertical-align: 2px; font-weight: 500;}
@@ -23,16 +107,20 @@ body.tt-train .added {flex: none; font-size: 13px; color: var(--accent); padding
 body.tt-train .dim-list {opacity: 0.6;}
 body.tt-train .empty-line {text-align: center; padding: 16px;}
 body.tt-train .row-btns {display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 10px;}
+body.tt-train .link {background: none; border: 0; padding: 4px 0; color: var(--accent); cursor: pointer; font-size: 14px;}
 body.tt-train .archived-toggle {margin: 14px 4px 6px;}
 body.tt-train .fab {position: fixed; z-index: 9; right: max(18px, calc(50% - 302px)); bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 16px);
   width: 60px; height: 60px; border-radius: 20px; border: 0; cursor: pointer; font-size: 32px; line-height: 1;
   background: var(--accent); color: var(--on-accent); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);}
 body.tt-train .exercises {padding-bottom: 80px;}
+body.tt-train.sheet-open {overflow: hidden;}
+body.tt-train .sheet-head h2 {margin: 0; font-size: 20px;}
 body.tt-train .opt {display: flex; gap: 12px; align-items: center; width: 100%; padding: 14px; margin-bottom: 10px; text-align: left; cursor: pointer;
   border-radius: 16px; background: var(--glass); border: 1px solid var(--glass-border); min-height: 64px;}
 body.tt-train .opt .ic {width: 42px; height: 42px; border-radius: 12px; background: color-mix(in srgb, var(--accent) 16%, transparent); display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 22px; flex: none;}
 body.tt-train .opt b {display: block;}
 body.tt-train .opt small {display: block; color: var(--muted); font-size: 13px;}
+body.tt-train .info p {line-height: 1.45; margin: 0 0 10px;}
 body.tt-train .info h3 {font-size: 15px; margin: 16px 0 6px;}
 body.tt-train .info ul {margin: 0 0 8px; padding-left: 20px; line-height: 1.45;}
 body.tt-train .sources li {margin-bottom: 6px; font-size: 14px;}
@@ -45,10 +133,12 @@ body.tt-train .editor .field, body.tt-train .field {margin-bottom: 14px;}
 body.tt-train .field > label, body.tt-train .label-row label {display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px 4px; text-transform: uppercase; letter-spacing: 0.06em;}
 body.tt-train .label-row {display: flex; align-items: center; justify-content: space-between;}
 body.tt-train .label-row .info-btn {width: 30px; height: 30px; font-size: 14px;}
-body.tt-train .area {width: 100%; border-radius: 14px; padding: 0 14px; font: inherit; font-size: 16px; color: var(--text);
+body.tt-train .input, body.tt-train .area {width: 100%; border-radius: 14px; padding: 0 14px; font: inherit; font-size: 16px; color: var(--text);
   background: var(--glass); border: 1px solid var(--glass-border); outline: none;}
+body.tt-train .input {height: var(--tap);}
 body.tt-train .area {padding: 12px 14px; resize: vertical; min-height: 84px; line-height: 1.4;}
-body.tt-train .area:focus, body.tt-train .search:focus-within {border-color: var(--accent);}
+body.tt-train .input:focus, body.tt-train .area:focus, body.tt-train .search:focus-within {border-color: var(--accent);}
+body.tt-train .seg {display: flex; padding: 4px; border-radius: 14px; background: var(--glass); border: 1px solid var(--glass-border);}
 body.tt-train .seg button {flex: 1; min-height: 40px; border: 0; border-radius: 10px; background: none; color: var(--muted); font-weight: 600; cursor: pointer; font-size: 14px;}
 body.tt-train .seg button.on {background: color-mix(in srgb, var(--text) 18%, transparent); color: var(--text);}
 body.tt-train .step {display: inline-flex; align-items: stretch; height: var(--tap); border-radius: 14px; overflow: hidden; border: 1px solid var(--glass-border);}
@@ -58,12 +148,15 @@ body.tt-train .src {font-size: 13px; color: var(--muted); margin: 8px 4px 0; lin
 body.tt-train .btn.subtle {background: transparent; margin: 6px 0 12px; color: var(--muted);}
 body.tt-train .btn.block.subtle {margin: 16px 0 0;}
 body.tt-train .sticky-bottom {position: sticky; bottom: 0; margin-top: 8px; box-shadow: 0 -8px 24px color-mix(in srgb, var(--bg) 90%, transparent);}
+body.tt-train .icon {stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; display: block;}
 body.tt-train .icon.inline {display: inline-block; vertical-align: -2px;}
 body.tt-train .icon.rot90 {transform: rotate(90deg);}
+body.tt-train .icon {transition: transform 0.15s;}
 body.tt-train .big {display: flex; justify-content: center; color: var(--accent);}
 body.tt-train .added {display: inline-flex; align-items: center; gap: 4px;}
 body.tt-train .chip .icon.inline {margin-left: 4px; color: var(--accent);}
 body.tt-train .row i .icon.inline {margin-right: 2px;}
+body.tt-train .search .icon {color: var(--muted);}
 body.tt-train .info-btn .icon, body.tt-train .sheet-close .icon, body.tt-train .add .icon, body.tt-train .fab .icon, body.tt-train .step button .icon {margin: auto;}
 body.tt-train .add, body.tt-train .fab, body.tt-train .step button {display: inline-flex; align-items: center; justify-content: center;}
 body.tt-train .archived-toggle {display: inline-flex; align-items: center; gap: 4px;}
@@ -86,6 +179,8 @@ body.tt-train .pcard .ex {display: block; font-size: 13.5px; color: var(--text);
 body.tt-train .plan-head {display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px;}
 body.tt-train .plan-head .input {flex: 1;}
 body.tt-train .plan-head p {margin: 0;}
+body.tt-train .pill {flex: none; min-height: 40px; padding: 0 14px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px;
+  background: var(--glass-strong); border: 1px solid var(--glass-border);}
 body.tt-train .pill.on {background: var(--accent); color: var(--on-accent); border-color: transparent;}
 body.tt-train .pill-in {display: inline-flex; align-items: center; gap: 6px;}
 body.tt-train .stp {display: flex; gap: 12px; position: relative;}
@@ -104,13 +199,14 @@ body.tt-train .last.none {background: color-mix(in srgb, var(--text) 7%, transpa
 body.tt-train .arrows {display: flex; flex-direction: column; gap: 6px; flex: none;}
 body.tt-train .arrows button {width: 44px; height: 40px; border-radius: 12px; border: 1px solid var(--glass-border); background: var(--glass); cursor: pointer; display: flex; align-items: center; justify-content: center;}
 body.tt-train .arrows button:disabled {opacity: 0.3; cursor: default;}
-body.tt-train .arrows button.danger {color: var(--danger);}
+body.tt-train .arrows button.danger, body.tt-train .danger-text {color: var(--danger);}
 body.tt-train .edit-controls {display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px;}
 body.tt-train .ctl {display: flex; flex-direction: column; gap: 4px;}
 body.tt-train .ctl-label {font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-left: 2px;}
 body.tt-train .addline {display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin-top: 6px; cursor: pointer;
   border-radius: 16px; border: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent); background: transparent; color: var(--accent); font-weight: 600; font-size: 15px;}
 body.tt-train .addline + .slot {margin-top: 12px;}
+body.tt-train .center {text-align: center;}
 body.tt-train .accent {color: var(--accent) !important;}
 body.tt-train .row.pick.on {background: color-mix(in srgb, var(--accent) 8%, transparent);}
 body.tt-train .check {flex: none; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--glass-border); display: flex; align-items: center; justify-content: center;}
@@ -145,6 +241,7 @@ body.tt-train .setrow.done .val {opacity: 0.6;}
 body.tt-train .ck {width: 48px; height: 48px; border-radius: 14px; border: 2px solid color-mix(in srgb, var(--text) 28%, transparent); background: none; display: flex; align-items: center; justify-content: center; cursor: pointer;}
 body.tt-train .ck.on {background: var(--accent); border-color: transparent; color: var(--on-accent);}
 body.tt-train .nav2 {display: flex; gap: 10px; margin-top: 12px;}
+body.tt-train .nav2 .btn {flex: 1;}
 body.tt-train .nav2 .btn:first-child:has(.flip) {flex: 0 0 56px;}
 body.tt-train .icon.flip {transform: rotate(180deg);}
 body.tt-train .restbar {position: fixed; z-index: 9; left: 12px; right: 12px; margin: 0 auto; max-width: 616px; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 10px);
@@ -276,6 +373,9 @@ body.tt-train .legend .sw.lv3 {background: var(--lv3);}
 body.tt-train .week-nav {display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0 12px;}
 body.tt-train .week-nav .wk {text-align: center; display: flex; flex-direction: column;}
 body.tt-train .week-nav .wk small {color: var(--muted); font-size: 13px;}
+body.tt-train .icon-btn {width: var(--tap); height: var(--tap); border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass); color: var(--text);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer;}
+body.tt-train .icon-btn:disabled {opacity: 0.35; cursor: default;}
 body.tt-train .icon-btn .flip, body.tt-train .btn .flip {transform: scaleX(-1);}
 body.tt-train .progress .chips {display: flex; gap: 8px; align-items: center; margin-bottom: 10px;}
 body.tt-train .progress .chips .info-btn {margin-left: auto;}
@@ -284,6 +384,7 @@ body.tt-train .mrow {display: flex; align-items: center; gap: 10px; min-height: 
 body.tt-train .mrow.zero {color: var(--muted);}
 body.tt-train .mrow.cur {background: color-mix(in srgb, var(--accent) 10%, transparent);}
 body.tt-train .mname {width: 118px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+body.tt-train .mbar {flex: 1; height: 10px; border-radius: 5px; background: color-mix(in srgb, var(--text) 8%, transparent); overflow: hidden; display: flex;}
 body.tt-train .mbar i {display: block; height: 100%; background: var(--accent-2);}
 body.tt-train .mbar b {display: block; height: 100%; background: repeating-linear-gradient(135deg, var(--accent-2) 0 3px, color-mix(in srgb, var(--accent) 25%, transparent) 3px 6px);}
 body.tt-train .mlegend {display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); padding: 0 2px 6px;}
@@ -428,6 +529,8 @@ body.tt-train .run-card h2 {font-size: 24px; margin: 4px 0 0;}
 body.tt-train .run-card p {margin: 0; line-height: 1.4;}
 body.tt-train .run-fig svg {display: block;}
 body.tt-train .run-label {font-weight: 700; color: var(--accent);}
+body.tt-train .ring {--p: 0%; width: 150px; height: 150px; border-radius: 50%; margin: 8px auto 4px; display: flex; align-items: center; justify-content: center;
+  background: conic-gradient(var(--accent) 0 var(--p), color-mix(in srgb, var(--text) 12%, transparent) var(--p) 100%);}
 body.tt-train .ring-in {width: 128px; height: 128px; border-radius: 50%; background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center;}
 body.tt-train .ring-time {font-size: 34px; font-variant-numeric: tabular-nums;}
 body.tt-train .ring.done .ring-time {color: var(--accent); font-size: 26px;}
@@ -517,6 +620,9 @@ body.tt-train .cyc-sheet .btn {margin-top: 10px;}
 body.tt-train .cyc-date {display: flex; align-items: center; gap: 10px; margin-top: 10px;}
 body.tt-train .cyc-date input {flex: 1; min-height: 44px;}
 body.tt-train .cyc-fields {margin-top: 14px;}
+body.tt-train .savebar {position: fixed; z-index: 30; left: 12px; right: 12px; top: calc(var(--safe-top) + 8px); margin: 0 auto; max-width: 616px;
+  padding: 12px 14px; border-radius: 14px; font-size: 14px; font-weight: 600; background: color-mix(in srgb, var(--danger) 22%, var(--surface)); border: 1px solid var(--danger); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);}
+body.tt-train .savebar[hidden] {display: none;}
 body.tt-train .savebar a {color: var(--text); text-decoration: underline; margin-left: 4px;}
 body.tt-train .set-line {display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;}
 body.tt-train .set-label {font-size: 15px;}
@@ -582,6 +688,8 @@ body.tt-train .hint-line {margin: 6px 0 10px; font-size: 13.5px; color: var(--mu
 body.tt-train .hint-line .link {padding: 0 6px; min-height: 0; font-size: 13.5px;}
 body.tt-train .hint-line .link {display: inline-flex; align-items: center; min-height: 32px; margin: -7px 0 -7px 0; vertical-align: middle;}
 body.tt-train .hint-line.warm {color: var(--warn);}
+body.tt-train .card-head {margin-bottom: 8px;}
+body.tt-train .card-head h2 {margin: 0;}
 body.tt-train .dots {flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--chip-bg); color: var(--text); font-size: 22px; line-height: 1; cursor: pointer;}
 body.tt-train .start-row {display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: default;}
 body.tt-train .start-row .t {flex: 1; min-width: 0;}
@@ -613,19 +721,32 @@ body.tt-train .card > .title-row {margin-bottom: 8px;}
 body.tt-train .card > .title-row h2 {margin: 0;}
 body.tt-train :where(.wrap, .chips, .seg) + p.muted.small {margin-top: 8px;}
 body.tt-train .glossary-link {margin-top: 10px;}
-body.tt-train .opt, body.tt-train .area, body.tt-train .step, body.tt-train .arrows button, body.tt-train .tile, body.tt-train .qbtn, body.tt-train .big-in, body.tt-train .dots, body.tt-train .pcard, body.tt-train .ss-seg button, body.tt-train .rate-btn, body.tt-train .anim-badge, body.tt-train .anim-stage, body.tt-train .ab-capsule, body.tt-train .ab-speed, body.tt-train .anim-kp .n, body.tt-train .hint, body.tt-train .hint-box, body.tt-train .ss-banner, body.tt-train .warn-box, body.tt-train .wtag, body.tt-train .slot, body.tt-train .addline, body.tt-train .a4-hint, body.tt-train .cyc-flag, body.tt-train .start-card.today, body.tt-train .start-row.today {border: 0;}
+body.tt-train .chip, body.tt-train .info-btn, body.tt-train .opt, body.tt-train .input, body.tt-train .area, body.tt-train .seg, body.tt-train .step, body.tt-train .pill, body.tt-train .arrows button, body.tt-train .icon-btn, body.tt-train .search, body.tt-train .tile, body.tt-train .qbtn, body.tt-train .big-in, body.tt-train .dots, body.tt-train .pcard, body.tt-train .ss-seg button, body.tt-train .rate-btn, body.tt-train .anim-badge, body.tt-train .anim-stage, body.tt-train .ab-capsule, body.tt-train .ab-speed, body.tt-train .anim-kp .n, body.tt-train .hint, body.tt-train .hint-box, body.tt-train .ss-banner, body.tt-train .warn-box, body.tt-train .wtag, body.tt-train .slot, body.tt-train .addline, body.tt-train .a4-hint, body.tt-train .cyc-flag, body.tt-train .start-card.today, body.tt-train .start-row.today {border: 0;}
+body.tt-train .sec {font-size: 13px; letter-spacing: 0; text-transform: uppercase; color: var(--muted); margin: 24px 16px 6px;}
+body.tt-train .row {min-height: 44px; padding: 11px 16px;}
+body.tt-train .row b {font-size: 17px; font-weight: 400;}
+body.tt-train .row small {font-size: 15px;}
 body.tt-train .row i {color: var(--muted); font-size: 15px;}
+body.tt-train .card.list .row + .row {border-top: 0; background: linear-gradient(var(--line), var(--line)) 16px 0 / calc(100% - 16px) 1px no-repeat;}
 body.tt-train button.row:active, body.tt-train .pickrow:active {background: var(--fill);}
 body.tt-train .chev {color: var(--faint);}
+body.tt-train .link {color: var(--accent); font-weight: 600;}
+body.tt-train .chip {background: var(--fill); color: var(--text); font-size: 15px;}
+body.tt-train .chip.on {font-weight: 600;}
 body.tt-train .chip .icon.inline {color: inherit;}
 body.tt-train .eq, body.tt-train .badge-own, body.tt-train .routines .tag, body.tt-train .row .tag, body.tt-train .tagchip, body.tt-train .last, body.tt-train .badge-instead, body.tt-train .est {background: var(--fill); color: var(--muted);}
 body.tt-train .side-pill, body.tt-train .pill-act {border-color: var(--line); color: var(--muted);}
-body.tt-train .dots {background: var(--fill); color: var(--muted);}
+body.tt-train .info-btn, body.tt-train .dots {background: var(--fill); color: var(--muted);}
 body.tt-train .info-mark {color: var(--faint);}
+body.tt-train .icon-btn {width: 44px; height: 44px; border-radius: 50%; background: var(--fill); color: var(--accent);}
 body.tt-train .dots {width: 36px; height: 36px; font-size: 18px; color: var(--accent);}
-body.tt-train .area {background: var(--surface-2); border-radius: 10px;}
-body.tt-train .area:focus, body.tt-train .search:focus-within, body.tt-train .big-in:focus {box-shadow: 0 0 0 2px var(--accent);}
+body.tt-train .search {height: 40px; border-radius: 10px; background: var(--fill);}
+body.tt-train .search .icon, body.tt-train .search-input::placeholder {color: var(--faint);}
+body.tt-train .input, body.tt-train .area {background: var(--surface-2); border-radius: 10px;}
+body.tt-train .input {height: 44px;}
+body.tt-train .input:focus, body.tt-train .area:focus, body.tt-train .search:focus-within, body.tt-train .big-in:focus {box-shadow: 0 0 0 2px var(--accent);}
 body.tt-train .field > label, body.tt-train .label-row label, body.tt-train .ctl-label {letter-spacing: 0; text-transform: none; font-size: 13px;}
+body.tt-train .seg {padding: 2px; border-radius: 9px; background: var(--fill);}
 body.tt-train .seg button {min-height: 32px; border-radius: 7px; color: var(--text); font-size: 13px; font-weight: 500;}
 body.tt-train .seg button.on {background: var(--seg-on); color: var(--text); font-weight: 600; box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 0 0 0.5px rgba(0, 0, 0, 0.04);}
 body.tt-train .seg.seg-sm {width: auto;}
@@ -634,6 +755,8 @@ body.tt-train .step button {width: 46px; background: none; color: var(--text); f
 body.tt-train .step-val {background: none; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;}
 body.tt-train .step.small {height: 32px;}
 body.tt-train .step.small button {width: 40px;}
+body.tt-train .switch {appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 51px; height: 31px; margin: 0; border-radius: 999px; cursor: pointer;
+  background: var(--fill); transition: background 0.2s;}
 body.tt-train .switch::after {content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06); transition: transform 0.2s;}
 body.tt-train .switch:checked {background: var(--accent);}
@@ -641,6 +764,7 @@ body.tt-train .switch:checked::after {transform: translateX(20px); background: v
 body.tt-train .switch:focus-visible {outline: 2px solid var(--accent); outline-offset: 2px;}
 body.tt-train .set-line {min-height: 44px; margin-top: 12px;}
 body.tt-train .set-label {font-size: 17px;}
+body.tt-train .sheet-head h2 {font-size: 20px; font-weight: 700;}
 body.tt-train .opt {background: var(--surface); border-radius: 12px;}
 body.tt-train .opt .ic {background: var(--fill); color: var(--accent);}
 body.tt-train .edit-bar {background: var(--sheet-bg);}
@@ -652,6 +776,7 @@ body.tt-train .pcard .ex {color: var(--muted);}
 body.tt-train .start-card.today, body.tt-train .start-row.today {box-shadow: none;}
 body.tt-train .today-tag {color: var(--muted) !important; font-weight: 600;}
 body.tt-train .play {width: 44px; height: 44px; background: var(--fill); color: var(--accent);}
+body.tt-train .pill {background: var(--fill); border-radius: 999px;}
 body.tt-train .stp .num {background: var(--fill); color: var(--text);}
 body.tt-train .stp:not(:last-of-type)::before {background: var(--line);}
 body.tt-train .arrows button {background: var(--fill); border-radius: 10px;}
@@ -695,6 +820,7 @@ body.tt-train .ch-grid {stroke: var(--line);}
 body.tt-train .ch-band {fill: var(--accent-soft);}
 body.tt-train .tbl td {border-top-color: var(--line);}
 body.tt-train .tbl td:first-child {color: var(--text);}
+body.tt-train .mbar {background: var(--fill);}
 body.tt-train .legend .sw {border-color: var(--line);}
 body.tt-train .a4c.lv0 {background: var(--fill);}
 body.tt-train .a4-hint {background: var(--surface);}
@@ -739,12 +865,6 @@ body.tt-train input.input[type="datetime-local"], body.tt-train input.input[type
   display: block; width: 100%; min-width: 0; max-width: 100%;
   text-align: center; font-size: 16px;}
 body.tt-train input.input[type="datetime-local"]::-webkit-date-and-time-value {text-align: center; min-width: 0; margin: 0;}
-body.tt-train .tb-play {width: 58px; height: 58px; margin-top: -30px; border-radius: 20px; border: 0; padding: 0; cursor: pointer;
-  background: var(--accent); color: var(--on-accent); display: grid; place-items: center;
-  box-shadow: 0 0 0 5px var(--bg), 0 8px 24px rgba(0, 0, 0, 0.3); transition: transform .12s;}
-body.tt-train .tb-play svg {width: 28px; height: 28px; fill: currentColor; stroke: currentColor;}
-body.tt-train .tb-play:active {transform: scale(0.94);}
-body.tt-train .tb-play:focus-visible {outline: 2px solid var(--accent); outline-offset: 4px;}
 body.tt-train .head-btns {display: flex; gap: 8px;}
 body.tt-train .head-btns a.dots {display: grid; place-items: center; text-decoration: none;}
 body.tt-train .play-next {display: flex; flex-direction: column; gap: 4px;}
@@ -847,11 +967,13 @@ body.tt-train .plan-dur > .step, body.tt-train .rt-total > .ctl > .step {flex: 0
 body.tt-train .routine-edit > .seg + .rt-total, body.tt-train .routine-edit > p + .rt-total {margin-top: 12px;}
 body.tt-train .rt-text b {white-space: nowrap;}
 body.tt-train .qbtn {white-space: nowrap;}
+body.tt-train .nav2 .btn {min-width: 0; white-space: nowrap;}
 @media (max-width: 374px) {
   body.tt-train .restbar {gap: 8px;}
   body.tt-train .rt-ring {width: 40px; height: 40px;}
   body.tt-train .rt-btn {min-width: 44px;}
   body.tt-train .nav2 {gap: 8px;}
+  body.tt-train .nav2 .btn {padding: 0 10px; font-size: 16px;}
   body.tt-train .nav2 .btn:first-child:has(.flip) {flex: 0 0 48px;}
   body.tt-train .nav2:has(.flip) .btn .icon:not(.flip) {display: none;}
   body.tt-train .qbtn {font-size: 13px; padding: 0 8px; min-width: 0;}
@@ -892,6 +1014,7 @@ body.tt-train .btn-grid2 > .btn {min-width: 0; white-space: nowrap; overflow: hi
 @media (max-width: 374px) {
   body.tt-train .btn-grid2 > .btn {padding: 0 8px; font-size: 15px;}
 }
+body.tt-train :root[data-theme="light"] {--muted: #5C5C60;}
 :root[data-theme="light"] body.tt-train .setrow .prev {color: var(--muted);}
 body.tt-train :where(.chip, .seg button, [role="tab"], .info-btn, .sheet-close, .dots, .link, .note-btn, .hist-link, .qbtn, .pill, .setrow .sn, .tt-tip-ok, .anim-badge, .ab-speed, .sheet a[href], #view a[href]) {position: relative;}
 body.tt-train :where(.chip, .seg button, [role="tab"], .info-btn, .sheet-close, .dots, .link, .note-btn, .hist-link, .qbtn, .pill, .setrow .sn, .tt-tip-ok, .anim-badge, .ab-speed, .sheet a[href], #view a[href])::after {content: ''; position: absolute; inset: 0;}
@@ -905,12 +1028,14 @@ body.tt-train :is(.qbtn, .pill, .tt-tip-ok)::after {inset: -2px 0;}
 body.tt-train .setrow .sn::after {inset: 0 -6px;}
 body.tt-train .anim-badge::after {inset: -7px 0;}
 body.tt-train .ab-speed::after {inset: -4px 0;}
+body.tt-train .search-input {min-height: 44px;}
 body.tt-train:has(#view .training) :is(#view .training, .sheet) button:not(.sn):not(.switch) {min-height: 44px;}
 body.tt-train:has(#view .training) :is(#view .training, .sheet) :is(.sheet-close, .dots) {width: 44px; height: 44px;}
 body.tt-train:has(#view .training) :is(#view .training, .sheet) :is(.qbtn, .pill, .note-btn, .hist-link, .link, .sheet-close, .dots)::after {inset: 0;}
 body.tt-train .step, body.tt-train .step.small {height: 44px;}
-body.tt-train .wrap, body.tt-train .chips-line {gap: 8px;}
+body.tt-train .wrap, body.tt-train .chips, body.tt-train .chips-line {gap: 8px;}
 body.tt-train .chip-pair {gap: 8px;}
+body.tt-train .chips {padding-top: 4px; margin-top: -2px;}
 body.tt-train .progress .chips {overflow: visible;}
 body.tt-train .anim-top {row-gap: 14px;}
 body.tt-train .as-day.kc {background: var(--accent); color: var(--on-accent);}
