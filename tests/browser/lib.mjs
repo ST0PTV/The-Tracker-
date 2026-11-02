@@ -51,18 +51,32 @@ function chromiumPath() {
 // Grund (gemessen 2026-11-01, Windows mit Norton 360): ab 4 gleichzeitigen Browsern blieben neue Verbindungen zu 127.0.0.1
 // 10–30 s hängen, obwohl der Server in ≤ 13 ms antwortete. Ursprung und Seiten bleiben gleich (sicherer Kontext 127.0.0.1);
 // was die Route nicht erfasst, geht weiter an den echten Server.
+// Messversuch 0.4.0 (Standard unverändert): TT_WS = gemeinsamer Browser (chromium.connect, nur ohne eigene Schalter),
+// TT_CHANNEL=chromium = neuer Headless-Modus, TT_ENGINE=webkit = WebKit. TT_STATS=1 schreibt am Ende eine Zeile „tt-stats {…}“.
+const STATS = { launches: 0, launchMs: 0, contexts: 0, ctxMs: 0, pauses: 0, pauseMaxMs: 0, pauseRealMs: 0 };
+if (process.env.TT_STATS) process.on('exit', () => console.log('tt-stats ' + JSON.stringify(STATS)));
+
 export async function launch(args = []) {
-  const { chromium } = await loadPlaywright();
-  const b = await chromium.launch({ executablePath: chromiumPath(), args });
-  if (process.env.TT_ROUTE === '0') return b;
+  const pw = await loadPlaywright();
+  const engine = process.env.TT_ENGINE || 'chromium';
+  const t = Date.now();
+  let b;
+  if (engine === 'webkit') b = await pw.webkit.launch();
+  else if (process.env.TT_WS && !args.length) b = await pw.chromium.connect(process.env.TT_WS);
+  else b = await pw.chromium.launch({ executablePath: chromiumPath(), args, ...(process.env.TT_CHANNEL ? { channel: process.env.TT_CHANNEL } : {}) });
+  STATS.launches++; STATS.launchMs += Date.now() - t;
   const newContext = b.newContext.bind(b);
   b.newContext = async (opts) => {
+    const t1 = Date.now();
     const ctx = await newContext(opts);
     ctx.on('page', trackNet);
-    await ctx.route((url) => SERVED.has(url.origin), async (route) => {
-      const r = await serveFile(new URL(route.request().url()).pathname);
-      await route.fulfill({ status: r.status, body: r.body, headers: r.headers });
-    });
+    if (process.env.TT_ROUTE !== '0') {
+      await ctx.route((url) => SERVED.has(url.origin), async (route) => {
+        const r = await serveFile(new URL(route.request().url()).pathname);
+        await route.fulfill({ status: r.status, body: r.body, headers: r.headers });
+      });
+    }
+    STATS.contexts++; STATS.ctxMs += Date.now() - t1;
     return ctx;
   };
   return b;
@@ -128,7 +142,15 @@ function trackNet(p) {
   for (const ev of ['requestfinished', 'requestfailed']) p.on(ev, (r) => { p.__ttInflight.delete(r); p.__ttNet = Date.now(); });
   p.on('framenavigated', (fr) => { if (fr === p.mainFrame()) p.__ttNet = Date.now(); }); // abgebrochene Anfragen melden sich über requestfailed
 }
+// TT_SETTLE=0: alte feste Pause (Messversuch). Zählt Pausen und Wartezeit für TT_STATS.
 export async function settle(p, max = 300) {
+  let real = max;
+  if (process.env.TT_SETTLE === '0') await p.waitForTimeout(max);
+  else real = await settleInner(p, max);
+  STATS.pauses++; STATS.pauseMaxMs += max; STATS.pauseRealMs += real;
+  return real;
+}
+async function settleInner(p, max) {
   const t0 = Date.now();
   trackNet(p);
   // Netz-Ruhe: seit der letzten Anfrage (Start oder Ende) so lange nichts. Nach Laden/Navigation (lange Pausen) länger,

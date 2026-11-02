@@ -7,6 +7,10 @@
 //     Filter      Teil des Dateinamens, z. B. v31 oder rezepte (ohne Filter: alle)
 //     --jobs N    gleichzeitige Checks (Standard: halbe Kernzahl, höchstens 4; --jobs 1 = seriell)
 //     --version   Version für check-tabs (Standard: js/core/version.js)
+//   Messversuch (Standard unverändert):
+//     --shared    ein gemeinsamer Chromium (launchServer); die Checks verbinden sich per TT_WS (Variante C)
+//     --root DIR  Checks eines anderen Arbeitsbaums starten (z. B. Worktree des alten Stands)
+//     --json F    Ergebnis je Check als JSON (ok-Zeilen, FAIL-Zeilen, Sekunden, tt-stats bei TT_STATS=1)
 //
 // Reihenfolge: die langsamsten zuerst (Zeiten vom letzten Lauf in <TT_OUT>/timings.json), damit kein langer Check zuletzt allein läuft.
 // check-wt.mjs (serieller Sammel-Check der wt/-Checks) wird hier nicht gestartet: seine Checks laufen einzeln.
@@ -14,11 +18,14 @@ import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir, availableParallelism } from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const argv = process.argv.slice(2);
 const opt = (name) => { const i = argv.indexOf(name); return i >= 0 ? argv.splice(i, 2)[1] : undefined; };
+const flag = (name) => { const i = argv.indexOf(name); return i >= 0 ? (argv.splice(i, 1), true) : false; };
+const ROOT = opt('--root') || fileURLToPath(new URL('../', import.meta.url));
+const jsonOut = opt('--json');
+const shared = flag('--shared');
 const jobsArg = opt('--jobs');
 const version = opt('--version');
 const filter = argv.find((a) => !a.startsWith('--')) || '';
@@ -36,7 +43,12 @@ const checks = [...list('tests/browser', ''), ...list('tests/browser/wt', 'wt/')
   .sort((a, b) => (last[b] || 0) - (last[a] || 0) || a.localeCompare(b));
 if (!checks.length) { console.error(`Kein Check passt zu „${filter}“.`); process.exit(1); }
 
-console.log(`${checks.length} Browser-Checks, ${jobs} gleichzeitig${filter ? `, Filter „${filter}“` : ''}`);
+let server = null;
+if (shared) {
+  const { loadPlaywright } = await import(pathToFileURL(join(fileURLToPath(new URL('../', import.meta.url)), 'tests/browser/lib.mjs')).href);
+  server = await (await loadPlaywright()).chromium.launchServer();
+}
+console.log(`${checks.length} Browser-Checks, ${jobs} gleichzeitig${filter ? `, Filter „${filter}“` : ''}${shared ? ', ein gemeinsamer Browser' : ''}`);
 const t0 = Date.now();
 const results = [];
 
@@ -46,7 +58,7 @@ function runOne(c) {
     const out = join(BASE, c.replace(/[^\w-]+/g, '_').replace(/_mjs$/, ''));
     const args = [join(ROOT, 'tests/browser', c)];
     if (c === 'check-tabs.mjs' && version) args.push(version);
-    const child = spawn(process.execPath, args, { cwd: ROOT, env: { ...process.env, TT_OUT: out } });
+    const child = spawn(process.execPath, args, { cwd: ROOT, env: { ...process.env, TT_OUT: out, ...(server ? { TT_WS: server.wsEndpoint() } : {}) } });
     let buf = '';
     child.stdout.on('data', (d) => { buf += d; });
     child.stderr.on('data', (d) => { buf += d; });
@@ -64,7 +76,12 @@ function runOne(c) {
 const queue = [...checks];
 await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, async () => { while (queue.length) await runOne(queue.shift()); }));
 
+if (server) await server.close();
 const total = (Date.now() - t0) / 1000;
+if (jsonOut) writeFileSync(jsonOut, JSON.stringify({ totalSec: +total.toFixed(1), jobs, shared, env: Object.fromEntries(Object.entries(process.env).filter(([k]) => /^TT_/.test(k))),
+  rows: results.map((r) => ({ check: r.check, good: r.good, ok: r.oks, fail: r.fails, sec: +r.sec.toFixed(1),
+    failLines: r.out.split(/\r?\n/).filter((l) => /^FAIL |Error|Abbruch/.test(l)).slice(0, 12),
+    stats: JSON.parse((r.out.match(/^tt-stats (\{.*\})/m) || [0, 'null'])[1]) })) }, null, 1));
 for (const r of results) last[r.check] = +r.sec.toFixed(1);
 writeFileSync(TIMINGS, JSON.stringify(last, null, 1));
 
