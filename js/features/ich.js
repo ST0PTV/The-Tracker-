@@ -8,6 +8,7 @@ import * as store from '../core/store.js';
 import { getGoals, getProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights, getSleep, currentWeight } from '../core/profile.js';
 import { getSettings } from '../core/settings.js';
 import { lookView, lookSummary } from './me/look-view.js';
+import { todayLayoutView, todaySummary } from './me/today-layout.js';
 import { VERSION } from '../core/version.js';
 import { isoDate, addDays, r1 } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
@@ -55,6 +56,8 @@ function ichView(rerender) {
       meRow({ kind: 'goal', ico: 'target', title: 'Tagesziel', href: '#/ich/ziel', sub: g?.goal ? `${fmt(g.goal)} kcal · ${PRESETS[g.preset]?.label || ''}` : 'noch nicht festgelegt' }),
       meRow({ kind: 'wt', ico: 'trend', title: 'Gewichtsziel', href: '#/ich/gewichtsziel',
         sub: o.on && o.target ? `${w != null ? `${fmtKg(w)} → ` : ''}${fmtKg(o.target)} kg${o.date ? ` bis ${wgDateFmt(o.date)}` : ''}` : 'aus' })),
+    ...group('Heute',
+      meRow({ kind: 'food', ico: 'home', title: 'Heute anpassen', href: '#/ich/heute', sub: todaySummary() })),
     ...group('Über mich',
       meRow({ kind: 'body', ico: 'moon', title: 'Schlaf & Körper', href: '#/ich/koerper', sub: `${sl.bed}–${sl.wake}${w != null ? ` · ${fmtKg(w)} kg` : ''}` }),
       meRow({ kind: 'food', ico: 'book', title: 'Ernährung & Rezepte', href: '#/ich/ernaehrung',
@@ -202,4 +205,4 @@ function quellenView() {
 const oldDrinks = (rerender) => { setTimeout(() => { location.hash = '#/ich'; }, 0); return ichView(rerender); };
 export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView, '/ich/ernaehrung': prefsView,
   '/ich/wasser': waterSettingsView, '/ich/koffein': caffSettingsView, '/ich/alkohol': alcSettingsView, '/ich/getraenke': oldDrinks,
-  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView, '/ich/darstellung': lookView };
+  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView, '/ich/darstellung': lookView, '/ich/heute': todayLayoutView };
