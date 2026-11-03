@@ -7,6 +7,7 @@ import { openSheet } from '../../core/sheet.js';
 import { icon } from '../../core/icons.js';
 import { toast, pageHead } from '../../core/ui.js';
 import { openInfo, infoBtn } from '../../core/info.js';
+import { backLink, sec, list, note, switchRow, actionRow } from '../../core/setui.js';
 import { num } from '../../core/format.js';
 import { getProfile } from '../../core/profile.js';
 import { SUPP_CAT, SUPP_CAT_MAP, SUPP_EV } from './catalog.js';
@@ -160,26 +161,23 @@ function pickSheet(rerender) {
 
 export function suppSettingsView(rerender) {
   const s = suppSettings();
-  const sw = (key, label) => {
-    const inp = h('input', { type: 'checkbox', 'aria-label': label });
-    inp.checked = !!s[key];
-    inp.addEventListener('change', () => setSuppSettings({ [key]: inp.checked }));
-    return h('label', { class: 'check-row' }, inp, h('span', {}, label));
-  };
-  return h('div', {},
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+  const items = s.items.map((x) => {
+    const on = h('input', { type: 'checkbox', role: 'switch', class: 'sw', 'aria-label': `${x.name} aktiv` });
+    on.checked = !!x.on;
+    on.addEventListener('change', () => { updateItem(x.id, { on: on.checked }); rerender(); });
+    return h('div', { class: 'st-row supp-set' },
+      h('button', { class: 't plain-btn', type: 'button', 'aria-label': `${x.name} bearbeiten`, onclick: () => editSheet(x, rerender) },
+        suppIcon(x, 28), h('span', {}, h('b', {}, x.name), h('small', {}, x.on ? summary(x) : 'ausgeschaltet'))),
+      infoBtn(x.name, () => suppInfo(SUPP_CAT_MAP[x.kind] ? x.kind : 'custom')),
+      on);
+  });
+  return h('div', {}, backLink(),
     pageHead('Supplements', 'Abhaken unter „Heute“. Hinweise sind Information, keine Empfehlung.'),
-    h('section', { class: 'card' }, sw('enabled', 'Supplement-Karte unter „Heute“ anzeigen'),
-      h('div', { class: 'check-wrap' }, sw('remind', 'Offene Supplements hervorheben'), infoBtn('Hervorheben', remindInfo))),
-    s.items.length ? h('section', { class: 'card list' }, ...s.items.map((x) => {
-      const on = h('input', { type: 'checkbox', 'aria-label': `${x.name} aktiv` });
-      on.checked = !!x.on;
-      on.addEventListener('change', () => { updateItem(x.id, { on: on.checked }); rerender(); });
-      return h('div', { class: 'row' },
-        h('button', { class: 't plain-btn', type: 'button', onclick: () => editSheet(x, rerender) },
-          suppIcon(x, 28), h('span', {}, h('b', {}, x.name), h('small', {}, x.on ? summary(x) : 'ausgeschaltet'))),
-        infoBtn(x.name, () => suppInfo(SUPP_CAT_MAP[x.kind] ? x.kind : 'custom')),
-        h('label', { class: 'switch' }, on, h('span', { class: 'slider' })));
-    })) : h('p', { class: 'muted center' }, 'Noch keine Supplements angelegt.'),
-    h('button', { class: 'btn primary block', type: 'button', onclick: () => pickSheet(rerender) }, '+ Supplement hinzufügen'));
+    sec('Allgemein', ['Hervorheben', remindInfo]),
+    list(switchRow({ title: 'Supplements tracken', sub: 'Karte unter „Heute“', on: s.enabled, set: (v) => { setSuppSettings({ enabled: v }); rerender(); } }),
+      s.enabled ? switchRow({ title: 'Offene hervorheben', sub: 'Karte färbt sich, solange etwas offen ist', on: s.remind, set: (v) => setSuppSettings({ remind: v }) }) : null),
+    s.enabled ? [
+      sec('Meine Supplements'),
+      list(...items, actionRow({ title: '+ Supplement hinzufügen', onClick: () => pickSheet(rerender) })),
+      items.length ? note('Antippen zum Bearbeiten. Der Schalter pausiert ein Supplement, ohne es zu löschen.') : note('Noch keine Supplements angelegt.')] : null);
 }

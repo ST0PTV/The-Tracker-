@@ -50,7 +50,7 @@ export function switchRow({ title, sub = '', badge = null, on, set, disabled = f
 export function numRow({ title, sub = '', value, lo, hi, unit, dec = false, set, placeholder = '' }) {
   const dp = dec === true ? 1 : dec || 0;
   const show = (v) => (v == null || v === '' ? '' : dp ? v.toLocaleString('de-DE', { maximumFractionDigits: dp, useGrouping: false }) : String(Math.round(v)));
-  const inp = h('input', { class: 'st-in', type: 'text', inputmode: dp ? 'decimal' : 'numeric', value: show(value), placeholder, 'aria-label': `${title} (${unit})` });
+  const inp = h('input', { class: 'st-in', type: 'text', inputmode: dp ? 'decimal' : 'numeric', value: show(value), placeholder, 'aria-label': title });
   inp.addEventListener('change', () => {
     const v = num(inp.value);
     if (v == null || v < lo || v > hi) { toast(`Bitte einen Wert zwischen ${show(lo)} und ${show(hi)} ${unit} eingeben.`, { error: true }); inp.value = show(value); return; }
@@ -74,11 +74,11 @@ export function linkRow({ title, sub = '', badge = null, value = '', href }) {
     h('span', { class: 'st-val' }, value, h('span', { class: 'st-chev' }, icon('chevron', { size: 15 }))));
 }
 
-/** Auswahl aus wenigen Möglichkeiten: Name oben, Segmente darunter. options = [[key, label], …]. */
-export function segRow({ title, sub = '', options, value, set }) {
+/** Auswahl aus wenigen Möglichkeiten: Name oben, Segmente darunter. options = [[key, label], …]; aria = Name für Screenreader. */
+export function segRow({ title, sub = '', options, value, set, aria = title }) {
   return h('div', { class: 'st-row st-segrow' },
     h('span', { class: 't' }, h('b', {}, title), sub ? h('small', {}, sub) : null),
-    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': title },
+    h('div', { class: 'seg', role: 'radiogroup', 'aria-label': aria },
       ...options.map(([key, text]) => h('button', {
         type: 'button', role: 'radio', 'aria-checked': key === value ? 'true' : 'false',
         onclick: () => { if (key !== value) set(key); }

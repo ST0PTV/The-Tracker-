@@ -105,7 +105,7 @@ for (const appearance of ['dark', 'light']) {
 
   // Alkohol ausschalten → weder Karte noch Menü-Zeile
   await p.goto(srv.url + '/index.html#/ich/alkohol'); await settle(p, 250);
-  await p.uncheck('input[aria-label="Alkohol im „+“-Menü (Karte erscheint mit dem ersten Eintrag)"]');
+  await p.uncheck('input[aria-label="Alkohol tracken"]');
   await p.goto(srv.url + '/index.html#/'); await settle(p, 250);
   await p.click('.tab-plus'); await settle(p, 300);
   ok(await p.locator('.trk.alc').count() === 0 && await p.locator('.qa-row:has-text("Alkohol")').count() === 0, `${appearance}: ausgeschaltet ohne Karte und Menü-Zeile`);

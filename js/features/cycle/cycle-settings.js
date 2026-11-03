@@ -7,19 +7,11 @@ import { icon } from '../../core/icons.js';
 import { pageHead, toast } from '../../core/ui.js';
 import { isoDate } from '../../core/format.js';
 import { lockSettings } from '../../core/lock.js';
+import { backLink, sec, list, note, switchRow, timeRow, segRow, linkRow, actionRow } from '../../core/setui.js';
 import * as M from './model.js';
 import { TRACK, cycleSettings, setCycleSettings, cycleAvailable, cycleDays, cycleAnalysis, importBleedDays, deleteCycleDays } from './cycle.js';
 
 const back = (href, label) => h('a', { class: 'back', href }, icon('chevron', { size: 16, cls: 'flip' }), label);
-const seg = (label, items, cur, set) => h('div', { class: 'seg', role: 'radiogroup', 'aria-label': label },
-  ...items.map(([k, l]) => h('button', { type: 'button', role: 'radio', 'aria-checked': k === cur ? 'true' : 'false', onclick: () => set(k) }, l)));
-function toggle(label, on, set, hint = '') {
-  const inp = h('input', { type: 'checkbox', 'aria-label': label });
-  inp.checked = !!on;
-  inp.addEventListener('change', () => set(inp.checked));
-  return h('label', { class: 'check-row' }, inp, h('span', {}, label, hint ? h('small', { class: 'form-hint' }, hint) : null));
-}
-
 /** Datei teilen (iOS: Teilen-Menü) oder herunterladen. */
 async function shareFile(text, name, type) {
   const blob = new Blob([text], { type });
@@ -57,47 +49,43 @@ export function cycleSettingsView(rerender) {
   });
   const paste = h('textarea', { class: 'input', rows: 3, placeholder: 'Ein Datum pro Zeile, z. B. 03.09.2026 oder 01.10.2026 bis 05.10.2026', 'aria-label': 'Daten einfügen' });
 
-  const remRow = (k, label, hint, timeKey) => {
-    const t = timeKey ? h('input', { class: 'input cy-time', type: 'time', value: c.rem[timeKey], 'aria-label': `Uhrzeit für ${label}` }) : null;
-    if (t) t.addEventListener('change', () => { if (/^\d{2}:\d{2}$/.test(t.value)) setCycleSettings({ rem: { ...c.rem, [timeKey]: t.value } }); });
-    return h('div', { class: 'cy-rem-row' }, toggle(label, c.rem[k], (v) => set({ rem: { ...c.rem, [k]: v } }), hint), t);
-  };
+  // Erinnerung: Schalter, darunter (wenn an) die Uhrzeit
+  const rem = (k, title, sub, timeKey) => [
+    switchRow({ title, sub, on: c.rem[k], set: (v) => set({ rem: { ...c.rem, [k]: v } }) }),
+    timeKey && c.rem[k] ? timeRow({ title: 'Uhrzeit', value: c.rem[timeKey], set: (v) => { if (/^d{2}:d{2}$/.test(v)) setCycleSettings({ rem: { ...c.rem, [timeKey]: v } }); } }) : null];
+  const chips = (items, isOn, onTap) => h('div', { class: 'st-pad' }, h('div', { class: 'chips' }, ...items.map(([k, l]) =>
+    h('button', { class: `chip${isOn(k) ? ' on' : ''}`, type: 'button', 'aria-pressed': isOn(k) ? 'true' : 'false', onclick: () => onTap(k) }, l))));
 
   return h('div', { class: 'cy' },
-    back('#/ich', 'Ich'),
+    backLink(),
     pageHead('Zyklus', 'Karte auf „Heute“, Kalender, Erinnerungen und Bericht. Alles bleibt auf diesem Handy.'),
     cycleAvailable() ? null : h('p', { class: 'hint small' }, 'Der Zyklus erscheint, wenn du unter „Schlaf & Körper“ bei „Hast du deine Regel?“ Ja wählst. ', h('a', { class: 'link', href: '#/ich/koerper' }, 'Öffnen')),
-    h('h3', { class: 'sec' }, 'Allgemein'),
-    h('section', { class: 'card' },
-      toggle('Zyklus-Karte auf „Heute“', c.on, (v) => set({ on: v })),
-      toggle('Fruchtbare Tage zeigen', c.fert, (v) => set({ fert: v }), 'Breite Schätzung aus deinen Zykluslängen. Keine Verhütung.'),
-      h('span', { class: 'label' }, 'Karte auf „Heute“'), seg('Kartenstil', [['strip', 'Streifen'], ['ring', 'Ring']], c.card, (k) => set({ card: k })),
-      h('span', { class: 'label' }, 'Kalender'), seg('Kalenderstil', [['circles', 'Kreise'], ['band', 'Band']], c.cal, (k) => set({ cal: k }))),
-    h('h3', { class: 'sec' }, 'Verhütung'),
-    h('section', { class: 'card' },
-      h('div', { class: 'chips' }, ...M.METHODS.map(([k, l]) => h('button', { class: `chip${c.method === k ? ' on' : ''}`, type: 'button', 'aria-pressed': c.method === k ? 'true' : 'false', onclick: () => set({ method: k }) }, l))),
-      h('p', { class: 'small muted' }, 'Mit hormoneller Verhütung zeigt die App keine fruchtbaren Tage und keine Phasen. Bei Pille und Minipille fragt „Eintragen“ nach der Pille.')),
-    h('h3', { class: 'sec' }, 'Lebensphase'),
-    h('section', { class: 'card' },
-      h('div', { class: 'chips' }, ...M.PHASES.map(([k, l]) => h('button', { class: `chip${c.phase === k ? ' on' : ''}`, type: 'button', 'aria-pressed': c.phase === k ? 'true' : 'false', onclick: () => set({ phase: k }) }, l))),
-      h('p', { class: 'small muted' }, 'Schwangerschaft, Stillzeit und Wechseljahre pausieren die Vorhersagen. Eintragen geht weiter.')),
-    h('h3', { class: 'sec' }, 'Erinnerungen'),
-    h('section', { class: 'card' },
-      remRow('period', 'Periode bald', 'Ab 2 Tage vor dem frühesten Termin'),
-      M.dailyPill(c.method) ? remRow('pill', 'Pille', 'Täglich ab dieser Uhrzeit, bis sie eingetragen ist', 'pillTime') : null,
-      c.track.temp ? remRow('temp', 'Temperatur messen', 'Morgens ab dieser Uhrzeit', 'tempTime') : null,
-      h('p', { class: 'small muted' }, 'Ohne Server kann die App dich nicht von selbst anstupsen. Die Erinnerung steht auf „Heute“, sobald du die App öffnest. Für einen echten Wecker übernimmst du die Termine in den Kalender deines Handys; die Titel heißen nur „The Tracker“.'),
-      h('button', { class: 'btn block', type: 'button', onclick: () => {
+    sec('Allgemein'),
+    list(switchRow({ title: 'Zyklus-Karte auf „Heute“', on: c.on, set: (v) => set({ on: v }) }),
+      switchRow({ title: 'Fruchtbare Tage zeigen', sub: 'Breite Schätzung aus deinen Zykluslängen. Keine Verhütung.', on: c.fert, set: (v) => set({ fert: v }) }),
+      segRow({ title: 'Karte auf „Heute“', options: [['strip', 'Streifen'], ['ring', 'Ring']], value: c.card, aria: 'Kartenstil', set: (k) => set({ card: k }) }),
+      segRow({ title: 'Kalender', options: [['circles', 'Kreise'], ['band', 'Band']], value: c.cal, aria: 'Kalenderstil', set: (k) => set({ cal: k }) })),
+    sec('Verhütung'),
+    list(chips(M.METHODS, (k) => c.method === k, (k) => set({ method: k }))),
+    note('Mit hormoneller Verhütung zeigt die App keine fruchtbaren Tage und keine Phasen. Bei Pille und Minipille fragt „Eintragen“ nach der Pille.'),
+    sec('Lebensphase'),
+    list(chips(M.PHASES, (k) => c.phase === k, (k) => set({ phase: k }))),
+    note('Schwangerschaft, Stillzeit und Wechseljahre pausieren die Vorhersagen. Eintragen geht weiter.'),
+    sec('Erinnerungen'),
+    list(...rem('period', 'Periode bald', 'ab 2 Tage vor dem frühesten Termin'),
+      ...(M.dailyPill(c.method) ? rem('pill', 'Pille', 'täglich ab dieser Uhrzeit, bis sie eingetragen ist', 'pillTime') : []),
+      ...(c.track.temp ? rem('temp', 'Temperatur messen', 'morgens ab dieser Uhrzeit', 'tempTime') : []),
+      actionRow({ title: 'In den Kalender übernehmen (.ics)', onClick: () => {
         const text = M.icsFile(cycleAnalysis(today), today, { rem: c.rem, method: c.method, phase: c.phase, track: c.track });
         if (!text) { toast('Schalte erst eine Erinnerung ein, die in den Kalender passt.', { error: true }); return; }
         shareFile(text, 'the-tracker-erinnerungen.ics', 'text/calendar');
-      } }, 'In den Kalender übernehmen (.ics)')),
-    h('h3', { class: 'sec' }, 'Was ich tracke'),
-    h('section', { class: 'card' },
-      h('div', { class: 'chips' }, ...TRACK.map(([k, l]) => h('button', { class: `chip${c.track[k] ? ' on' : ''}`, type: 'button', 'aria-pressed': c.track[k] ? 'true' : 'false', onclick: () => set({ track: { ...c.track, [k]: !c.track[k] } }) }, l))),
-      h('p', { class: 'small muted' }, 'Ausgeschaltetes erscheint beim Eintragen nicht. Die Blutung ist immer da.')),
-    h('h3', { class: 'sec' }, 'Daten übernehmen'),
-    h('section', { class: 'card' },
+      } })),
+    note('Ohne Server kann die App dich nicht von selbst anstupsen. Die Erinnerung steht auf „Heute“, sobald du die App öffnest. Für einen echten Wecker übernimmst du die Termine in den Kalender deines Handys; die Titel heißen nur „The Tracker“.'),
+    sec('Was ich tracke'),
+    list(chips(TRACK, (k) => !!c.track[k], (k) => set({ track: { ...c.track, [k]: !c.track[k] } }))),
+    note('Ausgeschaltetes erscheint beim Eintragen nicht. Die Blutung ist immer da.'),
+    sec('Daten übernehmen'),
+    list(h('div', { class: 'st-pad' },
       h('span', { class: 'label' }, 'Erster Tag einer Periode'),
       h('div', { class: 'rz-have' }, startIn, h('button', { class: 'btn', type: 'button', onclick: () => {
         const v = startIn.value;
@@ -111,18 +99,18 @@ export function cycleSettingsView(rerender) {
           if (!keys.length) { toast('Keine Daten erkannt.', { error: true }); return; }
           const added = importBleedDays(keys); toast(`${added} Tage mit Blutung übernommen`); rerender();
         } }, 'Übernehmen'),
-        h('label', { class: 'btn' }, 'Datei wählen', file)),
-      h('p', { class: 'small muted' }, 'Kalenderdatei (.ics) oder Tabelle (.csv, .txt) mit einem Datum pro Zeile. Ganztägige Termine über mehrere Tage zählen als Blutungstage. Übernommene Tage tragen die Stärke „Mittel“.'),
-      h('p', { class: 'small muted' }, n ? `${n} Tage mit Einträgen gespeichert.` : 'Noch keine Einträge.')),
-    h('section', { class: 'card list me-grp' },
-      h('a', { class: 'me-row k-cyc', href: '#/zyklus/bericht' }, h('span', { class: 'qa-badge' }, icon('list', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'Bericht für die Ärztin'), h('small', {}, 'Zykluslängen, Blutung, Beschwerden')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 }))),
-      h('a', { class: 'me-row k-app', href: '#/ich/sperre' }, h('span', { class: 'qa-badge' }, icon('lock', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'PIN-Sperre'), h('small', {}, L.on ? 'an · ganze App' : 'aus')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 }))),
-      h('a', { class: 'me-row k-app', href: '#/zyklus/wissen' }, h('span', { class: 'qa-badge' }, icon('info', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'Wissen und Quellen')), h('span', { class: 'qa-chev' }, icon('chevron', { size: 16 })))),
-    n ? h('div', { class: 'cy-danger' }, confirmDel
-      ? [h('p', { class: 'small' }, 'Wirklich alle Zyklusdaten löschen? Das geht nur mit einem Backup rückgängig.'),
-        h('div', { class: 'btn-row' }, h('button', { class: 'btn', type: 'button', onclick: () => { confirmDel = false; rerender(); } }, 'Abbrechen'),
-          h('button', { class: 'btn danger', type: 'button', onclick: () => { confirmDel = false; deleteCycleDays(); toast('Zyklusdaten gelöscht'); rerender(); } }, 'Ja, löschen'))]
-      : h('button', { class: 'link danger', type: 'button', onclick: () => { confirmDel = true; rerender(); } }, 'Zyklusdaten löschen …')) : null);
+        h('label', { class: 'btn' }, 'Datei wählen', file)))),
+    note('Kalenderdatei (.ics) oder Tabelle (.csv, .txt) mit einem Datum pro Zeile. Ganztägige Termine über mehrere Tage zählen als Blutungstage. Übernommene Tage tragen die Stärke „Mittel“. ',
+      n ? `${n} Tage mit Einträgen gespeichert.` : 'Noch keine Einträge.'),
+    sec('Mehr'),
+    list(linkRow({ title: 'Bericht für die Ärztin', sub: 'Zykluslängen, Blutung, Beschwerden', badge: ['cyc', 'list'], href: '#/zyklus/bericht' }),
+      linkRow({ title: 'PIN-Sperre', badge: ['app', 'lock'], value: L.on ? 'an' : 'aus', href: '#/ich/sperre' }),
+      linkRow({ title: 'Wissen und Quellen', badge: ['app', 'info'], href: '#/zyklus/wissen' })),
+    n ? [sec('Daten'), list(confirmDel
+      ? [h('div', { class: 'st-pad' }, h('p', { class: 'small', style: 'margin:0' }, 'Wirklich alle Zyklusdaten löschen? Das geht nur mit einem Backup rückgängig.')),
+        actionRow({ title: 'Ja, löschen', danger: true, onClick: () => { confirmDel = false; deleteCycleDays(); toast('Zyklusdaten gelöscht'); rerender(); } }),
+        actionRow({ title: 'Abbrechen', onClick: () => { confirmDel = false; rerender(); } })]
+      : actionRow({ title: 'Zyklusdaten löschen …', danger: true, onClick: () => { confirmDel = true; rerender(); } }))] : null);
 }
 
 // ---------- Bericht ----------

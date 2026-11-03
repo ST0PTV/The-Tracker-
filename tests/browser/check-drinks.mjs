@@ -140,7 +140,7 @@ for (const appearance of ['dark', 'light']) {
   const cols = await p.evaluate(() => [...document.querySelectorAll('.two')].every((g) => { const k = [...g.children].map((c) => Math.round(c.getBoundingClientRect().width)); return Math.abs(k[0] - k[1]) <= 1; }));
   ok(fit && cols, `${appearance}: Felder in „Koffein“ liegen in der Karte, Spalten gleich breit`);
   await shot('7-koffein');
-  await p.uncheck('input[aria-label="Koffein-Karte anzeigen"]');
+  await p.uncheck('input[aria-label="Koffein tracken"]');
   await p.goto(srv.url + '/index.html#/'); await settle(p, 250);
   ok(await p.locator('button[aria-label="Koffein-Getränk hinzufügen"]').count() === 0, `${appearance}: Koffein-Karte ausgeblendet`);
 

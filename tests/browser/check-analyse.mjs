@@ -107,7 +107,7 @@ for (const appearance of ['dark', 'light']) {
 
   // Koffein aus → keine Koffein-Kachel
   await p.goto(srv.url + '/index.html#/ich/koffein'); await settle(p, 250);
-  await p.uncheck('input[aria-label="Koffein-Karte anzeigen"]');
+  await p.uncheck('input[aria-label="Koffein tracken"]');
   await p.goto(srv.url + '/index.html#/analyse'); await settle(p, 300);
   ok(await p.locator('.an-tile.k-caf').count() === 0, `${appearance}: Koffein aus → keine Kachel`);
 
