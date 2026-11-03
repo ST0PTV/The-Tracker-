@@ -5,7 +5,7 @@
 //
 //   node scripts/run-browser-checks.mjs [Filter] [--jobs N] [--version x.y.z]
 //     Filter      Teil des Dateinamens, z. B. v31 oder rezepte (ohne Filter: alle)
-//     --jobs N    gleichzeitige Checks (Standard: halbe Kernzahl, höchstens 4; --jobs 1 = seriell)
+//     --jobs N    gleichzeitige Checks (Standard: 4, Messversuch 2026-11-02: 5/5 stabil; 6 schneller, aber nicht stabil; --jobs 1 = seriell)
 //     --version   Version für check-tabs (Standard: js/core/version.js)
 //   Messversuch (Standard unverändert):
 //     --shared    ein gemeinsamer Chromium (launchServer); die Checks verbinden sich per TT_WS (Variante C)
@@ -17,7 +17,7 @@
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { join } from 'node:path';
-import { tmpdir, availableParallelism } from 'node:os';
+import { tmpdir } from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const argv = process.argv.slice(2);
@@ -29,7 +29,7 @@ const shared = flag('--shared');
 const jobsArg = opt('--jobs');
 const version = opt('--version');
 const filter = argv.find((a) => !a.startsWith('--')) || '';
-const jobs = Math.max(1, Number(jobsArg) || Math.min(4, Math.floor(availableParallelism() / 2)));
+const jobs = Math.max(1, Number(jobsArg) || 4);
 const TIMEOUT_MS = 600000;
 
 const BASE = process.env.TT_OUT || join(tmpdir(), 'tt-browser');
