@@ -47,7 +47,7 @@ Die App läuft unter derselben Adresse (`st0ptv.github.io`) wie Calorie-Tracker 
 
 ```
 index.html, sw.js, manifest.webmanifest
-css/app.css            Design-Tokens und Bausteine („Apple nativ“; weitere Themes später)
+css/app.css            Design-Tokens und Bausteine; Themes Apple nativ, Glas, Sand, See (je hell/dunkel)
 js/app.js              Einstieg: Router mit allen Bereichen
 js/core/               gemeinsam: store (Speicher), profile (Ziele, Körper, Ernährung), ui, sheet, icons, theme
 js/features/           Bereiche: heute, rezepte, training, ich; food/ (BLS, Portionen), journal/ (Daten, Karte, Sheets), drinks/ (Wasser, Koffein- und Alkohol-Modell), supp/ (Supplements), goal/ (Gewicht, Gewichtsziel), me/ (Schlaf & Körper), analyse/ (Trend, Energiebedarf, Mikronährstoffe, Magen-Modell, Ansichten), recipes/ (Rezeptdaten, Zutaten-Nährwerte, Auswahl, Rezeptseite, eigene Rezepte, Start)

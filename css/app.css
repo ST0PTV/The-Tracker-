@@ -1,6 +1,7 @@
 /* The Tracker – Design „Apple nativ“ (Basis: Workout-Tracker/css/glass.css v3.0.3, MIT, ST0PTV).
-   Alle Farben kommen aus den Tokens unten. Weitere Themes (z. B. Glas, warm-hell) werden später als zusätzliche
-   Token-Sätze über html[data-theme="…"] ergänzt – Komponenten-Regeln dürfen deshalb nur Tokens nutzen. */
+   Alle Farben kommen aus den Tokens unten – Komponenten-Regeln dürfen deshalb nur Tokens nutzen.
+   Zwei Schalter am <html> (core/theme.js): data-theme="light" = hell (fehlt = dunkel),
+   data-palette="glas|sand|see" = Theme (fehlt = Apple nativ). Paletten folgen nach den Grund-Tokens. */
 :root {
   color-scheme: dark;
   /* Flächen (iOS systemBackground / secondarySystemBackground / tertiary) */
@@ -107,6 +108,79 @@
   --fig3d-line: rgba(17, 20, 24, 0.16);
   --stage-bg: #F2F2F7;
 }
+
+/* ---- Themes (0.4.1). Jede Palette setzt dieselben Tokens für dunkel und hell; Kontrast prüft tests/themes.test.js
+   (Text und Tracker-Farben ≥ 4,5:1 gegen die Karte, --faint ≥ 3:1). Akzent und --fig3d-* bleiben #rrggbb (body3d.js mischt sie).
+   [data-pv] = kleine Vorschau unter „Ich → Darstellung“: dieselben Werte auf einem Element statt am <html>. */
+:root[data-palette="glas"], [data-pv="glas"] {
+  --bg: #0B0E1A; --strip: rgba(14, 18, 32, 0.72);
+  --surface: rgba(255, 255, 255, 0.075); --surface-2: rgba(255, 255, 255, 0.12); --surface-3: rgba(255, 255, 255, 0.18);
+  --sheet-bg: #151A2D; --sheet-surface: rgba(255, 255, 255, 0.08); --sheet-surface-2: rgba(255, 255, 255, 0.14);
+  --fill: rgba(255, 255, 255, 0.10); --seg-on: rgba(255, 255, 255, 0.24); --line: rgba(255, 255, 255, 0.12);
+  --text: #F4F6FF; --muted: #B3B9CF; --faint: #8D94AD; --accent: #C9D4FF; --on-accent: #0B0E1A;
+  --danger: #FF7A70; --c-supp: #A3AEC2; /* auf dem blauen Verlauf heller als in Apple nativ */
+  --bg-art: radial-gradient(120% 60% at 0% 0%, #1F2356 0%, transparent 60%), radial-gradient(90% 50% at 100% 30%, #0A2E38 0%, transparent 60%), radial-gradient(100% 60% at 50% 100%, #2A1539 0%, transparent 65%);
+  --fig-base: #3A3F5A; --fig-body: #2F3450; --fig-rest: #40466A; --fig-edge: #8088AA; --fig-gap: #0B0E1A;
+  --fig3d-base: #3A3F5A; --fig3d-rest: #454B6E; --stage-bg: #0B0E1A;
+}
+:root[data-palette="glas"][data-theme="light"], :root[data-theme="light"] [data-pv="glas"] {
+  --bg: #EEF1F8; --strip: rgba(246, 248, 253, 0.75);
+  --surface: rgba(255, 255, 255, 0.62); --surface-2: rgba(255, 255, 255, 0.80); --surface-3: rgba(255, 255, 255, 0.92);
+  --sheet-bg: #F2F4FA; --sheet-surface: rgba(255, 255, 255, 0.75); --sheet-surface-2: rgba(255, 255, 255, 0.9);
+  --fill: rgba(20, 30, 60, 0.07); --seg-on: #FFFFFF; --line: rgba(20, 30, 60, 0.10);
+  --text: #0E1222; --muted: #51586E; --faint: #6F7690; --accent: #2A3A8C; --on-accent: #FFFFFF;
+  --danger: #D70015; --c-supp: #5B6478; --c-wt: #0B6F57;
+  --bg-art: radial-gradient(120% 60% at 0% 0%, #CBD3FF 0%, transparent 60%), radial-gradient(90% 50% at 100% 30%, #BFE9EE 0%, transparent 60%), radial-gradient(100% 60% at 50% 100%, #F0D6F2 0%, transparent 65%);
+  --fig-base: #D3D8EA; --fig-body: #FFFFFF; --fig-rest: #E4E8F4; --fig-edge: #9AA2BC; --fig-gap: #FFFFFF;
+  --fig3d-base: #E6E9F4; --fig3d-rest: #D8DCEB; --stage-bg: #EEF1F8;
+}
+:root[data-palette="sand"], [data-pv="sand"] {
+  --bg: #14110E; --strip: #14110E; --surface: #211C17; --surface-2: #2E2720; --surface-3: #3B332A;
+  --sheet-bg: #211C17; --sheet-surface: #2E2720; --sheet-surface-2: #3B332A;
+  --fill: rgba(196, 170, 140, 0.16); --seg-on: #5A4E40; --line: #3A3229;
+  --text: #F6EFE6; --muted: #C2B4A3; --faint: #9C8E7E; --accent: #E9A27A; --on-accent: #1E120B;
+  /* Periode etwas ins Rosa, damit sie sich vom Terrakotta-Akzent abhebt */
+  --c-cyc: #FF8AA8; --c-e2: #F49AC8;
+  --fig-base: #403830; --fig-body: #352E27; --fig-rest: #463D33; --fig-edge: #87796A; --fig-gap: #14110E;
+  --fig3d-base: #403830; --fig3d-rest: #4B4137; --stage-bg: #14110E;
+}
+:root[data-palette="sand"][data-theme="light"], :root[data-theme="light"] [data-pv="sand"] {
+  --bg: #F3EDE3; --strip: #F3EDE3; --surface: #FFFCF7; --surface-2: #EDE5D8; --surface-3: #E0D5C4;
+  --sheet-bg: #F3EDE3; --sheet-surface: #FFFCF7; --sheet-surface-2: #EDE5D8;
+  --fill: rgba(120, 90, 50, 0.09); --seg-on: #FFFCF7; --line: #E2D7C6;
+  --text: #2A211A; --muted: #6E5F50; --faint: #8A7A69; --accent: #A4471F; --on-accent: #FFFFFF;
+  --c-cyc: #B8164F; --c-e2: #A3306E;
+  --fig-base: #DDD3C6; --fig-body: #FFFCF7; --fig-rest: #ECE4D8; --fig-edge: #A39887; --fig-gap: #FFFCF7;
+  --fig3d-base: #ECE5DA; --fig3d-rest: #DFD6C8; --stage-bg: #F3EDE3;
+}
+:root[data-palette="see"], [data-pv="see"] {
+  --bg: #0A1114; --strip: #0A1114; --surface: #121C21; --surface-2: #1B282E; --surface-3: #25353C;
+  --sheet-bg: #121C21; --sheet-surface: #1B282E; --sheet-surface-2: #25353C;
+  --fill: rgba(120, 170, 180, 0.14); --seg-on: #35505A; --line: #22323A;
+  --text: #EEF6F7; --muted: #A6BCC1; --faint: #7F979D; --accent: #5FD3C0; --on-accent: #04201B;
+  --fig-base: #33424A; --fig-body: #2A383F; --fig-rest: #38474F; --fig-edge: #7A8C93; --fig-gap: #0A1114;
+  --fig3d-base: #33424A; --fig3d-rest: #3D4D55; --stage-bg: #0A1114;
+}
+:root[data-palette="see"][data-theme="light"], :root[data-theme="light"] [data-pv="see"] {
+  --bg: #EEF4F5; --strip: #EEF4F5; --surface: #FFFFFF; --surface-2: #E1EBED; --surface-3: #CFDDE0;
+  --sheet-bg: #EEF4F5; --sheet-surface: #FFFFFF; --sheet-surface-2: #E1EBED;
+  --fill: rgba(20, 80, 90, 0.08); --seg-on: #FFFFFF; --line: #D3E0E3;
+  --text: #0B1E22; --muted: #4C6267; --faint: #6A8187; --accent: #0B6E62; --on-accent: #FFFFFF;
+  --fig-base: #CFDCE0; --fig-body: #FFFFFF; --fig-rest: #E2EBED; --fig-edge: #93A5AA; --fig-gap: #FFFFFF;
+  --fig3d-base: #E4ECEE; --fig3d-rest: #D5E1E4; --stage-bg: #EEF4F5;
+}
+/* Vorschau von Apple nativ, wenn ein anderes Theme aktiv ist (nur die Tokens, die die Vorschau nutzt) */
+[data-pv="nativ"] { --bg: #000000; --surface: #1C1C1E; --surface-2: #2C2C2E; --line: #38383A; --text: #FFFFFF; --muted: #AEAEB2; --accent: #ECEEF0; --on-accent: #111315; --bg-art: none; }
+:root[data-theme="light"] [data-pv="nativ"] { --bg: #F2F2F7; --surface: #FFFFFF; --surface-2: #E9E9EE; --line: #D8D8DC; --text: #000000; --muted: #6C6C70; --accent: #1C1F23; --on-accent: #FFFFFF; }
+/* Glas: Verlauf hinter allem, Karten und Tab-Leiste mit Unschärfe. body ist fixiert, nur #view scrollt – der Verlauf steht still. */
+:root { --bg-art: none; }
+:root[data-palette="glas"] body { background: var(--bg-art), var(--bg); }
+:root[data-palette="glas"] :is(.card, .tabbar) { -webkit-backdrop-filter: blur(22px) saturate(1.4); backdrop-filter: blur(22px) saturate(1.4); }
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-palette="glas"] { --surface: #1A1F33; --surface-2: #252B42; --surface-3: #313852; --strip: #0B0E1A; }
+  :root[data-palette="glas"][data-theme="light"] { --surface: #FFFFFF; --surface-2: #F3F5FB; --surface-3: #E6EAF4; --strip: #EEF1F8; }
+}
+
 /* Abgeleitete Tokens (gelten in beiden Erscheinungen) und alte Namen aus „Glas“, damit bestehende Regeln weiter greifen */
 :root {
   --sec: color-mix(in srgb, var(--accent) 40%, var(--fig-body));
@@ -611,6 +685,30 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .qa-tick { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; box-sizing: border-box; }
 .qa-tick.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .heute-hint { text-align: center; color: var(--muted); font-size: 14px; margin: 4px 0 16px; }
+
+/* ---------- „Ich → Darstellung“ (0.4.1): Theme-Karten mit Mini-Vorschau. Jede Karte trägt data-pv und damit die Tokens ihres Themes. ---------- */
+.look .sec { margin: 18px 4px 8px; }
+.pal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pal-card { display: flex; flex-direction: column; gap: 2px; padding: 8px 8px 12px; border-radius: 16px; text-align: left; font: inherit; cursor: pointer;
+  border: 2px solid transparent; background: var(--bg-art), var(--bg); color: var(--text); box-shadow: inset 0 0 0 1px var(--line); }
+.pal-card[aria-checked="true"] { border-color: var(--accent); box-shadow: none; }
+.pal-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pal-name { display: flex; align-items: center; gap: 6px; margin: 8px 4px 0; font-size: 16px; }
+.pal-name .icon { color: var(--accent); stroke: currentColor; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.pal-desc { margin: 0 4px; font-size: 13px; line-height: 1.3; color: var(--muted); }
+.pv { display: flex; flex-direction: column; gap: 6px; padding: 8px 6px 4px; }
+.pv-card { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 10px; background: var(--surface); }
+.pv-ring { flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: conic-gradient(var(--accent) 0 62%, var(--surface-2) 62% 100%);
+  -webkit-mask: radial-gradient(circle, transparent 9px, #000 9.5px); mask: radial-gradient(circle, transparent 9px, #000 9.5px); }
+.pv-lines { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.pv-l1, .pv-l2 { display: block; height: 6px; border-radius: 3px; background: var(--text); width: 80%; }
+.pv-l2 { background: var(--muted); opacity: 0.6; width: 60%; }
+.pv-l2.short { width: 40%; }
+.pv-row .pv-l1 { flex: 1; width: auto; }
+.pv-dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent); }
+.pv-btn { display: block; height: 18px; border-radius: 9px; background: var(--accent); margin-top: 2px; }
+.look-note { margin: 0; line-height: 1.4; }
 
 /* ---------- „Ich“: gruppierte Listen mit Icon-Plaketten (nach der Einstellungsseite des Calorie-Trackers) ---------- */
 .me .sec { margin: 18px 4px 8px; }

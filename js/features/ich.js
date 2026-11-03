@@ -6,8 +6,8 @@ import { pageHead, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import * as store from '../core/store.js';
 import { getGoals, getProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights, getSleep, currentWeight } from '../core/profile.js';
-import { getSettings, setSettings } from '../core/settings.js';
-import { applyTheme, APPEARANCES } from '../core/theme.js';
+import { getSettings } from '../core/settings.js';
+import { lookView, lookSummary } from './me/look-view.js';
 import { VERSION } from '../core/version.js';
 import { isoDate, addDays, r1 } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
@@ -49,11 +49,6 @@ function ichView(rerender) {
   const fmtKg = (v) => r1(v);
   const cy = cycleSettings(), L = lockSettings();
   const p = getProfile();
-  const appSeg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Darstellung' },
-    ...APPEARANCES.map(([key, label]) => h('button', {
-      type: 'button', role: 'radio', 'aria-checked': s.appearance === key ? 'true' : 'false',
-      onclick: () => { setSettings({ appearance: key }); applyTheme(key); rerender(); }
-    }, label)));
   return h('div', { class: 'me' },
     pageHead('Ich', 'Ziele, Tracker & Daten'),
     ...group('Ziele',
@@ -73,7 +68,7 @@ function ichView(rerender) {
       meRow({ kind: 'alc', ico: 'glass', title: 'Alkohol', href: '#/ich/alkohol', sub: A.enabled ? `an · Abbau ${String(A.beta).replace('.', ',')} ‰/h` : 'aus' }),
       meRow({ kind: 'train', ico: 'dumbbell', title: 'Training', href: '#/ich/training', sub: 'Pause, Scheiben, Geräte, Figur' })),
     ...group('App',
-      meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', right: appSeg }),
+      meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', href: '#/ich/darstellung', sub: lookSummary(s) }),
       meRow({ kind: 'app', ico: 'lock', title: 'PIN-Sperre', href: '#/ich/sperre', sub: L.on ? 'an · ganze App' : 'aus' }),
       meRow({ kind: 'app', ico: 'info', title: 'Quellen & Lizenzen', href: '#/ich/quellen', sub: 'Daten, Studien, übernommener Code' })),
     devCard(rerender),
@@ -207,4 +202,4 @@ function quellenView() {
 const oldDrinks = (rerender) => { setTimeout(() => { location.hash = '#/ich'; }, 0); return ichView(rerender); };
 export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView, '/ich/ernaehrung': prefsView,
   '/ich/wasser': waterSettingsView, '/ich/koffein': caffSettingsView, '/ich/alkohol': alcSettingsView, '/ich/getraenke': oldDrinks,
-  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView };
+  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView, '/ich/darstellung': lookView };
