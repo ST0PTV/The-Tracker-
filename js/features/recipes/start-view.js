@@ -5,6 +5,7 @@
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { pageHead } from '../../core/ui.js';
+import { backLink, sec, list, linkRow } from '../../core/setui.js';
 import { fmt } from '../../core/format.js';
 import { getGoals } from '../../core/profile.js';
 import { rs, setRs, tasteFoods, setTaste, addTasteFood, dietForm, setDietForm, allergenCodes, toggleAllergen, mainMeals,
@@ -95,15 +96,26 @@ function deficitCards(rerender) {
     h('p', { class: 'small muted page-note' }, 'Nur eintragen, was deine Ärztin oder dein Arzt festgestellt hat. Die App bevorzugt dann Rezepte mit viel davon im Verhältnis zu ihren kcal und zeigt den Schnitt im Wochenplan. Das ersetzt keine Behandlung: Wie viel du brauchst und ob du ergänzt, klärst du ärztlich. Die DGE-Werte gelten für Gesunde nach Alter und Geschlecht (unter „Schlaf & Körper“).')];
 }
 
-/** „Ich → Ernährung & Rezepte“: alle drei Bereiche auf einer Seite. */
+/** „Ich → Ernährung & Rezepte“. Abschnittstitel im Muster der Einstellungsseiten (0.4.2); der Geschmack hat eine eigene Seite. */
 export function prefsView(rerender) {
-  return h('div', { class: 'me' },
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+  const t = rs().taste;
+  const likes = Object.values(t).filter((v) => v === 'like').length, nos = Object.values(t).filter((v) => v === 'no').length;
+  return h('div', { class: 'me prefs' },
+    backLink(),
     pageHead('Ernährung & Rezepte', 'Ernährungsform, Allergene, Geschmack, Mahlzeiten und Portionen für die Rezeptvorschläge.'),
-    h('h3', { class: 'sec' }, 'Ernährung'), ...dietCards(rerender),
-    h('h3', { class: 'sec' }, 'Geschmack'), ...tasteCards(rerender),
-    h('h3', { class: 'sec' }, 'Mahlzeiten'), ...mealCards(rerender),
-    h('h3', { class: 'sec' }, 'Ärztlich festgestellter Mangel'), ...deficitCards(rerender));
+    sec('Ernährung'), ...dietCards(rerender),
+    sec('Geschmack'),
+    list(linkRow({ title: 'Lieblingsessen und No-Gos', badge: ['food', 'heart'], value: likes || nos ? `${likes} ♥ · ${nos} ✕` : 'neutral', href: '#/ich/geschmack' })),
+    sec('Mahlzeiten'), ...mealCards(rerender),
+    sec('Ärztlich festgestellter Mangel'), ...deficitCards(rerender));
+}
+
+/** „Ich → Ernährung & Rezepte → Geschmack“ */
+export function tasteView(rerender) {
+  return h('div', { class: 'me prefs' },
+    backLink('#/ich/ernaehrung', 'Ernährung'),
+    pageHead('Geschmack', 'Was öfter kommen soll und was nie.'),
+    ...tasteCards(rerender));
 }
 
 export const startRoutes = { '/rezepte/start': startView };

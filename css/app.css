@@ -740,9 +740,10 @@ a.st-row, .st-action { cursor: pointer; }
 .st-note { margin: 7px 4px 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
 .st-note a { color: var(--accent); }
 /* iOS-Schalter für die ganze App (Training hat dieselbe Form in css/training.css) */
-.sw { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 51px; height: 31px; margin: 0; border-radius: 999px;
-  background: var(--fill); cursor: pointer; transition: background 0.2s; }
-.sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF;
+/* 31 px sichtbar, 44 px Trefferfläche: Innenabstand oben/unten, Hintergrund nur im Inhalt */
+.sw { appearance: none; -webkit-appearance: none; flex: none; position: relative; box-sizing: content-box; width: 51px; height: 31px; margin: -6.5px 0; padding: 6.5px 0;
+  border-radius: 999px; background: var(--fill); background-clip: content-box; cursor: pointer; transition: background 0.2s; }
+.sw::after { content: ''; position: absolute; top: 8.5px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); transition: transform 0.2s; }
 .sw:checked { background: var(--accent); }
 .sw:checked::after { transform: translateX(20px); background: var(--on-accent); }
@@ -750,6 +751,9 @@ a.st-row, .st-action { cursor: pointer; }
 .sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
 .st-fixed { flex: none; color: var(--faint); font-size: 15px; }
+/* Ernährung & Rezepte: geteilte Karten (auch im Rezept-Start) bekommen hier die Abschnittstitel der Einstellungsseiten */
+.prefs .sec { margin: 22px 4px 7px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.st-save { margin-top: 20px; }
 /* Freier Inhalt in einer Liste (Chips, kleine Formulare) */
 .st-pad { padding: 12px 14px; }
 .st-pad + .st-row, .st-row + .st-pad { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }

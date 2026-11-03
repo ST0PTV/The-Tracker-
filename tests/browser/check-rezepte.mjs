@@ -131,7 +131,11 @@ for (const appearance of ['dark', 'light']) {
   await p.goto(srv.url + '/index.html#/ich'); await settle(p, 250);
   ok((await text()).includes('Ernährung & Rezepte') && (await text()).includes('Vegetarisch'), `${appearance}: Ich zeigt Ernährung & Rezepte`);
   await p.click('a[href="#/ich/ernaehrung"]'); await settle(p, 300);
-  ok(await p.locator('.taste-row').count() > 10 && await p.locator('.seg[aria-label="Ernährungsform"]').count() === 1, `${appearance}: Einstellungen auf einer Seite`);
+  // 0.4.2: Geschmack hat eine eigene Seite unter „Ernährung & Rezepte“
+  ok(await p.locator('.seg[aria-label="Ernährungsform"]').count() === 1 && await p.locator('a[href="#/ich/geschmack"]').count() === 1, `${appearance}: Ernährung mit Link zum Geschmack`);
+  await p.click('a[href="#/ich/geschmack"]'); await settle(p, 300);
+  ok(await p.locator('.taste-row').count() > 10, `${appearance}: Geschmack-Seite mit Liste`);
+  await p.goBack(); await settle(p, 300);
   await shot('5-ich');
 
   const keys = await p.evaluate(() => ({ all: Object.keys(localStorage), rb: localStorage.getItem('rezeptbuch-v1'), ct: localStorage.getItem('ct.v1') }));

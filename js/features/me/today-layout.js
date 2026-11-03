@@ -54,6 +54,8 @@ export function todaySummary() {
 }
 
 let editing = false;
+// Beim Verlassen der Seite endet der Reihenfolge-Modus (sonst steht er beim nächsten Öffnen noch an)
+if (typeof window !== 'undefined') window.addEventListener('hashchange', () => { if (!location.hash.startsWith('#/ich/heute')) editing = false; });
 
 export function todayLayoutView(rerender) {
   const order = todayOrder();

@@ -8,7 +8,7 @@ const srv = await startServer();
 const b = await launch();
 const { ok, done } = checker();
 const out = outDir('abstaende');
-const ROUTES = ['#/ich', '#/ich/ziel', '#/ich/gewichtsziel', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/quellen', '#/', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen', '#/rezepte', '#/rezepte/rezept?id=linsen-bolognese', '#/rezepte/neu', '#/rezepte/start', '#/rezepte/start?s=2', '#/rezepte/start?s=3', '#/ich/ernaehrung', '#/zyklus', '#/zyklus/tag', '#/zyklus/verlauf', '#/zyklus/wissen', '#/zyklus/bericht', '#/ich/zyklus', '#/ich/sperre', '#/rezepte/woche'];
+const ROUTES = ['#/ich', '#/ich/heute', '#/ich/geschmack', '#/ich/darstellung', '#/ich/zyklus', '#/ich/training', '#/ich/ziel', '#/ich/gewichtsziel', '#/ich/koerper', '#/ich/wasser', '#/ich/koffein', '#/ich/alkohol', '#/ich/supplements', '#/ich/quellen', '#/', '#/analyse', '#/analyse/mikro', '#/analyse/monat', '#/analyse/jahr', '#/analyse/magen', '#/rezepte', '#/rezepte/rezept?id=linsen-bolognese', '#/rezepte/neu', '#/rezepte/start', '#/rezepte/start?s=2', '#/rezepte/start?s=3', '#/ich/ernaehrung', '#/zyklus', '#/zyklus/tag', '#/zyklus/verlauf', '#/zyklus/wissen', '#/zyklus/bericht', '#/ich/zyklus', '#/ich/sperre', '#/rezepte/woche'];
 
 for (const appearance of ['dark', 'light']) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, serviceWorkers: 'block' });

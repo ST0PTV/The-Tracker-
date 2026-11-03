@@ -3,6 +3,7 @@
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { pageHead, toast } from '../../core/ui.js';
+import { backLink, sec, list, note } from '../../core/setui.js';
 import * as store from '../../core/store.js';
 import { lockSettings, unlock, setPin, clearPin, forgetPin, validPin, isDecoy } from '../../core/lock.js';
 
@@ -57,20 +58,20 @@ export function lockSettingsView(rerender) {
     return h('div', { class: 'lock-field' }, a, b, h('button', { class: 'btn primary block', type: 'button', onclick: save }, 'Speichern'));
   };
   return h('div', {},
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+    backLink(),
     pageHead('PIN-Sperre', 'Sperrt die ganze App beim Verlassen. Ohne PIN siehst du nur den Sperrbildschirm.'),
     decoy ? h('p', { class: 'hint small' }, 'Mit der Schein-PIN lassen sich die Einstellungen nicht ändern.') : null,
-    h('h3', { class: 'sec' }, 'PIN'),
-    h('section', { class: 'card' },
+    sec('PIN'),
+    list(h('div', { class: 'st-pad' },
       L.on && editing !== 'pin'
         ? h('div', { class: 'btn-row' }, h('button', { class: 'btn', type: 'button', disabled: decoy || undefined, onclick: () => { editing = 'pin'; rerender(); } }, 'PIN ändern'),
           h('button', { class: 'btn danger', type: 'button', disabled: decoy || undefined, onclick: () => { try { clearPin('pin'); toast('PIN-Sperre aus'); rerender(); } catch (e) { toast(e.message, { error: true }); } } }, 'Ausschalten'))
-        : field('pin', L.on ? 'Neue PIN, 4 bis 8 Ziffern' : 'PIN, 4 bis 8 Ziffern')),
-    L.on ? [h('h3', { class: 'sec' }, 'Schein-PIN'),
-      h('section', { class: 'card' },
+        : field('pin', L.on ? 'Neue PIN, 4 bis 8 Ziffern' : 'PIN, 4 bis 8 Ziffern'))),
+    L.on ? [sec('Schein-PIN'),
+      list(h('div', { class: 'st-pad' },
         h('p', { class: 'small muted' }, 'Eine zweite PIN öffnet die App mit einem leeren Zyklus-Kalender. Was du dort einträgst, bleibt getrennt. Alles andere ist mit der Schein-PIN sichtbar.'),
         L.decoyOn && editing !== 'decoy'
           ? h('div', { class: 'btn-row' }, h('button', { class: 'btn danger', type: 'button', disabled: decoy || undefined, onclick: () => { try { clearPin('decoy'); toast('Schein-PIN aus'); rerender(); } catch (e) { toast(e.message, { error: true }); } } }, 'Ausschalten'))
-          : field('decoy', 'Schein-PIN, anders als die PIN'))] : null,
-    h('p', { class: 'small muted page-note' }, 'Die PIN schützt nur den Bildschirm. Wer das Handy entsperrt hat und sich auskennt, kommt an den Browser-Speicher, und die Backup-Datei ist nicht verschlüsselt.'));
+          : field('decoy', 'Schein-PIN, anders als die PIN')))] : null,
+    note('Die PIN schützt nur den Bildschirm. Wer das Handy entsperrt hat und sich auskennt, kommt an den Browser-Speicher, und die Backup-Datei ist nicht verschlüsselt.'));
 }

@@ -4,6 +4,7 @@
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { toast, pageHead } from '../../core/ui.js';
+import { backLink, sec, list, note, row, switchRow, actionRow } from '../../core/setui.js';
 import { openInfo, infoBtn } from '../../core/info.js';
 import { num, r1, fmt, isoDate, addDays } from '../../core/format.js';
 import { getProfile, setProfile, getGoals, currentWeight, getWeightGoal, setWeightGoal, logWeight, weightLog, kcalFloor } from '../../core/profile.js';
@@ -33,12 +34,8 @@ const palInfo = () => openInfo({
   src: [['DGE', null]]
 });
 
-function check(label, on, set) {
-  const inp = h('input', { type: 'checkbox', 'aria-label': label });
-  inp.checked = !!on;
-  inp.addEventListener('change', () => set(inp.checked));
-  return h('label', { class: 'check-row' }, inp, h('span', {}, label));
-}
+// Sport-Zuschlag: Teil des Rechners (Entwurf), darum Schalter ohne Speichern
+const check = (title, on, set) => switchRow({ title, on, set });
 const field = (label, input, extra = null) => h('label', { class: 'form-label' }, h('span', {}, label, extra), input);
 
 export function wgoalView(rerender) {
@@ -167,21 +164,20 @@ export function wgoalView(rerender) {
   drawSrc(); draw();
   const floor = kcalFloor(getProfile().sex);
   return h('div', {},
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+    backLink(),
     pageHead('Gewichtsziel', 'Rechnet das Kalorienziel aus Zielgewicht und Tempo. Gilt ab heute.'),
-    o.on ? h('section', { class: 'card' },
-      h('div', { class: 'kv' }, h('span', {}, 'Aktiv'), h('b', {}, `${r1(o.target)} kg · voraussichtlich ${o.date ? wgDateFmt(o.date) : '–'}`)),
-      check('Bei neuem Gewicht automatisch anpassen', o.auto, (v) => setWeightGoal({ auto: v })),
-      h('button', { class: 'btn block', type: 'button', onclick: () => { setWeightGoal({ on: false }); toast('Gewichtsziel aus. Das Kalorienziel bleibt, bis du es änderst.'); rerender(); } }, 'Gewichtsziel ausschalten')) : null,
-    h('section', { class: 'card' },
-      h('div', { class: 'card-head' }, h('h2', {}, '1 · Dein Tagesbedarf'), infoBtn('Tagesbedarf', srcInfo)),
-      srcSeg, srcBox, maintOut),
-    h('section', { class: 'card' },
-      h('div', { class: 'card-head' }, h('h2', {}, '2 · Zielgewicht'), infoBtn('Gewichtsziel', wgInfo)),
+    o.on ? [sec('Aktiv'),
+      list(row({ title: `${r1(o.target)} kg`, sub: `voraussichtlich ${o.date ? wgDateFmt(o.date) : '–'}` }),
+        switchRow({ title: 'Bei neuem Gewicht automatisch anpassen', on: o.auto, set: (v) => setWeightGoal({ auto: v }) }),
+        actionRow({ title: 'Gewichtsziel ausschalten', danger: true, onClick: () => { setWeightGoal({ on: false }); toast('Gewichtsziel aus. Das Kalorienziel bleibt, bis du es änderst.'); rerender(); } }))] : null,
+    sec('1 · Dein Tagesbedarf', ['Tagesbedarf', srcInfo]),
+    list(h('div', { class: 'st-pad' }, srcSeg, srcBox, maintOut)),
+    sec('2 · Zielgewicht', ['Gewichtsziel', wgInfo]),
+    list(h('div', { class: 'st-pad' },
       h('p', { class: 'small muted' }, w ? `Aktuell ${r1(w)} kg · ` : '', h('button', { class: 'link', type: 'button', onclick: () => openWeight(today) }, 'Gewicht eintragen')),
-      field('Zielgewicht (kg)', targetIn), planBox),
-    h('button', { class: 'btn primary block', type: 'button', onclick: apply }, o.on ? 'Neu berechnen und übernehmen' : 'Als Kalorienziel übernehmen'),
-    h('section', { class: 'card' },
-      check('Gewichtskarte unter „Heute“ anzeigen', o.card, (v) => setWeightGoal({ card: v })),
-      h('p', { class: 'small muted' }, `Untergrenze ohne fachliche Begleitung: ${fmt(floor)} kcal pro Tag. Die App rechnet nie darunter.`)));
+      field('Zielgewicht (kg)', targetIn), planBox)),
+    h('button', { class: 'btn primary block st-save', type: 'button', onclick: apply }, o.on ? 'Neu berechnen und übernehmen' : 'Als Kalorienziel übernehmen'),
+    sec('Heute'),
+    list(switchRow({ title: 'Gewichtskarte unter „Heute“', on: o.card, set: (v) => setWeightGoal({ card: v }) })),
+    note(`Untergrenze ohne fachliche Begleitung: ${fmt(floor)} kcal pro Tag. Die App rechnet nie darunter.`));
 }

@@ -16,6 +16,7 @@ import { openSheet } from './sheet.js';
 import { infoBody, cardHead } from './info.js';
 import { openGlossary } from './glossary.js';
 import { pageHead } from '../../core/ui.js';
+import { backLink, sec, list, row, switchRow, segRow, actionRow } from '../../core/setui.js';
 
 const save = (patch) => {
   if (store.set('settings', { ...store.get('settings'), ...patch })) return true;
@@ -23,61 +24,47 @@ const save = (patch) => {
   return false;
 };
 
-function onOff(label, key, rerender) {
-  const cur = store.get('settings')[key] !== false;
-  return h('label', { class: 'set-line' }, h('span', { class: 'set-label' }, label),
-    switchInput(label, cur, (v) => { save({ [key]: v }); rerender(); }));
-}
 
 const cardInfo = (title, short, details = []) => () =>
   openSheet(infoBody({ short, details: details.map((t) => h('p', { class: 'muted small' }, t)) }), { title });
 
 export function trainingSettingsView(rerender) {
   const settings = store.get('settings');
-  const labeled = (label, el) => h('div', { class: 'set-line' }, h('span', { class: 'set-label' }, label), el);
+  // 0.4.2: im Muster der Einstellungsseiten (core/setui.js); Stepper aus dem Workout-Tracker bleiben
+  const sw = (title, key, sub = '') => switchRow({ title, sub, on: settings[key] !== false, set: (v) => { save({ [key]: v }); rerender(); } });
   return h('div', {},
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+    backLink(),
     pageHead('Training', 'Pause, Scheiben, Geräte und Anzeige.'),
-    h('div', { class: 'card' },
-      cardHead('Training', cardInfo('Training', [
-        'Pause: gilt für Übungen ohne eigene Pause. Der Timer läuft ohne Ton und ohne Alarm.',
-        'Bildschirm anlassen: nur während eines Trainings, kostet etwas Akku.',
-        'Scheiben: bei Langhantel-Übungen; die Stange ist pro Übung im Editor änderbar. Eingetragen wird das Gesamtgewicht.'
-      ])),
-      labeled('Pause', stepper({
+    sec('Training', ['Training', cardInfo('Training', [
+      'Pause: gilt für Übungen ohne eigene Pause. Der Timer läuft ohne Ton und ohne Alarm.',
+      'Bildschirm anlassen: nur während eines Trainings, kostet etwas Akku.',
+      'Scheiben: bei Langhantel-Übungen; die Stange ist pro Übung im Editor änderbar. Eingetragen wird das Gesamtgewicht.'
+    ])]),
+    list(row({ title: 'Pause', right: stepper({
         value: settings.restSeconds,
         format: formatDuration,
         label: 'Standard-Pause',
         onStep: (v, d) => { const next = stepRest(v, d); return save({ restSeconds: next }) ? next : null; }
-      })),
-      onOff('Karte auf „Heute“', 'todayCard', rerender),
-      onOff('Bildschirm anlassen', 'keepAwake', rerender),
-      wakeLockSupported() ? null : h('p', { class: 'muted small' }, 'Auf diesem Gerät ohne Wirkung.'),
-      onOff('Scheiben pro Seite', 'plateMath', rerender),
-      settings.plateMath !== false ? labeled('Stange', stepper({
+      }) }),
+      sw('Karte auf „Heute“', 'todayCard'),
+      sw('Bildschirm anlassen', 'keepAwake', wakeLockSupported() ? 'nur während eines Trainings' : 'auf diesem Gerät ohne Wirkung'),
+      sw('Scheiben pro Seite', 'plateMath'),
+      settings.plateMath !== false ? row({ title: 'Stange', right: stepper({
         value: settings.barKg ?? 20,
         format: (v) => `${fmtNum(v)} kg`,
         label: 'Standard-Stange',
         onStep: (v, d) => { const next = Math.max(BAR_KG_MIN, Math.min(BAR_KG_MAX, v + d * 2.5)); return save({ barKg: next }) ? next : null; }
-      })) : null),
-    h('div', { class: 'card' },
-      cardHead('Mein Equipment', cardInfo('Mein Equipment', [
-        'Grenzt den Startpool auf passende Übungen ein.',
-        'Körpergewicht ohne Zubehör ist immer dabei.',
-        'Bereits übernommene Übungen bleiben unverändert.'
-      ])),
-      gearPicker()),
-    h('div', { class: 'card' },
-      cardHead('Anzeige'),
-      h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Figur' },
-        [['auto', 'Wie Profil'], ['male', 'Männlich'], ['female', 'Weiblich']].map(([k, label]) => {
-          const on = settings.figureChoice === k;
-          return h('button', { type: 'button', role: 'radio', class: on ? 'on' : '', 'aria-checked': String(on), onclick: () => {
-            if (on) return;
-            if (save({ figureChoice: k })) rerender();
-          } }, label);
-        })),
-      settings.figureChoice === 'auto' ? h('p', { class: 'muted small' }, `Figur: ${settings.figure === 'female' ? 'weiblich' : 'männlich'} – aus „Schlaf & Körper“.`) : null,
-      onOff('Hinweise anzeigen', 'hints', rerender),
-      h('div', { class: 'btn-row' }, h('button', { class: 'btn', type: 'button', onclick: openGlossary }, 'Begriffe'))));
+      }) }) : null),
+    sec('Mein Equipment', ['Mein Equipment', cardInfo('Mein Equipment', [
+      'Grenzt den Startpool auf passende Übungen ein.',
+      'Körpergewicht ohne Zubehör ist immer dabei.',
+      'Bereits übernommene Übungen bleiben unverändert.'
+    ])]),
+    list(h('div', { class: 'st-pad' }, gearPicker())),
+    sec('Anzeige'),
+    list(segRow({ title: 'Figur', aria: 'Figur', options: [['auto', 'Wie Profil'], ['male', 'Männlich'], ['female', 'Weiblich']], value: settings.figureChoice,
+        sub: settings.figureChoice === 'auto' ? `${settings.figure === 'female' ? 'weiblich' : 'männlich'} – aus „Schlaf & Körper“` : '',
+        set: (k) => { if (save({ figureChoice: k })) rerender(); } }),
+      sw('Hinweise anzeigen', 'hints'),
+      actionRow({ title: 'Begriffe', onClick: openGlossary })));
 }

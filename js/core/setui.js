@@ -46,14 +46,17 @@ export function switchRow({ title, sub = '', badge = null, on, set, disabled = f
   return h('label', { class: 'st-row' }, ...label(title, sub, badge), inp);
 }
 
-/** Zahl mit Einheit, rechtsbündig eintippbar. Speichert bei Änderung, wenn der Wert im Bereich liegt; sonst Hinweis und alter Wert. */
-export function numRow({ title, sub = '', value, lo, hi, unit, dec = false, set, placeholder = '' }) {
+/** Zahl mit Einheit, rechtsbündig eintippbar. Speichert bei Änderung, wenn der Wert im Bereich liegt; sonst Hinweis und alter Wert.
+ *  empty: leeres Feld ist erlaubt und speichert null; label: aria-label (Standard: Name). */
+export function numRow({ title, sub = '', value, lo, hi, unit, dec = false, set, placeholder = '', empty = false, label: aria = title }) {
   const dp = dec === true ? 1 : dec || 0;
   const show = (v) => (v == null || v === '' ? '' : dp ? v.toLocaleString('de-DE', { maximumFractionDigits: dp, useGrouping: false }) : String(Math.round(v)));
-  const inp = h('input', { class: 'st-in', type: 'text', inputmode: dp ? 'decimal' : 'numeric', value: show(value), placeholder, 'aria-label': title });
+  const inp = h('input', { class: 'st-in', type: 'text', inputmode: dp ? 'decimal' : 'numeric', value: show(value), placeholder, 'aria-label': aria });
   inp.addEventListener('change', () => {
+    if (empty && !inp.value.trim()) { value = null; set(null); return; }
     const v = num(inp.value);
     if (v == null || v < lo || v > hi) { toast(`Bitte einen Wert zwischen ${show(lo)} und ${show(hi)} ${unit} eingeben.`, { error: true }); inp.value = show(value); return; }
+    if (value != null && Math.round(v * 10 ** dp) === Math.round(value * 10 ** dp)) return; // unverändert
     value = Math.round(v * 10 ** dp) / 10 ** dp;
     inp.value = show(value);
     set(value);
@@ -62,8 +65,8 @@ export function numRow({ title, sub = '', value, lo, hi, unit, dec = false, set,
 }
 
 /** Uhrzeit rechtsbündig (input type=time). */
-export function timeRow({ title, sub = '', value, set }) {
-  const inp = h('input', { class: 'st-in st-time', type: 'time', value, 'aria-label': title });
+export function timeRow({ title, sub = '', value, set, label: aria = title }) {
+  const inp = h('input', { class: 'st-in st-time', type: 'time', value, 'aria-label': aria });
   inp.addEventListener('change', () => { if (inp.value) set(inp.value); });
   return h('label', { class: 'st-row' }, ...label(title, sub, null), h('span', { class: 'st-val' }, inp));
 }

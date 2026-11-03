@@ -34,7 +34,7 @@ for (const appearance of ['dark', 'light']) {
   ok(await p.locator('.cy-card').count() === 0, `${appearance}: ohne „Regel = Ja“ keine Zyklus-Karte`);
   await nav('#/ich/koerper');
   await p.click('.seg[aria-label="Hast du deine Regel?"] button:has-text("Ja")');
-  await p.click('button:has-text("Speichern")'); await settle(p, 300);
+  await settle(p, 300); // 0.4.2: speichert sofort, kein „Speichern“ mehr
   ok((await p.evaluate(() => JSON.parse(localStorage.getItem('tt_profile')).cycle)) === 'yes', `${appearance}: Regel-Frage gespeichert (tt_profile.cycle)`);
   await nav('#/');
   ok(await p.locator('.cy-card.cy-empty').count() === 1, `${appearance}: leere Zyklus-Karte auf „Heute“`);

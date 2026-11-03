@@ -2,6 +2,7 @@
 // Die Vorschau nutzt dieselben Tokens wie die App: data-pv am Element (css/app.css, Abschnitt Themes).
 import { h } from '../../core/util.js';
 import { pageHead } from '../../core/ui.js';
+import { backLink, sec, list } from '../../core/setui.js';
 import { icon } from '../../core/icons.js';
 import { getSettings, setSettings } from '../../core/settings.js';
 import { applyTheme, PALETTES, APPEARANCES, paletteOf, appearanceOf } from '../../core/theme.js';
@@ -28,9 +29,9 @@ export function lookView(rerender) {
   const pal = paletteOf(s), app = appearanceOf(s);
   const set = (patch) => { setSettings(patch); applyTheme(getSettings()); rerender(); };
   return h('div', { class: 'look' },
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+    backLink(),
     pageHead('Darstellung', 'Theme und Helligkeit gelten für die ganze App.'),
-    h('h3', { class: 'sec' }, 'Theme'),
+    sec('Theme'),
     h('div', { class: 'pal-grid', role: 'radiogroup', 'aria-label': 'Theme' },
       ...PALETTES.map(([key, label, desc]) => h('button', {
         type: 'button', class: 'pal-card', role: 'radio', 'data-pv': key, 'aria-checked': key === pal ? 'true' : 'false',
@@ -38,8 +39,8 @@ export function lookView(rerender) {
       }, preview(),
       h('span', { class: 'pal-name' }, h('b', {}, label), key === pal ? icon('check', { size: 16 }) : null),
       h('small', { class: 'pal-desc' }, desc)))),
-    h('h3', { class: 'sec' }, 'Erscheinung'),
-    h('section', { class: 'card' },
+    sec('Erscheinung'),
+    list(h('div', { class: 'st-pad' },
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Erscheinung' },
         ...APPEARANCES.map(([key, label]) => h('button', {
           type: 'button', role: 'radio', 'aria-checked': key === app ? 'true' : 'false',
@@ -47,6 +48,6 @@ export function lookView(rerender) {
         }, label))),
       h('p', { class: 'small muted look-note' }, app === 'system'
         ? 'Folgt der Einstellung des Geräts und wechselt mit ihr, z. B. abends auf Dunkel.'
-        : 'Bei „System“ folgt die App der Einstellung des Geräts.')),
+        : 'Bei „System“ folgt die App der Einstellung des Geräts.'))),
     pal === 'glas' ? h('p', { class: 'small muted page-note' }, 'Glas legt Karten mit Unschärfe über einen Farbverlauf. Ist auf dem iPhone „Transparenz reduzieren“ an, werden die Karten deckend.') : null);
 }

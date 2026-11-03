@@ -122,7 +122,7 @@ ok(t.includes('Hinweise anzeigen') && t.includes('Begriffe') && !t.includes('Pro
 ok(await words() < 100, `E: wenig Text (${await words()} Wörter)`);
 await shot('8-settings');
 await p.keyboard.press('Escape'); await settle(p, 200);
-await p.locator('.set-line', { hasText: 'Hinweise anzeigen' }).locator('input.switch').uncheck(); // v3.0.0: iOS-Schalter await settle(p, 300);
+await p.locator('input[aria-label="Hinweise anzeigen"]').uncheck(); // The Tracker: Schalter im Muster der Einstellungsseiten (0.4.2) await settle(p, 300);
 await go('#/training/fortschritt');
 ok(await p.locator('.hint-line').count() === 0, 'E: Hinweise aus → keine Hinweiszeilen');
 await go('#/training');

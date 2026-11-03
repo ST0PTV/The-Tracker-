@@ -28,7 +28,7 @@ for (const appearance of ['dark', 'light']) {
   // Gewicht 70 kg unter „Schlaf & Körper“, dann Ziel 2000 kcal, Ausgewogen; Untergrenzen-Hinweis bei 1100
   await p.goto(srv.url + '/index.html#/ich/koerper'); await settle(p, 200);
   await p.fill('input[aria-label="Körpergewicht"]', '70');
-  await p.click('button:has-text("Speichern")'); await settle(p, 200);
+  await p.press('input[aria-label="Körpergewicht"]', 'Tab'); await settle(p, 200); // 0.4.2: speichert beim Verlassen des Felds
   await p.goto(srv.url + '/index.html#/ich/ziel'); await settle(p, 200);
   await p.fill('input[aria-label="Kalorienziel"]', '1100');
   ok(await p.locator('.warn').isVisible(), `${appearance}: Hinweis unter der Untergrenze sichtbar`);

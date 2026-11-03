@@ -8,6 +8,7 @@ import * as store from '../core/store.js';
 import { getGoals, getProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights, getSleep, currentWeight } from '../core/profile.js';
 import { getSettings } from '../core/settings.js';
 import { lookView, lookSummary } from './me/look-view.js';
+import { backLink, sec, list, note } from '../core/setui.js';
 import { todayLayoutView, todaySummary } from './me/today-layout.js';
 import { VERSION } from '../core/version.js';
 import { isoDate, addDays, r1 } from '../core/format.js';
@@ -18,7 +19,7 @@ import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS, alcSettings } from './dri
 import { wgoalView } from './goal/wgoal-view.js';
 import { WG_REFS, wgDateFmt } from './goal/weightgoal.js';
 import { bodyView } from './me/body-view.js';
-import { prefsView } from './recipes/start-view.js';
+import { prefsView, tasteView } from './recipes/start-view.js';
 import { dietForm, allergenCodes, rs as recipeSettings } from './recipes/recipes.js';
 import { loadDemoWater, removeDemoWater, waterSettings } from './drinks/water.js';
 import { loadDemoCaffeine, removeDemoCaffeine, CAFF_REFS, caffSettings } from './drinks/caffeine.js';
@@ -118,9 +119,9 @@ function zielView() {
   let preset = g.preset && PRESETS[g.preset] ? g.preset : 'dge';
   const floor = kcalFloor(p.sex);
   const floorNote = h('p', { class: 'warn small', hidden: true });
-  const kcalIn = h('input', { class: 'input', type: 'text', inputmode: 'numeric', value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
+  const kcalIn = h('input', { class: 'st-in', type: 'text', inputmode: 'numeric', value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
   const preview = h('div', { class: 'stats' });
-  const note = h('p', { class: 'muted small' });
+  const macroNote = h('p', { class: 'st-note' });
   const seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Makro-Verteilung' });
 
   const num = (el) => { const v = parseFloat(String(el.value).replace(',', '.')); return Number.isFinite(v) ? v : null; };
@@ -136,7 +137,7 @@ function zielView() {
     const stat = (label, v) => h('div', { class: 'stat' }, h('b', {}, v == null ? '–' : `${fmt(v)} g`), h('span', {}, label));
     preview.replaceChildren(stat('Eiweiß', m?.protein), stat('Kohlenhydrate', m?.carbs), stat('Fett', m?.fat));
     const fc = m ? fatCheck(preset, m.fatPct) : null;
-    note.textContent = !w
+    macroNote.textContent = !w
       ? 'Für die Makros braucht die App dein Gewicht (unter „Schlaf & Körper“).'
       : !m ? 'Kalorienziel eintragen, dann rechne ich die Makros.'
         : `Fett ${m.fatPct} % der Energie${fc === 0 ? ' – im empfohlenen Bereich.' : fc === 1 ? ' – über dem empfohlenen Bereich.' : fc === -1 ? ' – unter dem empfohlenen Bereich.' : '.'}`;
@@ -152,20 +153,23 @@ function zielView() {
     location.hash = '#/ich';
   };
 
+  // Formular: legt ein Ziel ab heute an, darum mit „Speichern“ (siehe core/setui.js)
   return h('div', {},
-    h('a', { class: 'back', href: '#/ich' }, icon('chevron', { size: 16, cls: 'flip' }), 'Ich'),
+    backLink(),
     pageHead('Tagesziel', 'Gilt ab heute. Rezepte und Wochenplan rechnen mit diesem Ziel.'),
     getWeightGoal().on
-      ? h('section', { class: 'card' }, h('p', { class: 'small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen')))
+      ? h('p', { class: 'hint small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen'))
       : null,
-    h('section', { class: 'card' },
-      h('label', { class: 'form-label' }, h('span', {}, 'Kalorien pro Tag'), kcalIn),
-      floorNote,
-      h('span', { class: 'label' }, 'Makro-Verteilung'), seg, preview, note),
-    h('p', { class: 'small muted page-note' }, `Gewicht ${w != null ? `${r1(w)} kg` : 'fehlt'} · ${p.sex === 'm' ? 'Mann' : p.sex === 'f' ? 'Frau' : 'ohne Geschlecht'} – `,
-      h('a', { class: 'link', href: '#/ich/koerper' }, 'unter „Schlaf & Körper“ ändern'),
-      getWeightGoal().on ? null : h('span', {}, ' · Kalorienziel lieber aus Zielgewicht und Tempo rechnen? '), getWeightGoal().on ? null : h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel')),
-    h('button', { class: 'btn primary block', type: 'button', onclick: save }, 'Speichern'));
+    sec('Kalorien'),
+    list(h('label', { class: 'st-row' }, h('span', { class: 't' }, h('b', {}, 'Kalorien pro Tag')), h('span', { class: 'st-val' }, kcalIn, h('span', { class: 'st-unit' }, 'kcal')))),
+    floorNote,
+    sec('Makro-Verteilung'),
+    list(h('div', { class: 'st-pad' }, seg, preview)),
+    macroNote,
+    note(`Gewicht ${w != null ? `${r1(w)} kg` : 'fehlt'} · ${p.sex === 'm' ? 'Mann' : p.sex === 'f' ? 'Frau' : 'ohne Geschlecht'} – `,
+      h('a', { href: '#/ich/koerper' }, 'unter „Schlaf & Körper“ ändern'),
+      getWeightGoal().on ? null : ' · Kalorienziel lieber aus Zielgewicht und Tempo rechnen? ', getWeightGoal().on ? null : h('a', { href: '#/ich/gewichtsziel' }, 'Gewichtsziel')),
+    h('button', { class: 'btn primary block st-save', type: 'button', onclick: save }, 'Speichern'));
 }
 
 // Quellen und Lizenzen aller übernommenen Teile. Wird mit jeder Phase ergänzt.
@@ -205,4 +209,4 @@ function quellenView() {
 const oldDrinks = (rerender) => { setTimeout(() => { location.hash = '#/ich'; }, 0); return ichView(rerender); };
 export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView, '/ich/ernaehrung': prefsView,
   '/ich/wasser': waterSettingsView, '/ich/koffein': caffSettingsView, '/ich/alkohol': alcSettingsView, '/ich/getraenke': oldDrinks,
-  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView, '/ich/darstellung': lookView, '/ich/heute': todayLayoutView };
+  '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView, '/ich/darstellung': lookView, '/ich/heute': todayLayoutView, '/ich/geschmack': tasteView };

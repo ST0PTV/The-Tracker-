@@ -43,7 +43,7 @@ for (const appearance of ['dark', 'light']) {
   ok(p.url().endsWith('#/training'), `${appearance}: „Fortsetzen“ öffnet das Training`);
   await p.evaluate(async () => (await import('./js/features/training/session.js')).discard());
   await p.goto(srv.url + '/index.html#/ich/training'); await settle(p, 800);
-  await p.locator('label.set-line', { hasText: 'Karte auf „Heute“' }).locator('input').click(); await settle(p, 300);
+  await p.locator('input[aria-label="Karte auf „Heute“"]').click(); await settle(p, 300);
   await p.goto(srv.url + '/index.html#/'); await settle(p, 500);
   ok(await p.locator('.tt-today').count() === 0, `${appearance}: Karte abschaltbar`);
   ok(errs.length === 0, `${appearance}: keine Konsolenfehler${errs.length ? ' – ' + errs.slice(0, 3).join(' | ') : ''}`);
