@@ -14,17 +14,17 @@ export function backLink(href = '#/ich', label = 'Ich') {
 
 /** Abschnittstitel; mit info = [Titel, onClick] steht rechts ein ⓘ. */
 export function sec(title, info = null) {
-  return h('h3', { class: 'st-sec' }, h('span', {}, title), info ? infoBtn(info[0], info[1]) : null);
+  return h('h3', { class: 'cfg-sec' }, h('span', {}, title), info ? infoBtn(info[0], info[1]) : null);
 }
 
 /** Liste mit Zeilen (leere Einträge fallen weg). */
 export function list(...rows) {
-  return h('div', { class: 'st-list' }, ...rows.flat().filter(Boolean));
+  return h('div', { class: 'cfg-list' }, ...rows.flat().filter(Boolean));
 }
 
 /** Graue Fußnote unter einer Liste. */
 export function note(...children) {
-  return h('p', { class: 'st-note' }, ...children);
+  return h('p', { class: 'cfg-note' }, ...children);
 }
 
 // Linke Seite einer Zeile: optional Plakette, Name, Untertitel
@@ -35,15 +35,15 @@ function label(title, sub, badge) {
 
 /** Freie Zeile: Name links, beliebiges Element rechts. */
 export function row({ title, sub = '', badge = null, right = null, cls = '' }) {
-  return h('div', { class: `st-row ${cls}`.trim() }, ...label(title, sub, badge), right);
+  return h('div', { class: `cfg-row ${cls}`.trim() }, ...label(title, sub, badge), right);
 }
 
 /** Schalter (iOS-Stil). Die ganze Zeile ist antippbar. */
 export function switchRow({ title, sub = '', badge = null, on, set, disabled = false }) {
-  const inp = h('input', { type: 'checkbox', role: 'switch', class: 'sw', 'aria-label': title, disabled: disabled || undefined });
+  const inp = h('input', { type: 'checkbox', role: 'switch', class: 'cfg-sw', 'aria-label': title, disabled: disabled || undefined });
   inp.checked = !!on;
   inp.addEventListener('change', () => set(inp.checked));
-  return h('label', { class: 'st-row' }, ...label(title, sub, badge), inp);
+  return h('label', { class: 'cfg-row' }, ...label(title, sub, badge), inp);
 }
 
 /** Zahl mit Einheit, rechtsbündig eintippbar. Speichert bei Änderung, wenn der Wert im Bereich liegt; sonst Hinweis und alter Wert.
@@ -51,7 +51,7 @@ export function switchRow({ title, sub = '', badge = null, on, set, disabled = f
 export function numRow({ title, sub = '', value, lo, hi, unit, dec = false, set, placeholder = '', empty = false, label: aria = title }) {
   const dp = dec === true ? 1 : dec || 0;
   const show = (v) => (v == null || v === '' ? '' : dp ? v.toLocaleString('de-DE', { maximumFractionDigits: dp, useGrouping: false }) : String(Math.round(v)));
-  const inp = h('input', { class: 'st-in', type: 'text', inputmode: dp ? 'decimal' : 'numeric', value: show(value), placeholder, 'aria-label': aria });
+  const inp = h('input', { class: 'cfg-in', type: 'text', inputmode: dp ? 'decimal' : 'numeric', value: show(value), placeholder, 'aria-label': aria });
   inp.addEventListener('change', () => {
     if (empty && !inp.value.trim()) { value = null; set(null); return; }
     const v = num(inp.value);
@@ -61,25 +61,25 @@ export function numRow({ title, sub = '', value, lo, hi, unit, dec = false, set,
     inp.value = show(value);
     set(value);
   });
-  return h('label', { class: 'st-row' }, ...label(title, sub, null), h('span', { class: 'st-val' }, inp, h('span', { class: 'st-unit' }, unit)));
+  return h('label', { class: 'cfg-row' }, ...label(title, sub, null), h('span', { class: 'cfg-val' }, inp, h('span', { class: 'cfg-unit' }, unit)));
 }
 
 /** Uhrzeit rechtsbündig (input type=time). */
 export function timeRow({ title, sub = '', value, set, label: aria = title }) {
-  const inp = h('input', { class: 'st-in st-time', type: 'time', value, 'aria-label': aria });
+  const inp = h('input', { class: 'cfg-in cfg-time', type: 'time', value, 'aria-label': aria });
   inp.addEventListener('change', () => { if (inp.value) set(inp.value); });
-  return h('label', { class: 'st-row' }, ...label(title, sub, null), h('span', { class: 'st-val' }, inp));
+  return h('label', { class: 'cfg-row' }, ...label(title, sub, null), h('span', { class: 'cfg-val' }, inp));
 }
 
 /** Zeile, die zu einer anderen Seite führt: Wert grau und ›. */
 export function linkRow({ title, sub = '', badge = null, value = '', href }) {
-  return h('a', { class: 'st-row st-link', href }, ...label(title, sub, badge),
-    h('span', { class: 'st-val' }, value, h('span', { class: 'st-chev' }, icon('chevron', { size: 15 }))));
+  return h('a', { class: 'cfg-row cfg-link', href }, ...label(title, sub, badge),
+    h('span', { class: 'cfg-val' }, value, h('span', { class: 'cfg-chev' }, icon('chevron', { size: 15 }))));
 }
 
 /** Auswahl aus wenigen Möglichkeiten: Name oben, Segmente darunter. options = [[key, label], …]; aria = Name für Screenreader. */
 export function segRow({ title, sub = '', options, value, set, aria = title }) {
-  return h('div', { class: 'st-row st-segrow' },
+  return h('div', { class: 'cfg-row cfg-segrow' },
     h('span', { class: 't' }, h('b', {}, title), sub ? h('small', {}, sub) : null),
     h('div', { class: 'seg', role: 'radiogroup', 'aria-label': aria },
       ...options.map(([key, text]) => h('button', {
@@ -90,5 +90,5 @@ export function segRow({ title, sub = '', options, value, set, aria = title }) {
 
 /** Knopf als ganze Zeile in Akzentfarbe (z. B. „Supplement hinzufügen“). */
 export function actionRow({ title, onClick, danger = false }) {
-  return h('button', { type: 'button', class: `st-row st-action${danger ? ' danger' : ''}`, onclick: onClick }, h('span', { class: 't' }, h('b', {}, title)));
+  return h('button', { type: 'button', class: `cfg-row cfg-action${danger ? ' danger' : ''}`, onclick: onClick }, h('span', { class: 't' }, h('b', {}, title)));
 }

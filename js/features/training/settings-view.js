@@ -60,7 +60,7 @@ export function trainingSettingsView(rerender) {
       'Körpergewicht ohne Zubehör ist immer dabei.',
       'Bereits übernommene Übungen bleiben unverändert.'
     ])]),
-    list(h('div', { class: 'st-pad' }, gearPicker())),
+    list(h('div', { class: 'cfg-pad' }, gearPicker())),
     sec('Anzeige'),
     list(segRow({ title: 'Figur', aria: 'Figur', options: [['auto', 'Wie Profil'], ['male', 'Männlich'], ['female', 'Weiblich']], value: settings.figureChoice,
         sub: settings.figureChoice === 'auto' ? `${settings.figure === 'female' ? 'weiblich' : 'männlich'} – aus „Schlaf & Körper“` : '',

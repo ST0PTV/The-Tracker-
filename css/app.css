@@ -711,66 +711,66 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .look-note { margin: 0; line-height: 1.4; }
 
 /* ---------- Einstellungsseiten (0.4.2, core/setui.js): Abschnittstitel, Liste, Zeilen, Fußnote ---------- */
-.st-sec { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin: 22px 4px 7px;
+.cfg-sec { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin: 22px 4px 7px;
   font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
-.page-head + .st-sec, .back + .st-sec { margin-top: 8px; }
-.st-sec .info-btn { margin: -6px -6px -6px 0; }
-.st-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
-.st-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 8px 14px; box-sizing: border-box;
+.page-head + .cfg-sec, .back + .cfg-sec { margin-top: 8px; }
+.cfg-sec .info-btn { margin: -6px -6px -6px 0; }
+.cfg-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
+.cfg-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 8px 14px; box-sizing: border-box;
   color: var(--text); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; }
-.st-row + .st-row { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
-.st-row > .t { flex: 1; min-width: 0; }
-.st-row > .t b { display: block; font-weight: 400; font-size: 17px; line-height: 1.3; }
-.st-row > .t small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; line-height: 1.3; }
-.st-row .qa-badge { width: 30px; height: 30px; border-radius: 8px; }
-.st-val { flex: none; display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 17px; }
-.st-in { width: 84px; padding: 8px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; text-align: right; font-variant-numeric: tabular-nums; }
-.st-in:focus { color: var(--text); outline: none; }
-.st-in.st-time { width: auto; min-width: 70px; -webkit-appearance: none; appearance: none; }
-.st-in::placeholder { color: var(--faint); }
-.st-row:focus-within { background: color-mix(in srgb, var(--text) 4%, transparent); }
-.st-chev { display: inline-flex; color: var(--faint); }
-.st-chev .icon { stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-a.st-row, .st-action { cursor: pointer; }
-.st-action { justify-content: center; }
-.st-action > .t b { color: var(--accent); text-align: center; }
-.st-action.danger > .t b { color: var(--danger); }
-.st-segrow { flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 12px; }
-.st-segrow .seg { margin: 0; }
-.st-note { margin: 7px 4px 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
-.st-note a { color: var(--accent); }
+.cfg-row + .cfg-row { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+.cfg-row > .t { flex: 1; min-width: 0; }
+.cfg-row > .t b { display: block; font-weight: 400; font-size: 17px; line-height: 1.3; }
+.cfg-row > .t small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; line-height: 1.3; }
+.cfg-row .qa-badge { width: 30px; height: 30px; border-radius: 8px; }
+.cfg-val { flex: none; display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 17px; }
+.cfg-in { width: 84px; padding: 8px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; text-align: right; font-variant-numeric: tabular-nums; }
+.cfg-in:focus { color: var(--text); outline: none; }
+.cfg-in.cfg-time { width: auto; min-width: 70px; -webkit-appearance: none; appearance: none; }
+.cfg-in::placeholder { color: var(--faint); }
+.cfg-row:focus-within { background: color-mix(in srgb, var(--text) 4%, transparent); }
+.cfg-chev { display: inline-flex; color: var(--faint); }
+.cfg-chev .icon { stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+a.cfg-row, .cfg-action { cursor: pointer; }
+.cfg-action { justify-content: center; }
+.cfg-action > .t b { color: var(--accent); text-align: center; }
+.cfg-action.danger > .t b { color: var(--danger); }
+.cfg-segrow { flex-direction: column; align-items: stretch; gap: 8px; padding-bottom: 12px; }
+.cfg-segrow .seg { margin: 0; }
+.cfg-note { margin: 7px 4px 0; font-size: 13px; line-height: 1.4; color: var(--muted); }
+.cfg-note a { color: var(--accent); }
 /* iOS-Schalter für die ganze App (Training hat dieselbe Form in css/training.css) */
 /* 31 px sichtbar, 44 px Trefferfläche: Innenabstand oben/unten, Hintergrund nur im Inhalt */
-.sw { appearance: none; -webkit-appearance: none; flex: none; position: relative; box-sizing: content-box; width: 51px; height: 31px; margin: -6.5px 0; padding: 6.5px 0;
+.cfg-sw { appearance: none; -webkit-appearance: none; flex: none; position: relative; box-sizing: content-box; width: 51px; height: 31px; margin: -6.5px 0; padding: 6.5px 0;
   border-radius: 999px; background: var(--fill); background-clip: content-box; cursor: pointer; transition: background 0.2s; }
-.sw::after { content: ''; position: absolute; top: 8.5px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF;
+.cfg-sw::after { content: ''; position: absolute; top: 8.5px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); transition: transform 0.2s; }
-.sw:checked { background: var(--accent); }
-.sw:checked::after { transform: translateX(20px); background: var(--on-accent); }
-.sw:disabled { opacity: 0.4; cursor: default; }
-.sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
-.st-fixed { flex: none; color: var(--faint); font-size: 15px; }
+.cfg-sw:checked { background: var(--accent); }
+.cfg-sw:checked::after { transform: translateX(20px); background: var(--on-accent); }
+.cfg-sw:disabled { opacity: 0.4; cursor: default; }
+.cfg-sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .cfg-sw, .cfg-sw::after { transition: none; } }
+.cfg-fixed { flex: none; color: var(--faint); font-size: 15px; }
 /* Ernährung & Rezepte: geteilte Karten (auch im Rezept-Start) bekommen hier die Abschnittstitel der Einstellungsseiten */
 .prefs .sec { margin: 22px 4px 7px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
-.st-save { margin-top: 20px; }
+.cfg-save { margin-top: 20px; }
 /* Freier Inhalt in einer Liste (Chips, kleine Formulare) */
-.st-pad { padding: 12px 14px; }
-.st-pad + .st-row, .st-row + .st-pad { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
-.st-pad .chips { margin: 0; }
-.st-pad > .label:first-child { margin-top: 0; }
-.st-pad > :last-child { margin-bottom: 0; }
-button.st-edit { margin: -6px -4px -6px 0; padding: 6px 4px; min-height: var(--tap-s); border: 0; background: none; color: var(--accent);
+.cfg-pad { padding: 12px 14px; }
+.cfg-pad + .cfg-row, .cfg-row + .cfg-pad { border-top: 1px solid color-mix(in srgb, var(--text) 8%, transparent); }
+.cfg-pad .chips { margin: 0; }
+.cfg-pad > .label:first-child { margin-top: 0; }
+.cfg-pad > :last-child { margin-bottom: 0; }
+button.cfg-edit { margin: -6px -4px -6px 0; padding: 6px 4px; min-height: var(--tap-s); border: 0; background: none; color: var(--accent);
   font: inherit; font-size: 15px; letter-spacing: 0; text-transform: none; cursor: pointer; }
-button.st-edit[aria-pressed="true"] { font-weight: 600; }
+button.cfg-edit[aria-pressed="true"] { font-weight: 600; }
 /* „Heute anpassen“: Griff zum Ziehen (touch-action none, sonst scrollt die Seite statt der Zeile) */
-.st-grip { flex: none; width: var(--tap-s); height: var(--tap-s); margin: -6px -10px -6px 0; display: grid; place-items: center;
+.cfg-grip { flex: none; width: var(--tap-s); height: var(--tap-s); margin: -6px -10px -6px 0; display: grid; place-items: center;
   border: 0; background: none; color: var(--faint); cursor: grab; touch-action: none; }
-.st-grip .icon { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
-.st-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 8px; }
-.st-drag { position: relative; background: var(--surface); transition: transform 0.15s; }
-.st-drag.dragging { z-index: 2; transition: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); border-radius: 10px; }
-@media (prefers-reduced-motion: reduce) { .st-drag { transition: none; } }
+.cfg-grip .icon { stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+.cfg-grip:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 8px; }
+.cfg-drag { position: relative; background: var(--surface); transition: transform 0.15s; }
+.cfg-drag.dragging { z-index: 2; transition: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); border-radius: 10px; }
+@media (prefers-reduced-motion: reduce) { .cfg-drag { transition: none; } }
 
 /* ---------- „Ich“: gruppierte Listen mit Icon-Plaketten (nach der Einstellungsseite des Calorie-Trackers) ---------- */
 .me .sec { margin: 18px 4px 8px; }

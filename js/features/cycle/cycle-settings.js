@@ -53,7 +53,7 @@ export function cycleSettingsView(rerender) {
   const rem = (k, title, sub, timeKey) => [
     switchRow({ title, sub, on: c.rem[k], set: (v) => set({ rem: { ...c.rem, [k]: v } }) }),
     timeKey && c.rem[k] ? timeRow({ title: 'Uhrzeit', value: c.rem[timeKey], set: (v) => { if (/^d{2}:d{2}$/.test(v)) setCycleSettings({ rem: { ...c.rem, [timeKey]: v } }); } }) : null];
-  const chips = (items, isOn, onTap) => h('div', { class: 'st-pad' }, h('div', { class: 'chips' }, ...items.map(([k, l]) =>
+  const chips = (items, isOn, onTap) => h('div', { class: 'cfg-pad' }, h('div', { class: 'chips' }, ...items.map(([k, l]) =>
     h('button', { class: `chip${isOn(k) ? ' on' : ''}`, type: 'button', 'aria-pressed': isOn(k) ? 'true' : 'false', onclick: () => onTap(k) }, l))));
 
   return h('div', { class: 'cy' },
@@ -85,7 +85,7 @@ export function cycleSettingsView(rerender) {
     list(chips(TRACK, (k) => !!c.track[k], (k) => set({ track: { ...c.track, [k]: !c.track[k] } }))),
     note('Ausgeschaltetes erscheint beim Eintragen nicht. Die Blutung ist immer da.'),
     sec('Daten übernehmen'),
-    list(h('div', { class: 'st-pad' },
+    list(h('div', { class: 'cfg-pad' },
       h('span', { class: 'label' }, 'Erster Tag einer Periode'),
       h('div', { class: 'rz-have' }, startIn, h('button', { class: 'btn', type: 'button', onclick: () => {
         const v = startIn.value;
@@ -107,7 +107,7 @@ export function cycleSettingsView(rerender) {
       linkRow({ title: 'PIN-Sperre', badge: ['app', 'lock'], value: L.on ? 'an' : 'aus', href: '#/ich/sperre' }),
       linkRow({ title: 'Wissen und Quellen', badge: ['app', 'info'], href: '#/zyklus/wissen' })),
     n ? [sec('Daten'), list(confirmDel
-      ? [h('div', { class: 'st-pad' }, h('p', { class: 'small', style: 'margin:0' }, 'Wirklich alle Zyklusdaten löschen? Das geht nur mit einem Backup rückgängig.')),
+      ? [h('div', { class: 'cfg-pad' }, h('p', { class: 'small', style: 'margin:0' }, 'Wirklich alle Zyklusdaten löschen? Das geht nur mit einem Backup rückgängig.')),
         actionRow({ title: 'Ja, löschen', danger: true, onClick: () => { confirmDel = false; deleteCycleDays(); toast('Zyklusdaten gelöscht'); rerender(); } }),
         actionRow({ title: 'Abbrechen', onClick: () => { confirmDel = false; rerender(); } })]
       : actionRow({ title: 'Zyklusdaten löschen …', danger: true, onClick: () => { confirmDel = true; rerender(); } }))] : null);

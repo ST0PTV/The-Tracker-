@@ -62,28 +62,28 @@ export function todayLayoutView(rerender) {
   const on = order.filter((k) => cardOn(byKey(k)));
   const off = order.filter((k) => !cardOn(byKey(k)));
   const save = (keys) => { setSettings({ todayOrder: [...keys, ...off] }); };
-  const fixed = row({ title: 'Tagesübersicht', sub: editing ? '' : 'Kalorien und Makros', badge: ['food', 'target'], right: h('span', { class: 'st-fixed' }, 'immer oben') });
+  const fixed = row({ title: 'Tagesübersicht', sub: editing ? '' : 'Kalorien und Makros', badge: ['food', 'target'], right: h('span', { class: 'cfg-fixed' }, 'immer oben') });
 
-  const toggleBtn = h('button', { type: 'button', class: 'st-edit', 'aria-pressed': editing ? 'true' : 'false',
+  const toggleBtn = h('button', { type: 'button', class: 'cfg-edit', 'aria-pressed': editing ? 'true' : 'false',
     onclick: () => { editing = !editing; rerender(); } }, editing ? 'Fertig' : 'Reihenfolge');
 
   let rows;
   if (!editing) {
     rows = order.map((k) => {
       const c = byKey(k);
-      if (!c.get) return row({ title: c.title, sub: c.sub, badge: c.badge, right: h('span', { class: 'st-fixed' }, 'immer') });
+      if (!c.get) return row({ title: c.title, sub: c.sub, badge: c.badge, right: h('span', { class: 'cfg-fixed' }, 'immer') });
       const avail = c.avail ? c.avail() : true;
       return switchRow({ title: c.title, sub: avail ? c.sub || '' : c.off, badge: c.badge, on: avail && c.get(), disabled: !avail,
         set: (v) => { c.set(v); rerender(); } });
     });
   } else {
     rows = [...on.map((k, i) => dragRow(byKey(k), i, on, save, rerender)),
-      ...off.map((k) => row({ title: byKey(k).title, badge: byKey(k).badge, right: h('span', { class: 'st-fixed' }, 'aus') }))];
+      ...off.map((k) => row({ title: byKey(k).title, badge: byKey(k).badge, right: h('span', { class: 'cfg-fixed' }, 'aus') }))];
   }
   return h('div', { class: 'today-layout' },
     backLink(),
     pageHead('Heute anpassen', 'Welche Karten auf „Heute“ erscheinen und in welcher Reihenfolge.'),
-    h('div', { class: 'st-sec' }, h('span', {}, 'Karten'), toggleBtn),
+    h('div', { class: 'cfg-sec' }, h('span', {}, 'Karten'), toggleBtn),
     list(fixed, ...rows),
     editing
       ? note('Am Griff ziehen. Ausgeschaltete Karten stehen unten. ',
@@ -98,15 +98,15 @@ function dragRow(c, i, keys, save, rerender) {
     const next = [...keys]; next.splice(to, 0, next.splice(i, 1)[0]);
     save(next); rerender();
     // Fokus bleibt auf dem verschobenen Griff
-    requestAnimationFrame(() => document.querySelector(`.st-grip[data-key="${c.key}"]`)?.focus());
+    requestAnimationFrame(() => document.querySelector(`.cfg-grip[data-key="${c.key}"]`)?.focus());
   };
-  const grip = h('button', { type: 'button', class: 'st-grip', 'data-key': c.key,
+  const grip = h('button', { type: 'button', class: 'cfg-grip', 'data-key': c.key,
     'aria-label': `${c.title} verschieben, Position ${i + 1} von ${keys.length}. Pfeil hoch oder runter.`,
     onkeydown: (e) => {
       if (e.key === 'ArrowUp') { e.preventDefault(); move(i - 1); }
       if (e.key === 'ArrowDown') { e.preventDefault(); move(i + 1); }
     } }, icon('grip', { size: 20 }));
-  const el = row({ title: c.title, badge: c.badge, right: grip, cls: 'st-drag' });
+  const el = row({ title: c.title, badge: c.badge, right: grip, cls: 'cfg-drag' });
   grip.addEventListener('pointerdown', (e) => startDrag(e, el, i, keys.length, move));
   return el;
 }
@@ -117,7 +117,7 @@ function startDrag(e, el, from, count, move) {
   const grip = e.currentTarget;
   grip.setPointerCapture(e.pointerId);
   const listEl = el.parentElement;
-  const rows = [...listEl.querySelectorAll('.st-drag')];
+  const rows = [...listEl.querySelectorAll('.cfg-drag')];
   const hgt = el.getBoundingClientRect().height;
   const y0 = e.clientY;
   let to = from;

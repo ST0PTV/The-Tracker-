@@ -25,7 +25,7 @@ for (const appearance of ['dark', 'light']) {
   // Muster: keine alten Checkboxen mehr, Abschnittstitel im neuen Stil
   for (const r of SUBPAGES) {
     await nav(r);
-    const s = await p.evaluate(() => ({ old: document.querySelectorAll('#view .check-row, #view .set-line').length, sec: document.querySelectorAll('#view .st-sec').length, lists: document.querySelectorAll('#view .st-list').length }));
+    const s = await p.evaluate(() => ({ old: document.querySelectorAll('#view .check-row, #view .set-line').length, sec: document.querySelectorAll('#view .cfg-sec').length, lists: document.querySelectorAll('#view .cfg-list').length }));
     ok(s.old === 0 && s.sec > 0 && s.lists > 0, `${appearance}: ${r} im neuen Muster (alt ${s.old}, Abschnitte ${s.sec}, Listen ${s.lists})`);
   }
 
@@ -48,17 +48,17 @@ for (const appearance of ['dark', 'light']) {
   await p.locator('input[aria-label="Wasser"]').check(); await settle(p, 200);
 
   // Reihenfolge: Koffein per Ziehen ganz nach oben
-  await p.click('button.st-edit'); await settle(p, 200);
-  ok(await p.locator('.st-grip').count() === 8, `${appearance}: acht Griffe im Reihenfolge-Modus`);
-  const g = await p.locator('.st-grip[data-key="caff"]').boundingBox();
-  const top = await p.locator('.st-grip[data-key="cycle"]').boundingBox();
+  await p.click('button.cfg-edit'); await settle(p, 200);
+  ok(await p.locator('.cfg-grip').count() === 8, `${appearance}: acht Griffe im Reihenfolge-Modus`);
+  const g = await p.locator('.cfg-grip[data-key="caff"]').boundingBox();
+  const top = await p.locator('.cfg-grip[data-key="cycle"]').boundingBox();
   await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await p.mouse.down();
   for (let i = 1; i <= 12; i++) await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + (top.y - g.y - 10) * i / 12);
   await p.mouse.up(); await settle(p, 250);
   ok((await order())[0] === 'caff', `${appearance}: Koffein nach Ziehen oben (${(await order()).join(',')})`);
   // Pfeiltaste: Training eins nach unten, Fokus bleibt auf dem Griff
   const before = await order();
-  await p.locator('.st-grip[data-key="training"]').focus(); await p.keyboard.press('ArrowDown'); await settle(p, 200);
+  await p.locator('.cfg-grip[data-key="training"]').focus(); await p.keyboard.press('ArrowDown'); await settle(p, 200);
   const after = await order();
   ok(after.indexOf('training') === before.indexOf('training') + 1, `${appearance}: Pfeil runter verschiebt Training um eins`);
   ok(await p.evaluate(() => document.activeElement?.dataset.key) === 'training', `${appearance}: Fokus bleibt auf dem Griff`);
@@ -68,7 +68,7 @@ for (const appearance of ['dark', 'light']) {
   const hs = await heute();
   ok(hs[0] === 'day' && hs.indexOf('caff') < hs.indexOf('water'), `${appearance}: Heute in neuer Reihenfolge (${hs.join(',')})`);
   // Standard wiederherstellen
-  await nav('#/ich/heute'); await p.click('button.st-edit'); await settle(p, 200);
+  await nav('#/ich/heute'); await p.click('button.cfg-edit'); await settle(p, 200);
   await p.click('a:has-text("Standard wiederherstellen")'); await settle(p, 200);
   ok((await order()).length === 0 || (await order())[0] === 'cycle', `${appearance}: Standard wiederhergestellt`);
 

@@ -62,13 +62,13 @@ export function lockSettingsView(rerender) {
     pageHead('PIN-Sperre', 'Sperrt die ganze App beim Verlassen. Ohne PIN siehst du nur den Sperrbildschirm.'),
     decoy ? h('p', { class: 'hint small' }, 'Mit der Schein-PIN lassen sich die Einstellungen nicht ändern.') : null,
     sec('PIN'),
-    list(h('div', { class: 'st-pad' },
+    list(h('div', { class: 'cfg-pad' },
       L.on && editing !== 'pin'
         ? h('div', { class: 'btn-row' }, h('button', { class: 'btn', type: 'button', disabled: decoy || undefined, onclick: () => { editing = 'pin'; rerender(); } }, 'PIN ändern'),
           h('button', { class: 'btn danger', type: 'button', disabled: decoy || undefined, onclick: () => { try { clearPin('pin'); toast('PIN-Sperre aus'); rerender(); } catch (e) { toast(e.message, { error: true }); } } }, 'Ausschalten'))
         : field('pin', L.on ? 'Neue PIN, 4 bis 8 Ziffern' : 'PIN, 4 bis 8 Ziffern'))),
     L.on ? [sec('Schein-PIN'),
-      list(h('div', { class: 'st-pad' },
+      list(h('div', { class: 'cfg-pad' },
         h('p', { class: 'small muted' }, 'Eine zweite PIN öffnet die App mit einem leeren Zyklus-Kalender. Was du dort einträgst, bleibt getrennt. Alles andere ist mit der Schein-PIN sichtbar.'),
         L.decoyOn && editing !== 'decoy'
           ? h('div', { class: 'btn-row' }, h('button', { class: 'btn danger', type: 'button', disabled: decoy || undefined, onclick: () => { try { clearPin('decoy'); toast('Schein-PIN aus'); rerender(); } catch (e) { toast(e.message, { error: true }); } } }, 'Ausschalten'))

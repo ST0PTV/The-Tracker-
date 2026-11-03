@@ -162,10 +162,10 @@ function pickSheet(rerender) {
 export function suppSettingsView(rerender) {
   const s = suppSettings();
   const items = s.items.map((x) => {
-    const on = h('input', { type: 'checkbox', role: 'switch', class: 'sw', 'aria-label': `${x.name} aktiv` });
+    const on = h('input', { type: 'checkbox', role: 'switch', class: 'cfg-sw', 'aria-label': `${x.name} aktiv` });
     on.checked = !!x.on;
     on.addEventListener('change', () => { updateItem(x.id, { on: on.checked }); rerender(); });
-    return h('div', { class: 'st-row supp-set' },
+    return h('div', { class: 'cfg-row supp-set' },
       h('button', { class: 't plain-btn', type: 'button', 'aria-label': `${x.name} bearbeiten`, onclick: () => editSheet(x, rerender) },
         suppIcon(x, 28), h('span', {}, h('b', {}, x.name), h('small', {}, x.on ? summary(x) : 'ausgeschaltet'))),
       infoBtn(x.name, () => suppInfo(SUPP_CAT_MAP[x.kind] ? x.kind : 'custom')),

@@ -40,7 +40,7 @@ export function lookView(rerender) {
       h('span', { class: 'pal-name' }, h('b', {}, label), key === pal ? icon('check', { size: 16 }) : null),
       h('small', { class: 'pal-desc' }, desc)))),
     sec('Erscheinung'),
-    list(h('div', { class: 'st-pad' },
+    list(h('div', { class: 'cfg-pad' },
       h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Erscheinung' },
         ...APPEARANCES.map(([key, label]) => h('button', {
           type: 'button', role: 'radio', 'aria-checked': key === app ? 'true' : 'false',

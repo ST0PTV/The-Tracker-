@@ -119,9 +119,9 @@ function zielView() {
   let preset = g.preset && PRESETS[g.preset] ? g.preset : 'dge';
   const floor = kcalFloor(p.sex);
   const floorNote = h('p', { class: 'warn small', hidden: true });
-  const kcalIn = h('input', { class: 'st-in', type: 'text', inputmode: 'numeric', value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
+  const kcalIn = h('input', { class: 'cfg-in', type: 'text', inputmode: 'numeric', value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
   const preview = h('div', { class: 'stats' });
-  const macroNote = h('p', { class: 'st-note' });
+  const macroNote = h('p', { class: 'cfg-note' });
   const seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Makro-Verteilung' });
 
   const num = (el) => { const v = parseFloat(String(el.value).replace(',', '.')); return Number.isFinite(v) ? v : null; };
@@ -161,15 +161,15 @@ function zielView() {
       ? h('p', { class: 'hint small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen'))
       : null,
     sec('Kalorien'),
-    list(h('label', { class: 'st-row' }, h('span', { class: 't' }, h('b', {}, 'Kalorien pro Tag')), h('span', { class: 'st-val' }, kcalIn, h('span', { class: 'st-unit' }, 'kcal')))),
+    list(h('label', { class: 'cfg-row' }, h('span', { class: 't' }, h('b', {}, 'Kalorien pro Tag')), h('span', { class: 'cfg-val' }, kcalIn, h('span', { class: 'cfg-unit' }, 'kcal')))),
     floorNote,
     sec('Makro-Verteilung'),
-    list(h('div', { class: 'st-pad' }, seg, preview)),
+    list(h('div', { class: 'cfg-pad' }, seg, preview)),
     macroNote,
     note(`Gewicht ${w != null ? `${r1(w)} kg` : 'fehlt'} · ${p.sex === 'm' ? 'Mann' : p.sex === 'f' ? 'Frau' : 'ohne Geschlecht'} – `,
       h('a', { href: '#/ich/koerper' }, 'unter „Schlaf & Körper“ ändern'),
       getWeightGoal().on ? null : ' · Kalorienziel lieber aus Zielgewicht und Tempo rechnen? ', getWeightGoal().on ? null : h('a', { href: '#/ich/gewichtsziel' }, 'Gewichtsziel')),
-    h('button', { class: 'btn primary block st-save', type: 'button', onclick: save }, 'Speichern'));
+    h('button', { class: 'btn primary block cfg-save', type: 'button', onclick: save }, 'Speichern'));
 }
 
 // Quellen und Lizenzen aller übernommenen Teile. Wird mit jeder Phase ergänzt.

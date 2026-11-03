@@ -27,7 +27,7 @@ let t = await text();
 ok(/mein equipment/i.test(t) /* The Tracker: Titel in Großbuchstaben */ && t.includes('Klimmzugstange') && t.includes('Dipbarren') && t.includes('Widerstandsband') && t.includes('Ab-Rad'), 'E: Karte „Mein Equipment“ mit feinen Geräten');
 ok(t.includes('Nichts gewählt'), 'E: Standard = nichts gewählt (alles zeigen)');
 await shot('1-settings-empty');
-const card = p.locator('.st-sec:has-text("Mein Equipment") + .st-list') /* The Tracker: Abschnitt im Muster der Einstellungsseiten (0.4.2) */;
+const card = p.locator('.cfg-sec:has-text("Mein Equipment") + .cfg-list') /* The Tracker: Abschnitt im Muster der Einstellungsseiten (0.4.2) */;
 await card.locator('button.chip', { hasText: 'Kurzhantel' }).click(); await settle(p, 200);
 await card.locator('button.chip', { hasText: 'Bank / Box' }).click(); await settle(p, 200);
 await card.locator('button.chip', { hasText: 'Klimmzugstange' }).click(); await settle(p, 200);
@@ -36,7 +36,7 @@ let saved = await p.evaluate(async () => (await import('./js/features/training/s
 ok(JSON.stringify(saved) === '["dumbbell","bench","pullbar"]', `E: gespeichert in Geräte-Reihenfolge (${JSON.stringify(saved)})`);
 await shot('2-settings-chosen');
 await p.reload(); await settle(p, 500);
-ok((await p.locator('.st-sec:has-text("Mein Equipment") + .st-list') /* The Tracker: Abschnitt im Muster der Einstellungsseiten (0.4.2) */.locator('button.chip.on').count()) === 3, 'E: Auswahl bleibt nach Neuladen');
+ok((await p.locator('.cfg-sec:has-text("Mein Equipment") + .cfg-list') /* The Tracker: Abschnitt im Muster der Einstellungsseiten (0.4.2) */.locator('button.chip.on').count()) === 3, 'E: Auswahl bleibt nach Neuladen');
 
 // ---------- Startpool: Filter ----------
 await p.goto(srv.url + '/index.html#/training/uebungen'); await settle(p, 500);

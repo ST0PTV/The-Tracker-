@@ -97,7 +97,7 @@ t = await text();
 ok(t.includes('Bildschirm anlassen') && t.includes('Scheiben pro Seite') && t.includes('Stange'), 'Einstellungen: Schalter da (Beschriftungen ab 2.34.0 kürzer)');
 ok(!t.includes('Speicher geschützt') && !t.includes('Datenschema'), 'v3.0.1: Info-Karte zeigt nur die Version');
 ok(!BAD_TEXT.test(t), 'Einstellungen: kein null/undefined/NaN');
-await p.locator('.st-sec:has-text("Training") + .st-list').screenshot( /* The Tracker: 0.4.2 */ { path: join(out, '7-settings-training.png') });
+await p.locator('.cfg-sec:has-text("Training") + .cfg-list').screenshot( /* The Tracker: 0.4.2 */ { path: join(out, '7-settings-training.png') });
 // The Tracker: keine Info-Karte unter „Ich → Training“ (Version steht unter „Ich“).
 // Bildschirm-Sperre aus → beim Training wird sie freigegeben
 await p.locator('input[aria-label="Bildschirm anlassen"]').uncheck(); // The Tracker: Schalter im Muster der Einstellungsseiten (0.4.2) await settle(p, 200);
