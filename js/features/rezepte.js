@@ -15,6 +15,9 @@ import { weekRoutes } from './recipes/week-view.js';
 import { shopRoutes } from './recipes/shop-view.js';
 import { pantryRoutes } from './recipes/pantry-view.js';
 import { snackRoutes } from './recipes/snack-view.js';
+import { cookRoutes } from './recipes/cook-view.js';
+import { pantry, foodOf, groupOf } from './recipes/pantry.js';
+import { usualPortion } from './recipes/snack.js';
 import { pantryInUse, recipeStock } from './recipes/pantry.js';
 import { recipeRoutes } from './recipes/recipe-view.js';
 import { ownRoutes } from './recipes/own-view.js';
@@ -32,6 +35,18 @@ function stockNote(r, factor = 1) {
 
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 
+// 0.5.1: als Snack markierte Produkte aus dem Vorrat zwischen den Snack-Vorschlägen, mit üblicher Portion
+// (nach den Produkt-Snacks im Rezeptbuch, app.js; JuliaKelp, MIT). Antippen führt zu „Snack: Was darf ich jetzt?“.
+export function snackProducts(max = 2) {
+  return pantry().filter((x) => x.snack && x.qty !== 0 && x.k > 0).map((x) => {
+    const portion = usualPortion(x, foodOf(x), groupOf(x));
+    return portion ? { x, portion, kcal: Math.round((portion * x.k) / 100) } : null;
+  }).filter(Boolean).slice(0, max);
+}
+const productRow = ({ x, portion, kcal }) => h('a', { class: 'rz-prod k-food', href: '#/rezepte/snack' },
+  h('span', { class: 'qa-badge' }, icon('star', { size: 22 })),
+  h('span', { class: 't' }, h('b', {}, x.n), h('small', {}, `1 Portion (${fmt(portion)} ${x.liq ? 'ml' : 'g'}) · ${fmt(kcal)} kcal · aus dem Vorrat`)));
+
 function suggestions(rerender) {
   const today = isoDate();
   const meal = ui.sugMeal || mealByMin(nowMin());
@@ -40,6 +55,7 @@ function suggestions(rerender) {
   const stocked = pantryInUse();
   let pool = ideasFor(meal, today);
   if (stocked && ui.pantryFirst) pool = pool.slice(0, 12).sort((a, b) => (recipeStock(portionLines(b.recipe)).all ? 1 : 0) - (recipeStock(portionLines(a.recipe)).all ? 1 : 0)).concat(pool.slice(12));
+  const prods = meal === 'snack' ? snackProducts() : [];
   const ideas = (plan ? [{ recipe: plan.recipe, mode: null, factor: plan.factor, planned: true }, ...pool.filter((x) => x.recipe.id !== plan.recipe.id)] : pool).slice(0, 3);
   const mealSeg = h('div', { class: 'seg rz-meal', role: 'radiogroup', 'aria-label': 'Mahlzeit für Vorschläge' },
     ...['breakfast', 'lunch', 'dinner', 'snack'].map((m) => h('button', { type: 'button', role: 'radio', 'aria-checked': m === meal ? 'true' : 'false', onclick: () => { ui.sugMeal = m; rerender(); } }, MEAL_SHORT[m])));
@@ -50,9 +66,10 @@ function suggestions(rerender) {
     stocked ? h('div', { class: 'chips rz-pf', role: 'group', 'aria-label': 'Reihenfolge' },
       h('button', { class: `chip${ui.pantryFirst ? ' on' : ''}`, type: 'button', 'aria-pressed': ui.pantryFirst ? 'true' : 'false', onclick: () => { ui.pantryFirst = true; rerender(); } }, 'Mit Vorrat zuerst'),
       h('button', { class: `chip${!ui.pantryFirst ? ' on' : ''}`, type: 'button', 'aria-pressed': !ui.pantryFirst ? 'true' : 'false', onclick: () => { ui.pantryFirst = false; rerender(); } }, 'Beste Passung')) : null,
-    ideas.length
+    ideas.length || prods.length
       ? h('section', { class: 'card list rz-list' }, ...ideas.map((x) => recipeRow(x.recipe, { meal, mode: x.mode, factor: x.factor || 1,
-        extra: [x.planned ? `aus dem Wochenplan${x.factor !== 1 ? ` · ${fmtFactor(x.factor)}× Menge` : ''}` : null, stocked ? stockNote(x.recipe, x.factor || 1) : null].filter(Boolean).join(' · ') || null })))
+        extra: [x.planned ? `aus dem Wochenplan${x.factor !== 1 ? ` · ${fmtFactor(x.factor)}× Menge` : ''}` : null, stocked ? stockNote(x.recipe, x.factor || 1) : null].filter(Boolean).join(' · ') || null })),
+        ...prods.map(productRow))
       : h('section', { class: 'card' }, h('p', { class: 'small muted' }, 'Gerade passt kein Rezept zu deinen Einstellungen und der Zeit für diese Mahlzeit.')),
     hasGoal(today) ? null : h('p', { class: 'small muted page-note' }, 'Ohne Tagesziel rechnet die Auswahl mit 2.000 kcal. ', h('a', { class: 'link', href: '#/ich/ziel' }, 'Tagesziel festlegen'))
   ];
@@ -108,5 +125,5 @@ function rezepteView(rerender) {
 
 export const rezepteRoutes = {
   '/rezepte': rezepteView,
-  ...weekRoutes, ...shopRoutes, ...pantryRoutes, ...snackRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
+  ...weekRoutes, ...shopRoutes, ...pantryRoutes, ...snackRoutes, ...cookRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
 };

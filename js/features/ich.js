@@ -5,7 +5,7 @@ import { h } from '../core/util.js';
 import { pageHead, toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import * as store from '../core/store.js';
-import { getGoals, getProfile, setGoal, macrosFrom, fatCheck, kcalFloor, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights, getSleep, currentWeight } from '../core/profile.js';
+import { getGoals, getProfile, setGoal, PRESETS, getWeightGoal, loadDemoWeights, removeDemoWeights, getSleep, currentWeight } from '../core/profile.js';
 import { getSettings } from '../core/settings.js';
 import { lookView, lookSummary } from './me/look-view.js';
 import { backLink, sec, list, note } from '../core/setui.js';
@@ -19,6 +19,8 @@ import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
 import { generateDemo, generateDemoDrinks, generateDemoWeights, generateDemoAlcohol, generateDemoCycle, DEMO_GOAL } from './dev/demo.js';
 import { loadDemoAlcohol, removeDemoAlcohol, ALC_REFS, alcSettings } from './drinks/alcohol.js';
 import { wgoalView } from './goal/wgoal-view.js';
+import { goalView } from './goal/goal-view.js';
+import { foodsView, recipeFoodView, foodsSummary } from './food/foods-view.js';
 import { WG_REFS, wgDateFmt } from './goal/weightgoal.js';
 import { bodyView } from './me/body-view.js';
 import { prefsView, tasteView } from './recipes/start-view.js';
@@ -63,6 +65,7 @@ function ichView(rerender) {
       meRow({ kind: 'food', ico: 'home', title: 'Heute anpassen', href: '#/ich/heute', sub: todaySummary() })),
     ...group('Über mich',
       meRow({ kind: 'body', ico: 'moon', title: 'Schlaf & Körper', href: '#/ich/koerper', sub: `${sl.bed}–${sl.wake}${w != null ? ` · ${fmtKg(w)} kg` : ''}` }),
+      meRow({ kind: 'food', ico: 'scan', title: 'Meine Lebensmittel', href: '#/ich/lebensmittel', sub: foodsSummary() }),
       meRow({ kind: 'food', ico: 'book', title: 'Ernährung & Rezepte', href: '#/ich/ernaehrung',
         sub: `${({ all: 'Alles', vegetarian: 'Vegetarisch', vegan: 'Vegan' })[dietForm()]}${allergenCodes().length ? ` · ${allergenCodes().length} ${allergenCodes().length === 1 ? 'Allergen' : 'Allergene'}` : ''} · ${recipeSettings().mealCount} Mahlzeiten` }),
       p.sex !== 'm' ? meRow({ kind: 'cyc', ico: 'drop', title: 'Zyklus', href: '#/ich/zyklus',
@@ -116,71 +119,11 @@ function devCard(rerender) {
       n ? h('button', { class: 'btn', type: 'button', onclick: async () => { removeDemoWater(); removeDemoCaffeine(); removeDemoWeights(); removeDemoAlcohol(); const k = removeDemo(); const T = await import('./training/demo.js').catch(() => null); T?.removeTrainingDemo(); removeDemoCycle(); toast(`${fmt(k)} Beispiel-Einträge entfernt`); rerender(); } }, 'Entfernen') : null));
 }
 
-function zielView() {
-  const g = getGoals() || {};
-  const p = getProfile();
-  const w = currentWeight(isoDate());
-  let preset = g.preset && PRESETS[g.preset] ? g.preset : 'dge';
-  const floor = kcalFloor(p.sex);
-  const floorNote = h('p', { class: 'warn small', hidden: true });
-  const kcalIn = h('input', { class: 'cfg-in', type: 'text', inputmode: 'numeric', value: g.goal ?? '', placeholder: 'z. B. 2200', 'aria-label': 'Kalorienziel' });
-  const preview = h('div', { class: 'stats' });
-  const macroNote = h('p', { class: 'cfg-note' });
-  const seg = h('div', { class: 'seg', role: 'radiogroup', 'aria-label': 'Makro-Verteilung' });
-
-  const num = (el) => { const v = parseFloat(String(el.value).replace(',', '.')); return Number.isFinite(v) ? v : null; };
-  const update = () => {
-    // Untergrenze: nur Hinweis, kein Sperren (Faustregel; Ziel bleibt die eigene Entscheidung)
-    const kc = num(kcalIn);
-    floorNote.hidden = !(kc > 0 && kc < floor);
-    floorNote.textContent = `Unter ${fmt(floor)} kcal pro Tag nur mit ärztlicher oder ernährungstherapeutischer Begleitung${p.sex ? '' : ' (Frauen 1.200, Männer 1.500 kcal; ohne Angabe gilt 1.200)'}.`;
-    seg.replaceChildren(...Object.entries(PRESETS).filter(([k]) => k !== 'custom').map(([k, P]) =>
-      h('button', { type: 'button', role: 'radio', 'aria-checked': k === preset ? 'true' : 'false', onclick: () => { preset = k; update(); } }, P.label)));
-    const P = PRESETS[preset];
-    const m = macrosFrom(num(kcalIn), w, P.pf, P.ff);
-    const stat = (label, v) => h('div', { class: 'stat' }, h('b', {}, v == null ? '–' : `${fmt(v)} g`), h('span', {}, label));
-    preview.replaceChildren(stat('Eiweiß', m?.protein), stat('Kohlenhydrate', m?.carbs), stat('Fett', m?.fat));
-    const fc = m ? fatCheck(preset, m.fatPct) : null;
-    macroNote.textContent = !w
-      ? 'Für die Makros braucht die App dein Gewicht (unter „Schlaf & Körper“).'
-      : !m ? 'Kalorienziel eintragen, dann rechne ich die Makros.'
-        : `Fett ${m.fatPct} % der Energie${fc === 0 ? ' – im empfohlenen Bereich.' : fc === 1 ? ' – über dem empfohlenen Bereich.' : fc === -1 ? ' – unter dem empfohlenen Bereich.' : '.'}`;
-  };
-  kcalIn.addEventListener('input', update);
-  update();
-
-  const save = () => {
-    const kcal = num(kcalIn);
-    if (!(kcal >= 800 && kcal <= 6000)) { toast('Bitte ein Kalorienziel zwischen 800 und 6.000 eintragen.', { error: true }); return; }
-    setGoal({ goal: kcal, preset, weight: w });
-    toast('Ziel gespeichert');
-    location.hash = '#/ich';
-  };
-
-  // Formular: legt ein Ziel ab heute an, darum mit „Speichern“ (siehe core/setui.js)
-  return h('div', {},
-    backLink(),
-    pageHead('Tagesziel', 'Gilt ab heute. Rezepte und Wochenplan rechnen mit diesem Ziel.'),
-    getWeightGoal().on
-      ? h('p', { class: 'hint small' }, 'Das Kalorienziel kommt gerade aus dem Gewichtsziel. Ein eigenes Ziel hier gilt, bis du das nächste Gewicht einträgst (bei „automatisch anpassen“). ', h('a', { class: 'link', href: '#/ich/gewichtsziel' }, 'Gewichtsziel öffnen'))
-      : null,
-    sec('Kalorien'),
-    list(h('label', { class: 'cfg-row' }, h('span', { class: 't' }, h('b', {}, 'Kalorien pro Tag')), h('span', { class: 'cfg-val' }, kcalIn, h('span', { class: 'cfg-unit' }, 'kcal')))),
-    floorNote,
-    sec('Makro-Verteilung'),
-    list(h('div', { class: 'cfg-pad' }, seg, preview)),
-    macroNote,
-    note(`Gewicht ${w != null ? `${r1(w)} kg` : 'fehlt'} · ${p.sex === 'm' ? 'Mann' : p.sex === 'f' ? 'Frau' : 'ohne Geschlecht'} – `,
-      h('a', { href: '#/ich/koerper' }, 'unter „Schlaf & Körper“ ändern'),
-      getWeightGoal().on ? null : ' · Kalorienziel lieber aus Zielgewicht und Tempo rechnen? ', getWeightGoal().on ? null : h('a', { href: '#/ich/gewichtsziel' }, 'Gewichtsziel')),
-    h('button', { class: 'btn primary block cfg-save', type: 'button', onclick: save }, 'Speichern'));
-}
-
 // Quellen und Lizenzen aller übernommenen Teile. Wird mit jeder Phase ergänzt.
 const CREDITS = [
-  ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen. Seit 0.3.1 der ganze Trainingsbereich aus Version 3.14.0 (Training, Pläne, Übungen, Fortschritt, Übungsanimationen, Körperfigur); die Studien dazu stehen in den Info-Sheets der Übungen und Animationen. Seit 0.5.0 Backup-Prüfungen, Sicherheitsregeln (CSP), Rundgang mit Spotlight und Probetraining.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
-  ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild. Seit 0.5.0 gespeicherte Mahlzeiten und der Plan-Vorschlag zum Magen-Modell.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
-  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js), die Ginger-Zeichnung als Platzhalterbild und der Zyklus (zyklus.js: Rechnung, Kalender, Eintragen, Wissen, Erinnerungen, Bericht, Import, PIN mit Schein-PIN; zerlegt und an die Studienlage angepasst). Seit 0.5.0 Snack-Rahmen und Snack-Markierung im Vorrat, „viel …“-Hinweise im Vorrat und Mineralstoffe auf der Rezeptseite.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
+  ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen. Seit 0.3.1 der ganze Trainingsbereich aus Version 3.14.0 (Training, Pläne, Übungen, Fortschritt, Übungsanimationen, Körperfigur); die Studien dazu stehen in den Info-Sheets der Übungen und Animationen. Seit 0.5.0 Backup-Prüfungen, Sicherheitsregeln (CSP), Rundgang mit Spotlight und Probetraining; seit 0.5.1 einmalige Tipps im Training.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
+  ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild. Seit 0.5.0 gespeicherte Mahlzeiten und der Plan-Vorschlag zum Magen-Modell; seit 0.5.1 Wochenstreifen, Wischen auf Einträgen, Uhrzeit je Mahlzeit, Wochenrückblick, Tagesabschluss, Ziel-Editor mit Historie, „Meine Lebensmittel“, Lebensmittel teilen und Rezept je 100 g.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
+  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js), die Ginger-Zeichnung als Platzhalterbild und der Zyklus (zyklus.js: Rechnung, Kalender, Eintragen, Wissen, Erinnerungen, Bericht, Import, PIN mit Schein-PIN; zerlegt und an die Studienlage angepasst). Seit 0.5.0 Snack-Rahmen und Snack-Markierung im Vorrat, „viel …“-Hinweise im Vorrat und Mineralstoffe auf der Rezeptseite; seit 0.5.1 „Geplant für heute“, „Kochen mit dem Vorrat“, Wegwerfen und Herz im Vorrat, Einkaufsliste mit eigenen Punkten und Produkt-Snacks bei den Vorschlägen.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
   ['Eigene Rezepte (ab 0.2.4)', '104 eigene Fassungen klassischer Gerichte (Fleisch, Frühstück, vegetarisch/vegan, Snacks) im Format des Rezeptbuchs, ohne Fisch und Meeresfrüchte. Keine Vorlage aus einer bestimmten Sammlung, keine Bilder. Nährwerte aus den Zutaten geschätzt (BLS 4.0).', 'The Tracker · MIT-Lizenz', 'https://github.com/ST0PTV/The-Tracker-'],
   ['Bundeslebensmittelschlüssel (BLS) 4.0', 'Nährwerte je 100 g für die Lebensmittelsuche (data/bls.json). Verändert: Auszug; freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.', 'Max Rubner-Institut (2025), Karlsruhe · CC BY 4.0 · DOI 10.25826/Data20251217-134202-0', 'https://doi.org/10.25826/Data20251217-134202-0'],
   ['Open Food Facts', 'Produktdaten zum Barcode. Nur die Barcode-Nummer wird gesendet; gefundene Produkte werden auf dem Gerät gespeichert.', 'Open Database License (ODbL) 1.0, Inhalte Database Contents License (DbCL) 1.0', 'https://world.openfoodfacts.org'],
@@ -211,6 +154,6 @@ function quellenView() {
 
 // „/ich/getraenke“ (bis 0.1.7) führt auf die neue Übersicht
 const oldDrinks = (rerender) => { setTimeout(() => { location.hash = '#/ich'; }, 0); return ichView(rerender); };
-export const ichRoutes = { '/ich': ichView, '/ich/ziel': zielView, '/ich/quellen': quellenView, '/ich/koerper': bodyView, '/ich/ernaehrung': prefsView,
+export const ichRoutes = { '/ich': ichView, '/ich/ziel': goalView, '/ich/lebensmittel': foodsView, '/ich/lebensmittel/rezept': recipeFoodView, '/ich/quellen': quellenView, '/ich/koerper': bodyView, '/ich/ernaehrung': prefsView,
   '/ich/wasser': waterSettingsView, '/ich/koffein': caffSettingsView, '/ich/alkohol': alcSettingsView, '/ich/getraenke': oldDrinks,
   '/ich/supplements': suppSettingsView, '/ich/gewichtsziel': wgoalView, '/ich/darstellung': lookView, '/ich/heute': todayLayoutView, '/ich/geschmack': tasteView };

@@ -87,6 +87,25 @@ function remember(food, at = nowISO()) {
   });
 }
 
+/** 0.5.1: gescanntes Produkt vergessen (Meine Lebensmittel); gibt es zurück (für „Rückgängig“). */
+export function removeScanned(code) {
+  const gone = offCache()[code] || null;
+  if (gone) store.update('offcache', (c) => { delete c[code]; });
+  if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('tt-foods'));
+  return gone;
+}
+/** 0.5.1: Produkt aus einer Lebensmittel-Datei oder „Rückgängig“ übernehmen (ohne Scan-Ereignis). */
+export function addScanned(food) {
+  if (!validCode(food?.barcode)) return false;
+  store.update('offcache', (c) => {
+    c[food.barcode] = food;
+    const keys = Object.keys(c);
+    if (keys.length > CACHE_MAX) for (const k of keys.slice(0, keys.length - CACHE_MAX)) delete c[k];
+  });
+  if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent('tt-foods'));
+  return true;
+}
+
 /**
  * Sucht ein Produkt. own: Liste eigener Lebensmittel (Barcode hat Vorrang). fetchFn: für Tests ersetzbar.
  * Ergebnis: { food } | { missing: true } | { offline: true }

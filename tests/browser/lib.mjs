@@ -202,3 +202,17 @@ export async function viaPlus(p, row, meal = null) {
   if (meal) { await p.click(`.qa-meal button:has-text("${MEAL_SHORT[meal] || meal}")`); await settle(p, 80); }
   await p.click(`.qa-row:has-text("${row}")`); await settle(p, 450);
 }
+
+/** 0.5.1: Auf „Heute“ einen Tag vor (dir = 1) oder zurück (dir = −1) über den Wochenstreifen; am Wochenrand den Streifen
+ *  wischen (springt eine Woche) und dann den ersten bzw. letzten Tag wählen. */
+export async function stepDay(p, dir) {
+  const sel = dir > 0 ? '.wk-d.sel + .wk-d' : '.wk-d:has(+ .wk-d.sel)';
+  if (await p.locator(sel).count()) { await p.click(sel); await p.waitForTimeout(200); return; }
+  const b = await p.locator('.wk-strip').boundingBox();
+  const y = b.y + b.height / 2;
+  const [x0, x1] = dir > 0 ? [b.x + b.width - 40, b.x + 40] : [b.x + 40, b.x + b.width - 40];
+  await p.mouse.move(x0, y); await p.mouse.down(); await p.mouse.move(x1, y + 2, { steps: 6 }); await p.mouse.up();
+  await p.waitForTimeout(200);
+  await p.click(dir > 0 ? '.wk-d:first-child' : '.wk-d:last-child');
+  await p.waitForTimeout(200);
+}

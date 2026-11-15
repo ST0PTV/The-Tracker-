@@ -162,6 +162,41 @@ export function restoreEntry(iso, entry) {
   if (entry && !entriesOf(iso).some((e) => e.id === entry.id)) writeDay(iso, (list) => list.concat([entry]));
 }
 
+/** 0.5.1: Wischen nach rechts – gleicher Eintrag noch einmal (neue ID, neue Erfassungszeit). Gibt die Kopie zurück. */
+export function duplicateEntry(iso, id) {
+  const e = entriesOf(iso).find((x) => x.id === id);
+  if (!e || e.link) return null;
+  const copy = { ...e, id: uuid(), at: nowISO() };
+  delete copy.demo;
+  writeDay(iso, (list) => list.concat([copy]));
+  return copy;
+}
+
+/**
+ * 0.5.1 „Wann gegessen?“ (nach timeline.js im Calorie-Tracker, ST0PTV, MIT): eine Uhrzeit für alle Einträge einer
+ * Mahlzeit; t = null setzt sie auf den Standard der Mahlzeit zurück. Verknüpfte Einträge (Koffein, Alkohol) behalten
+ * ihre eigene Zeit. Gibt die Anzahl geänderter Einträge zurück.
+ */
+export function setMealTime(iso, meal, t) {
+  if (t != null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(t)) throw new Error('Ungültige Uhrzeit.');
+  let n = 0;
+  writeDay(iso, (list) => list.map((e) => {
+    if (e.meal !== meal || e.link) return e;
+    n++;
+    const x = { ...e };
+    if (t) x.t = t; else delete x.t;
+    return x;
+  }));
+  return n;
+}
+
+/** Uhrzeit einer Mahlzeit: gemeinsame eigene Zeit ('HH:MM'), 'mixed' bei verschiedenen, null = Standard. */
+export function mealTime(iso, meal) {
+  const ts = [...new Set(entriesOf(iso).filter((e) => e.meal === meal && !e.link).map((e) => e.t || null))];
+  if (!ts.length || (ts.length === 1 && !ts[0])) return null;
+  return ts.length === 1 ? ts[0] : 'mixed';
+}
+
 /** Übernimmt Einträge eines anderen Tages (optional nur eine Mahlzeit) als neue Einträge. Gibt die Anzahl zurück. */
 export function copyEntries(fromIso, toIso, meal = null) {
   const src = entriesOf(fromIso).filter((e) => (!meal || e.meal === meal) && !e.link);

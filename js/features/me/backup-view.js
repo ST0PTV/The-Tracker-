@@ -5,6 +5,7 @@ import { h } from '../../core/util.js';
 import { toast, pageHead } from '../../core/ui.js';
 import * as store from '../../core/store.js';
 import { backLink, sec, list, note, row, actionRow } from '../../core/setui.js';
+import { shareOrDownload } from '../../core/file-share.js';
 import { buildBackup, parseBackup, applyBackup, fileName, MAX_BYTES } from '../../core/backup.js';
 
 store.define('backupmeta', { last: null });
@@ -25,28 +26,11 @@ export function backupSummary() {
 
 const standalone = () => (typeof window !== 'undefined') && ((window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true);
 
-function download(text, name) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
-  const a = h('a', { href: url, download: name });
-  document.body.append(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 10000);
-}
-
 async function exportNow(rerender) {
   if (store.inSandbox()) { toast('Während des Probetrainings geht das nicht.', { error: true }); return; }
   const text = JSON.stringify(buildBackup());
   const name = fileName();
-  let done = false;
-  try {
-    const file = new File([text], name, { type: 'application/json' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'The Tracker – Backup' });
-      done = true;
-    }
-  } catch (e) {
-    if (e && e.name === 'AbortError') return; // Teilen abgebrochen: nichts vermerken
-  }
-  if (!done) download(text, name);
+  if (await shareOrDownload(text, name, 'The Tracker – Backup') === 'aborted') return; // abgebrochen: nichts vermerken
   store.update('backupmeta', (m) => { m.last = new Date().toISOString(); });
   toast('Backup erstellt');
   rerender();

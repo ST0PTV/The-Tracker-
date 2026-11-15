@@ -1,7 +1,7 @@
 // Journal im Browser: Ziel setzen, Lebensmittel suchen, Portion mehrfach tippen, eintragen, bearbeiten,
 // löschen mit Rückgängig, Vortag übernehmen. Prüft Zahlen, Konsolenfehler und fremde Keys; Screenshots hell/dunkel.
 // Aufruf: node tests/browser/check-journal.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus, settle } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus, settle, stepDay } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -74,7 +74,7 @@ for (const appearance of ['dark', 'light']) {
   ok((await text()).includes('348 kcal'), `${appearance}: Rückgängig stellt den Eintrag wieder her`);
 
   // Nächster Tag: Frühstück wie am Vortag
-  await p.click('button[aria-label="Nächster Tag"]'); await settle(p, 200);
+  await stepDay(p, 1); await settle(p, 200);
   ok((await text()).includes('Morgen'), `${appearance}: Tageswechsel auf Morgen`);
   ok(await p.locator('.card.meal').count() === 0 && (await text()).includes('Ganzen Vortag übernehmen'), `${appearance}: leerer Tag ohne Mahlzeit-Karten, mit „Ganzen Vortag übernehmen“`);
   await viaPlus(p, 'Wie am Vortag', 'Frühstück');

@@ -3,12 +3,14 @@
 // Texte beschreiben nur die Bedienung (keine Studienaussagen); kein Druck, keine Belohnung, alles überspringbar.
 import * as store from '../../core/store.js';
 
-store.define('intro', { tour: null, trial: null, welcome: true }); // tour/trial: null | 'done' | 'skipped'; welcome: Karte auf „Heute“
+store.define('intro', { tour: null, trial: null, welcome: true, tips: {}, hints: true });
+// tour/trial: null | 'done' | 'skipped'; welcome: Karte auf „Heute“; tips: gesehene Tipps { id: true }; hints: Tipps an (0.5.1)
 
 export const introState = () => {
   const s = store.get('intro');
   const ok = (v) => (v === 'done' || v === 'skipped' ? v : null);
-  return { tour: ok(s.tour), trial: ok(s.trial), welcome: s.welcome !== false };
+  return { tour: ok(s.tour), trial: ok(s.trial), welcome: s.welcome !== false,
+    tips: s.tips && typeof s.tips === 'object' && !Array.isArray(s.tips) ? { ...s.tips } : {}, hints: s.hints !== false };
 };
 export const setIntro = (patch) => store.update('intro', (s) => Object.assign(s, patch));
 
@@ -20,7 +22,7 @@ export const TOUR_STEPS = [
   { id: 'plus', route: '/', target: ['.tab-plus'], title: 'Eintragen',
     body: 'Das „+“ in der Mitte trägt Essen, Wasser, Koffein, Alkohol, Gewicht oder eine gespeicherte Mahlzeit ein – auch aus jedem anderen Bereich.' },
   { id: 'day', route: '/', target: ['#view .day-card', '#view .card'], title: 'Dein Tag',
-    body: 'Oben stehen Kalorien und Makros des Tages, darunter die Karten deiner Tracker. Mit den Pfeilen blätterst du durch die Tage.' },
+    body: 'Oben stehen Kalorien und Makros des Tages, darunter die Karten deiner Tracker. Über den Wochenstreifen und den Kalender wechselst du den Tag.' },
   { id: 'analyse', route: '/', target: ['#view [aria-label="Analyse"]', '#view .day-nav .icon-btn'], title: 'Analyse',
     body: 'Hier geht es zu Wochen, Monat, Mikronährstoffen und dem Magen-Modell mit Plan-Vorschlag. Alles sind Schätzungen.' },
   { id: 'recipes', route: '/rezepte', target: ['#view .rz-sub', '#view nav', '#view .card'], title: 'Rezepte',
@@ -44,6 +46,27 @@ export const TRIAL_STEPS = [
   { id: 'overview', target: ['#view .nav2 .btn'], match: 'Übersicht', title: 'Training beenden',
     body: 'In der Übersicht siehst du alle Übungen und beendest das Training.', until: 'finished' }
 ];
+
+// 0.5.1: einmalige Tipps im Training (aus Workout-Tracker/js/tutorial.js 3.14, TIPS; MIT, ST0PTV): pro Bildschirm
+// höchstens einer, erst nach dem Rundgang, abschaltbar unter „Ich → Einführung“. Pfade an The Tracker angepasst.
+export const TIPS = [
+  { id: 'training-more', route: '/training', target: ['#view button.dots'], body: 'Über ⋯ trägst du ein Training nach oder legst eine leichte Woche ein.' },
+  { id: 'session-setnum', route: '/training', target: ['#view .setrow .sn'], body: 'Tippe auf die Satznummer, um einen Satz als Aufwärm-, Drop- oder Rest-Pause-Satz zu markieren.' },
+  { id: 'plans-analyse', route: '/training/plaene', target: ['#view .plans-ana'], body: 'Prüft deine Pläne auf Balance, Sätze pro Muskel und Dauer – mit Vorschlägen zum Übernehmen.' },
+  { id: 'plans-routines', route: '/training/plaene', target: ['#view [role=tab]'], match: 'Routinen', body: 'Unter „Routinen“ findest du Aufwärmen, Cool-down und Mobility – auch ohne Plan startbar.' },
+  { id: 'progress-4w', route: '/training/fortschritt', target: ['#view [role=tab]'], match: '4 Wochen', body: 'Unter „4 Wochen“ siehst du, welche Muskeln du zuletzt mehr oder weniger trainiert hast.' }
+];
+
+/** Tipps erst nach dem Rundgang (gesehen oder übersprungen) und nur, wenn sie an sind. */
+export const tipsAllowed = (state) => state.hints && state.tour !== null;
+
+/** Noch nicht gesehene Tipps eines Bildschirms in Reihenfolge. */
+export function pendingTips(route, state) {
+  if (!tipsAllowed(state)) return [];
+  return TIPS.filter((t) => t.route === route && !state.tips[t.id]);
+}
+export const markTip = (id) => store.update('intro', (s) => { s.tips = { ...(s.tips && typeof s.tips === 'object' ? s.tips : {}), [id]: true }; });
+export const resetTips = () => store.update('intro', (s) => { s.tips = {}; });
 
 /** Willkommenskarte auf „Heute“: nur für neue Nutzer (noch kein Rundgang, keine Einträge, nicht ausgeblendet). */
 export function showWelcome(state, hasData) {

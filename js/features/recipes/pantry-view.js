@@ -2,6 +2,7 @@
 // mit Menge zum Ändern; Tipp auf den Namen für Menge, „zählt als“, Gegessen und Entfernen.
 // Aufbau nach viewEinkauf/Vorratskammer im Rezeptbuch (JuliaKelp, MIT). Seit 0.5.0 mit Snack-Markierung, „viel …“-Hinweisen
 // bei eingetragenem Mangel (richLevel, Filter wie „Mangel“ im Rezeptbuch) und dem Weg zu „Snack: Was darf ich jetzt?“.
+// 0.5.1: Herz je Eintrag, Wegwerfen ohne Tagebuch, Nährwerte zum Aufklappen, Weg zu „Kochen mit dem Vorrat“ (Rezeptbuch app.js).
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { toast } from '../../core/ui.js';
@@ -12,8 +13,9 @@ import { addEntry, mealByMin, mealLabel, removeEntry } from '../journal/journal.
 import { openAdd } from '../journal/add-sheet.js';
 import { FOODS } from './ingredients.js';
 import { rs } from './recipes.js';
+import { addExtra } from './week.js';
 import { ensureReady, subnav } from './parts.js';
-import { pantry, pantryById, label, step, foodOf, groupOf, GROUPS, addFood, addLoose, setQty, setFoodOf, removeItem, restoreItem, eat, giveBack, clearEmpty, UNIT, setSnack, microsOfItem } from './pantry.js';
+import { pantry, pantryById, label, step, foodOf, groupOf, GROUPS, addFood, addLoose, setQty, setFoodOf, removeItem, restoreItem, eat, giveBack, clearEmpty, UNIT, setSnack, microsOfItem, setFav, discard } from './pantry.js';
 import { richLevel } from './snack.js';
 import { list, switchRow } from '../../core/setui.js';
 import { deficits, refOf } from '../analyse/deficits.js';
@@ -116,18 +118,48 @@ function itemSheet(id, rerender) {
     sheet.close(); rerender();
     toast(`${x.n} als ${mealLabel(meal)} eingetragen${used.length ? ', vom Vorrat abgezogen' : ''}`, { action: { label: 'Rückgängig', onClick: () => { removeEntry(iso, entry.id); giveBack(used); rerender(); } } });
   };
+  const throwG = h('input', { class: 'input', type: 'text', inputmode: 'decimal', 'aria-label': `Weggeworfen in ${unitG}`, value: x.ug ? String(Math.round(x.serving || 100)) : '' , placeholder: x.ug ? '' : 'alles' });
+  const doThrow = (all) => {
+    const g = all ? null : num(throwG.value);
+    if (!all && !(g > 0)) { toast('Bitte eine Menge eingeben.', { error: true }); return; }
+    if (!all && !x.ug) { toast('Ohne Packungsgröße geht nur „Alles weg“.', { error: true }); return; }
+    const used = discard(id, g);
+    sheet.close(); rerender();
+    if (!used.length) { toast('Nichts abgezogen.'); return; }
+    toast(`${x.n}: weggeworfen, nicht im Tagebuch`, { action: { label: 'Rückgängig', onClick: () => { giveBack(used); rerender(); } } });
+  };
   const del = () => { const gone = removeItem(id); sheet.close(); rerender(); toast(`${x.n} entfernt`, { action: { label: 'Rückgängig', onClick: () => { restoreItem(gone); rerender(); } } }); };
   sheet = openSheet(h('div', { class: 'vr-item' },
     h('p', { class: 'small muted' }, `${label(x)}${x.brand ? ' · ' + x.brand : ''}${x.k != null ? ` · ${fmt(x.k)} kcal / 100 ${unitG}` : ''}`),
     h('label', { class: 'form-label' }, h('span', {}, `Menge (${UNIT[x.qu]}${x.qu === 'pkg' && x.ug ? `, je ${fmt(x.ug)} ${unitG}` : ''})`), qty),
     h('label', { class: 'form-label' }, h('span', {}, 'Zählt beim Kochen als'), fn),
     h('button', { class: 'btn primary block', type: 'button', onclick: saveQty }, 'Speichern'),
+    list(switchRow({ title: 'Favorit', sub: 'mit Herz, steht in seiner Gruppe oben', on: !!x.fav, set: (v) => { setFav(id, v); rerender(); } })),
     x.k > 0 ? list(switchRow({ title: 'Als Snack vorschlagen', sub: 'erscheint unter „Snack: Was darf ich jetzt?“', on: !!x.snack, set: (v) => { setSnack(id, v); rerender(); } })) : null,
     microLines(x),
+    nutFold(x),
     h('h3', { class: 'sec' }, 'Gegessen'),
     h('div', { class: 'vr-eat' }, eatG, h('span', {}, unitG), h('button', { class: 'btn', type: 'button', onclick: doEat }, 'Ins Journal')),
     h('p', { class: 'small muted' }, x.ug ? 'Wird als Mahlzeit passend zur Uhrzeit eingetragen und vom Vorrat abgezogen.' : 'Wird eingetragen; ohne Packungsgröße zieht die App nichts ab – ändere die Menge oben.'),
+    x.qty > 0 ? h('h3', { class: 'sec' }, 'Weggeworfen') : null,
+    x.qty > 0 ? h('div', { class: 'vr-eat' }, throwG, h('span', {}, unitG), h('button', { class: 'btn', type: 'button', disabled: !x.ug, onclick: () => doThrow(false) }, 'Abziehen')) : null,
+    x.qty > 0 ? h('button', { class: 'btn block', type: 'button', onclick: () => doThrow(true) }, 'Alles weg') : null,
+    x.qty > 0 ? h('p', { class: 'small muted' }, 'Verdorbenes oder Weggeworfenes: wird vom Vorrat abgezogen, aber nicht als gegessen eingetragen.') : null,
     h('button', { class: 'btn block rp-del', type: 'button', onclick: del }, 'Aus dem Vorrat entfernen')), { title: x.n });
+}
+
+// Nährwerte je 100 g zum Aufklappen (0.5.1); Mikronährstoffe nur mit BLS-Bezug
+function nutFold(x) {
+  if (x.k == null) return null;
+  const u = x.liq ? 'ml' : 'g';
+  const d1 = (v) => String(Math.round((v || 0) * 10) / 10).replace('.', ',');
+  const m = microsOfItem(x);
+  const mic = m ? Object.keys(DGE).filter((id) => m[id] != null).map((id) => `${DGE[id].name} ${d1(m[id])} ${DGE[id].unit}`) : [];
+  return h('details', { class: 'vr-nut' },
+    h('summary', {}, `Nährwerte je 100 ${u}`),
+    h('div', { class: 'vr-nut-grid' }, ...[['kcal', fmt(x.k)], ['Eiweiß', `${d1(x.p)} g`], ['Kohlenhydrate', `${d1(x.c)} g`], ['davon Zucker', `${d1(x.su)} g`], ['Fett', `${d1(x.f)} g`], ['Ballaststoffe', `${d1(x.fi)} g`]]
+      .map(([l, v]) => h('div', {}, h('span', {}, l), h('b', {}, v)))),
+    mic.length ? h('p', { class: 'small muted' }, mic.join(' · ')) : h('p', { class: 'small muted' }, 'Mineralstoffe und Vitamine nur bei Lebensmitteln aus dem BLS.'));
 }
 
 // Mikronährstoffe je 100 g für die eingetragenen Mängel (0.5.0); unbekannt bleibt unbekannt
@@ -148,8 +180,8 @@ function row(x, rerender) {
   const change = (d) => { setQty(x.id, (x.qty || 0) + d); rerender(); };
   const s = step(x);
   return h('div', { class: `vr-row${low(x) ? ' low' : ''}` },
-    h('button', { class: 'vr-main', type: 'button', 'aria-label': `${x.n}, ${label(x)}. Bearbeiten`, onclick: () => itemSheet(x.id, rerender) },
-      h('b', {}, x.n), sub ? h('small', {}, sub) : null),
+    h('button', { class: 'vr-main', type: 'button', 'aria-label': `${x.n}${x.fav ? ', Favorit' : ''}, ${label(x)}. Bearbeiten`, onclick: () => itemSheet(x.id, rerender) },
+      h('b', {}, x.n, x.fav ? h('span', { class: 'vr-fav', 'aria-hidden': 'true' }, icon('heart', { size: 14 })) : null), sub ? h('small', {}, sub) : null),
     h('div', { class: 'vr-stp', role: 'group', 'aria-label': `Menge ${x.n}` },
       h('button', { class: 'icon-btn sm', type: 'button', 'aria-label': `${x.n}: weniger`, disabled: !(x.qty > 0), onclick: () => change(-Math.min(s, x.qty)) }, icon('minus', { size: 16 })),
       h('span', {}, label(x).replace(/ \(≈.*\)$/, '')),
@@ -171,7 +203,7 @@ function pantryView(rerender) {
     const q = ui.query.trim().toLowerCase();
     const shown = have.filter((x) => (!q || `${x.n} ${x.brand} ${foodOf(x) || ''}`.toLowerCase().includes(q)) && (!ui.rich || levelOf(x, ui.rich) >= 1))
       .sort((a, b) => (ui.rich ? levelOf(b, ui.rich) - levelOf(a, ui.rich) : 0));
-    const groups = GROUPS.map(([g, l]) => [l, shown.filter((x) => groupOf(x) === g).sort((a, b) => a.n.localeCompare(b.n, 'de'))]).filter(([, l]) => l.length);
+    const groups = GROUPS.map(([g, l]) => [l, shown.filter((x) => groupOf(x) === g).sort((a, b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0) || a.n.localeCompare(b.n, 'de'))]).filter(([, l]) => l.length);
     listBox.replaceChildren(...(groups.length ? groups.flatMap(([l, items]) => [h('h3', { class: 'sec' }, l), h('section', { class: 'card list' }, ...items.map((x) => row(x, rerender)))])
       : [h('section', { class: 'card' }, h('p', { class: 'small muted' }, ui.rich ? `Gerade nichts im Vorrat mit viel oder etwas ${DGE[ui.rich].name}. Gescannte Packungen ohne BLS-Wert zählen als unbekannt.` : q ? `Nichts im Vorrat mit „${ui.query.trim()}“.` : 'Noch nichts im Vorrat. Scanne Einkäufe, lege lose Zutaten dazu oder übernimm Gekauftes von der Einkaufsliste.'))]));
   };
@@ -186,6 +218,7 @@ function pantryView(rerender) {
     h('div', { class: 'btn-row wk-bar' },
       h('button', { class: 'btn', type: 'button', onclick: () => openPicker('scan', rerender) }, 'Scannen'),
       h('button', { class: 'btn', type: 'button', onclick: () => looseSheet(rerender) }, 'Zutat dazu')),
+    have.length ? h('a', { class: 'cfg-row cfg-link vr-snacklink card', href: '#/rezepte/kochen' }, h('span', { class: 't' }, h('b', {}, 'Kochen mit dem Vorrat'), h('small', {}, 'Rezepte, für die alles oder fast alles da ist')), h('span', { class: 'cfg-val' }, h('span', { class: 'cfg-chev' }, icon('chevron', { size: 15 })))) : null,
     have.length ? h('a', { class: 'cfg-row cfg-link vr-snacklink card', href: '#/rezepte/snack' }, h('span', { class: 't' }, h('b', {}, 'Snack: Was darf ich jetzt?'), h('small', {}, 'freier Rahmen und passende Portionen')), h('span', { class: 'cfg-val' }, h('span', { class: 'cfg-chev' }, icon('chevron', { size: 15 })))) : null,
     deficits().length && have.length ? h('div', { class: 'chips vr-rich', role: 'group', 'aria-label': 'Nach Mangel filtern' },
       h('button', { class: `chip${ui.rich ? '' : ' on'}`, type: 'button', 'aria-pressed': String(!ui.rich), onclick: () => { ui.rich = null; rerender(); } }, 'Alle'),
@@ -195,6 +228,7 @@ function pantryView(rerender) {
     empty.length ? h('h3', { class: 'sec' }, 'Aufgebraucht') : null,
     empty.length ? h('section', { class: 'card' },
       h('p', { class: 'small muted' }, empty.map((x) => x.n).join(', ')),
+      h('button', { class: 'btn block', type: 'button', onclick: () => { const n = empty.filter((x) => addExtra(foodOf(x) || x.n)).length; toast(n ? `${n} auf der Einkaufsliste` : 'Steht schon auf der Liste'); } }, 'Auf die Einkaufsliste'),
       h('button', { class: 'btn block', type: 'button', onclick: () => { const n = clearEmpty(); toast(`${n} entfernt`); rerender(); } }, 'Aufgebrauchtes entfernen')) : null,
     h('p', { class: 'small muted page-note' }, 'Mengen sind Schätzungen. Nur auf diesem Gerät.'));
 }

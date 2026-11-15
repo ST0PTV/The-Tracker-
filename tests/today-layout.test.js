@@ -13,14 +13,14 @@ test('ohne gespeicherte Reihenfolge: Standard', () => {
 });
 
 test('gespeicherte Reihenfolge gilt; Unbekanntes und Doppeltes fällt weg', () => {
-  const o = ['water', 'cycle', 'meals', 'training', 'supp', 'caff', 'alc', 'weight'];
+  const o = ['planned', 'water', 'cycle', 'meals', 'training', 'supp', 'caff', 'alc', 'weight'];
   assert.deepEqual(todayOrder({ todayOrder: o }), o);
   assert.deepEqual(todayOrder({ todayOrder: ['neu', ...o, 'water'] }), o);
 });
 
 test('fehlende Karte (z. B. neu in einer späteren Version) kommt hinter ihren Vorgänger im Standard', () => {
   assert.deepEqual(todayOrder({ todayOrder: ['water', 'cycle', 'training', 'meals', 'caff', 'alc', 'weight'] }),
-    ['water', 'cycle', 'training', 'supp', 'meals', 'caff', 'alc', 'weight']);
+    ['planned', 'water', 'cycle', 'training', 'supp', 'meals', 'caff', 'alc', 'weight']);
   // ohne Vorgänger an den Anfang, die übrigen jeweils hinter ihren Vorgänger
-  assert.deepEqual(todayOrder({ todayOrder: ['weight'] }), ['cycle', 'training', 'supp', 'meals', 'water', 'caff', 'alc', 'weight']);
+  assert.deepEqual(todayOrder({ todayOrder: ['weight'] }), ['planned', 'cycle', 'training', 'supp', 'meals', 'water', 'caff', 'alc', 'weight']);
 });

@@ -17,7 +17,8 @@ store.define('vorrat', []); // [Eintrag] – neueste zuerst
    qty  – Menge in der Einheit qu: 'g' | 'ml' | 'stk' | 'pkg'; ug = Gramm je Einheit (bei g/ml 1, sonst null = unbekannt)
    k, p, c, f, fi, su, fs – je 100 g/ml (für „Gegessen“); serving, pq (Packung in g/ml), liq
    grp  – selbst gewählte Gruppe (optional); added – ISO-Zeit des ersten Hinzufügens
-   snack – true = als Snack markiert (0.5.0): erscheint unter „Snack: Was darf ich jetzt?“ */
+   snack – true = als Snack markiert (0.5.0): erscheint unter „Snack: Was darf ich jetzt?“
+   fav  – true = Herz (0.5.1): steht in seiner Gruppe oben */
 export const UNIT = { g: 'g', ml: 'ml', stk: 'Stück', pkg: 'Pkg.' };
 const r2 = (x) => Math.round(x * 100) / 100;
 const num = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
@@ -134,6 +135,18 @@ export function addLoose(foodName, amount, unit) {
   return { ...x, fn: food.name };
 }
 export function setQty(id, qty) { upd((list) => { const x = list.find((y) => y.id === id); if (x) x.qty = Math.max(0, r2(qty)); }); }
+// 0.5.1: Herz je Eintrag (steht in seiner Gruppe oben) und Wegwerfen ohne Tagebuch (Rezeptbuch app.js, JuliaKelp, MIT)
+export function setFav(id, on) { upd((list) => { const x = list.find((y) => y.id === id); if (x) { if (on) x.fav = true; else delete x.fav; } }); }
+/** Weggeworfen: g Gramm (null = alles) abziehen, nicht ins Tagebuch. Gibt [[id, Menge]] für giveBack zurück. */
+export function discard(id, g = null) {
+  return upd((list) => {
+    const x = list.find((y) => y.id === id);
+    if (!x || !(x.qty > 0)) return [];
+    const dq = g == null ? x.qty : x.ug ? Math.min(x.qty, r2(g / x.ug)) : 0;
+    x.qty = r2(x.qty - dq);
+    return dq > 0 ? [[x.id, dq]] : [];
+  });
+}
 export function setSnack(id, on) { upd((list) => { const x = list.find((y) => y.id === id); if (x) { if (on) x.snack = true; else delete x.snack; } }); }
 
 /**

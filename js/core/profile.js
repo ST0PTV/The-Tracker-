@@ -137,6 +137,20 @@ export function setGoal({ from = todayISO(), goal, preset = 'dge', pf, ff, weigh
   return ok;
 }
 
+/** 0.5.1: Ziel aus der Historie löschen (Datum from); gibt den Eintrag zurück (für „Rückgängig“). */
+export function removeGoal(from) {
+  const gone = store.get('goals').find((g) => g.from === from) || null;
+  if (gone) { store.set('goals', store.get('goals').filter((g) => g.from !== from)); changed(); }
+  return gone;
+}
+/** Gelöschtes Ziel unverändert zurücklegen. */
+export function restoreGoal(entry) {
+  if (!entry) return false;
+  const ok = store.set('goals', withGoal(store.get('goals'), entry));
+  changed();
+  return ok;
+}
+
 // ---------- Gewicht und Gewichtsziel ----------
 // Gewichtsverlauf: { 'JJJJ-MM-TT': { kg, demo? } }, ein Wert pro Tag (der letzte zählt).
 // Gewichtsziel (Datenform wie state.wgoal im Calorie-Tracker 2.3.1): Rechnung in js/features/goal/weightgoal.js.

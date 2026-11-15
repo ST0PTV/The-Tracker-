@@ -2,7 +2,7 @@
    Bei jeder Änderung an den Dateien CACHE_VERSION erhöhen (und js/core/version.js abgleichen).
    Strategie wie im Rezeptbuch: erst Netz (immer neueste Version), offline aus dem Cache.
    Wichtig: Die Origin st0ptv.github.io teilen sich mehrere Apps. Beim Aufräumen nur EIGENE Caches (tt-cache-…) löschen. */
-const CACHE_VERSION = 33;
+const CACHE_VERSION = 34;
 const CACHE = `tt-cache-v${CACHE_VERSION}`;
 
 const PRECACHE = [
@@ -37,6 +37,15 @@ const PRECACHE = [
   'js/features/journal/food-form.js',
   'js/features/journal/journal.js',
   'js/features/journal/meals-sheet.js',
+  'js/features/journal/week-strip.js',
+  'js/features/journal/swipe.js',
+  'js/features/journal/closing-card.js',
+  'js/features/analyse/week-review.js',
+  'js/features/goal/goal-view.js',
+  'js/core/file-share.js',
+  'js/features/food/share.js',
+  'js/features/food/recipe-food.js',
+  'js/features/food/foods-view.js',
   'js/features/journal/day-card.js',
   'js/features/journal/add-sheet.js',
   'js/features/journal/amount-sheet.js',
@@ -78,6 +87,8 @@ const PRECACHE = [
   'js/features/recipes/pantry.js',
   'js/features/recipes/pantry-view.js',
   'js/features/recipes/snack-view.js',
+  'js/features/recipes/planned-card.js',
+  'js/features/recipes/cook-view.js',
   'js/features/recipes/snack.js',
   'js/core/lock.js',
   'js/features/me/lock-view.js',

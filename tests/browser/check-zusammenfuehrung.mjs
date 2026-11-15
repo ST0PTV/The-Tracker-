@@ -113,7 +113,7 @@ const rich = await text();
 ok(/Linsen/.test(rich) && !/Riegel/.test(rich), 'Filter Eisen zeigt nur Reiches');
 await shot('vorrat-mangel');
 await p.click('.vr-rich .chip:has-text("Alle")'); await settle(p, 200);
-await p.click('.vr-snacklink'); await settle(p, 500);
+await p.click('.vr-snacklink[href="#/rezepte/snack"]'); await settle(p, 500);
 const sn = await text();
 ok(/frei für Snacks/.test(sn) && /Riegel/.test(sn) && /Banane/.test(sn) && !/Linsen/.test(sn.split('Snack-Rezepte')[0]), 'Snack-Seite: Rahmen, Riegel und Banane, keine Linsen');
 await shot('snack');

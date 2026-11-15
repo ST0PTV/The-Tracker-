@@ -13,9 +13,13 @@ import { caffSettings, setCaffSettings } from '../drinks/caffeine.js';
 import { alcSettings, setAlcSettings } from '../drinks/alcohol.js';
 import { suppSettings, setSuppSettings } from '../supp/supplements.js';
 import * as tstore from '../training/store.js';
+import { plannedCardOn } from '../recipes/planned-card.js';
 
 // Karten in der Standard-Reihenfolge. get/set = bestehende Einstellung; ohne get = immer an (Mahlzeiten).
 export const TODAY_CARDS = [
+  // 0.5.1: übernommene Gerichte des Wochenplans für heute (nur mit Plan sichtbar)
+  { key: 'planned', title: 'Geplant für heute', sub: 'aus dem Wochenplan', badge: ['food', 'calendar'],
+    get: plannedCardOn, set: (v) => setSettings({ plannedCard: v }) },
   { key: 'cycle', title: 'Zyklus', sub: 'nur am heutigen Tag', badge: ['cyc', 'drop'],
     get: () => cycleSettings().on !== false, set: (v) => setCycleSettings({ on: v }), avail: cycleAvailable,
     off: 'unter „Schlaf & Körper“ einschalten' },

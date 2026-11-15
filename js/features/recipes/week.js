@@ -4,6 +4,7 @@
 // Copyright (c) 2026 JuliaKelp, MIT-Lizenz). Geändert: Auswahl über recipes.ideasFor (Profil-Ziele, Allergene,
 // Ablehnungen), kein Vorrat- und Mangel-Bonus (0.2.5 / 0.3.0), Speicher nur über core/store.js (Schlüssel tt_week).
 import * as store from '../../core/store.js';
+import { uuid } from '../../core/util.js';
 import { isoDate, addDays } from '../../core/format.js';
 import { ideasFor, mainMeals, mealBudget, kcalOfRecipe, recipeById, suitable, timeMode, rs, MEAL_OF, recipeNutrients } from './recipes.js';
 
@@ -13,7 +14,8 @@ store.define('week', {
   fit: true,       // Mengen an das Tagesziel anpassen
   seed: 0,         // „Rest neu mischen“ zählt hoch
   slots: {},       // { 'JJJJ-MM-TT|meal': { id, ok } }
-  bought: {}       // Einkauf: { Schlüssel: true }
+  bought: {},      // Einkauf: { Schlüssel: true }
+  extra: []        // 0.5.1: eigene Punkte der Einkaufsliste [{ key: 'x:<id>', text }]
 });
 
 export const PLAN_MEALS = ['breakfast', 'lunch', 'dinner', 'snack'];
@@ -191,4 +193,20 @@ export function togglePlanMeal(m) {
 export function setWeekPortions(n) { upd((w) => { w.portions = Math.max(1, Math.min(12, Math.round(n) || 1)); }); }
 export function setFit(on) { upd((w) => { w.fit = !!on; }); }
 export function toggleBought(key) { upd((w) => { if (w.bought[key]) delete w.bought[key]; else w.bought[key] = true; }); }
+// 0.5.1: eigene Punkte auf der Einkaufsliste (z. B. „Auf die Liste“ beim Kochen mit dem Vorrat, Aufgebrauchtes)
+export const extras = () => (Array.isArray(wk().extra) ? wk().extra : []);
+/** Fügt einen Punkt hinzu (gleicher Text nur einmal). Gibt true zurück, wenn er neu ist. */
+export function addExtra(text) {
+  const t = String(text || '').trim().slice(0, 80);
+  if (!t || extras().some((x) => x.text.toLowerCase() === t.toLowerCase())) return false;
+  upd((w) => { w.extra = [...(Array.isArray(w.extra) ? w.extra : []), { key: 'x:' + uuid(), text: t }]; });
+  return true;
+}
+export function removeExtra(key) { upd((w) => { w.extra = (w.extra || []).filter((x) => x.key !== key); delete w.bought[key]; }); }
+/** Abgehakte eigene Punkte entfernen (nach dem Einkauf). Gibt die Anzahl zurück. */
+export function clearBoughtExtras() {
+  let n = 0;
+  upd((w) => { const keep = (w.extra || []).filter((x) => !w.bought[x.key]); n = (w.extra || []).length - keep.length; w.extra = keep; });
+  return n;
+}
 export function clearBought() { upd((w) => { w.bought = {}; }); }

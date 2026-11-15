@@ -1,6 +1,6 @@
 // Beispieldaten im Browser: unter „Ich“ laden, gestern im Journal sehen, wieder entfernen; echte Einträge und
 // fremde Keys bleiben. Aufruf: node tests/browser/check-demo.mjs
-import { launch, startServer, checker, outDir, settle } from './lib.mjs';
+import { launch, startServer, checker, outDir, settle, stepDay } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -24,7 +24,7 @@ await p.screenshot({ path: join(out, 'ich.png') });
 await p.goto(srv.url + '/index.html#/'); await settle(p, 200);
 let t = await p.evaluate(() => document.body.innerText);
 ok(/2\.150/.test(t), 'Beispielziel 2.150 kcal gesetzt');
-await p.click('button[aria-label="Vorheriger Tag"]'); await settle(p, 200);
+await stepDay(p, -1); await settle(p, 200);
 t = await p.evaluate(() => document.body.innerText);
 ok(t.includes('Gestern') && /Einträge · /.test(t), 'gestern hat Mahlzeiten mit Einträgen');
 await p.screenshot({ path: join(out, 'gestern.png') });

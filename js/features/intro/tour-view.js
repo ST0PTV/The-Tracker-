@@ -7,7 +7,8 @@ import * as store from '../../core/store.js';
 import { toast, currentPath, pageHead } from '../../core/ui.js';
 import { closeAllSheets } from '../../core/sheet.js';
 import { backLink, sec, list, note, actionRow } from '../../core/setui.js';
-import { TOUR_STEPS, TRIAL_STEPS, introState, setIntro, showWelcome } from './intro.js';
+import { TOUR_STEPS, TRIAL_STEPS, introState, setIntro, showWelcome, pendingTips, markTip, resetTips } from './intro.js';
+import { switchRow } from '../../core/setui.js';
 
 let active = null; // 'tour' | 'trial' | null
 export const introActive = () => active !== null;
@@ -216,6 +217,47 @@ export function endTrial(done) {
 
 // ---------- Willkommenskarte und Seite ----------
 /** Karte „Neu hier?“ ganz oben auf „Heute“ für neue Nutzer. hasData: schon Einträge vorhanden. */
+// ---------- Einmalige Tipps (0.5.1, aus Workout-Tracker/js/tour-view.js 3.14 maybeTip) ----------
+let tip = null;
+function hideTip() { if (tip) { tip.remove(); tip = null; } }
+
+/** Zeigt den ersten noch nicht gesehenen Tipp dieses Bildschirms (nach dem Rendern aufrufen). */
+export function maybeTip(path = currentPath()) {
+  hideTip();
+  if (active || store.inSandbox() || sheetOpen()) return;
+  for (const t of pendingTips(path, introState())) {
+    const el = findTarget(t);
+    if (!el) continue;
+    const box = h('div', { class: 'tip-box', role: 'dialog', 'aria-label': 'Tipp', 'aria-live': 'polite' },
+      h('p', {}, t.body),
+      h('button', { type: 'button', class: 'tip-ok', onclick: () => { markTip(t.id); hideTip(); } }, 'Verstanden'));
+    const arrow = h('div', { class: 'tip-arrow', 'aria-hidden': 'true' });
+    const wrap = h('div', { class: 'tip-wrap' }, arrow, box);
+    document.body.append(wrap);
+    const place = () => {
+      if (!el.isConnected) { hideTip(); return; }
+      const r = el.getBoundingClientRect(); const W = window.innerWidth; const H = window.innerHeight;
+      const bh = box.offsetHeight; const below = H - r.bottom >= bh + 90;
+      const top = below ? r.bottom + 12 : Math.max(8, r.top - 12 - bh);
+      box.style.top = top + 'px';
+      arrow.style.left = Math.min(W - 30, Math.max(20, (r.left + r.right) / 2 - 8)) + 'px';
+      arrow.style.top = (below ? top - 7 : top + bh - 9) + 'px';
+    };
+    const onScroll = () => place();
+    document.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onScroll);
+    tip = { remove: () => { document.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', onScroll); wrap.remove(); } };
+    requestAnimationFrame(place); place();
+    return;
+  }
+}
+// Nach jedem Seitenwechsel kurz warten (Trainingsbereich lädt nach), dann einen Tipp prüfen
+if (typeof window !== 'undefined') {
+  const later = () => { hideTip(); setTimeout(() => maybeTip(), 700); };
+  window.addEventListener('hashchange', later);
+  window.addEventListener('load', later);
+}
+
 export function welcomeCard(hasData, rerenderPage) {
   if (!showWelcome(introState(), hasData)) return null;
   return h('section', { class: 'card intro-card' },
@@ -239,5 +281,9 @@ export function introView() {
     note(`Acht Schritte durch Heute, Rezepte, Training und „Ich“. Bisher: ${st(s.tour)}. Escape oder „Überspringen“ beendet ihn.`),
     sec('Probetraining'),
     list(actionRow({ title: 'Probetraining starten', onClick: () => startTrial() })),
-    note(`Ein kurzes Training mit zwei Beispielübungen: Satz abhaken, Pause, nächste Übung, beenden. Nichts wird gespeichert. Bisher: ${st(s.trial)}.`));
+    note(`Ein kurzes Training mit zwei Beispielübungen: Satz abhaken, Pause, nächste Übung, beenden. Nichts wird gespeichert. Bisher: ${st(s.trial)}.`),
+    sec('Tipps'),
+    list(switchRow({ title: 'Tipps im Training', sub: 'je Bildschirm einmal, nach dem Rundgang', on: s.hints, set: (v) => { setIntro({ hints: v }); rerender(); } }),
+      Object.keys(s.tips).length ? actionRow({ title: 'Alle Tipps wieder zeigen', onClick: () => { resetTips(); toast('Tipps erscheinen wieder'); rerender(); } }) : null),
+    note('Kurze Hinweise zu versteckten Funktionen, z. B. Satztypen oder „4 Wochen“ im Fortschritt.'));
 }

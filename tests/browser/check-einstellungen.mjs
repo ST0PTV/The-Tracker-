@@ -33,7 +33,7 @@ for (const appearance of ['dark', 'light']) {
 
   // Ich: neuer Bereich „Heute“
   await nav('#/ich');
-  ok(/Heute anpassen/.test(await p.innerText('#view')) && /von 9 Karten/.test(await p.innerText('a[href="#/ich/heute"]')), `${appearance}: Ich zeigt „Heute anpassen“ mit Kartenzahl`);
+  ok(/Heute anpassen/.test(await p.innerText('#view')) && /von 10 Karten/.test(await p.innerText('a[href="#/ich/heute"]')), `${appearance}: Ich zeigt „Heute anpassen“ mit Kartenzahl`);
 
   // An/aus: Wasser aus → keine Karte und kein Eintrag im „+“
   await nav('#/ich/heute');
@@ -51,9 +51,9 @@ for (const appearance of ['dark', 'light']) {
 
   // Reihenfolge: Koffein per Ziehen ganz nach oben
   await p.click('button.cfg-edit'); await settle(p, 200);
-  ok(await p.locator('.cfg-grip').count() === 8, `${appearance}: acht Griffe im Reihenfolge-Modus`);
+  ok(await p.locator('.cfg-grip').count() === 9, `${appearance}: neun Griffe im Reihenfolge-Modus`);
   const g = await p.locator('.cfg-grip[data-key="caff"]').boundingBox();
-  const top = await p.locator('.cfg-grip[data-key="cycle"]').boundingBox();
+  const top = await p.locator('.cfg-grip[data-key="planned"]').boundingBox();
   await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2); await p.mouse.down();
   for (let i = 1; i <= 12; i++) await p.mouse.move(g.x + g.width / 2, g.y + g.height / 2 + (top.y - g.y - 10) * i / 12);
   await p.mouse.up(); await settle(p, 250);
