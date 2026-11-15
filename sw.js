@@ -2,12 +2,13 @@
    Bei jeder Änderung an den Dateien CACHE_VERSION erhöhen (und js/core/version.js abgleichen).
    Strategie wie im Rezeptbuch: erst Netz (immer neueste Version), offline aus dem Cache.
    Wichtig: Die Origin st0ptv.github.io teilen sich mehrere Apps. Beim Aufräumen nur EIGENE Caches (tt-cache-…) löschen. */
-const CACHE_VERSION = 32;
+const CACHE_VERSION = 33;
 const CACHE = `tt-cache-v${CACHE_VERSION}`;
 
 const PRECACHE = [
   './',
   'index.html',
+  'js/boot-theme.js',
   'manifest.webmanifest',
   'css/app.css',
   'css/training.css',
@@ -35,6 +36,7 @@ const PRECACHE = [
   'js/features/food/barcode.js',
   'js/features/journal/food-form.js',
   'js/features/journal/journal.js',
+  'js/features/journal/meals-sheet.js',
   'js/features/journal/day-card.js',
   'js/features/journal/add-sheet.js',
   'js/features/journal/amount-sheet.js',
@@ -75,8 +77,14 @@ const PRECACHE = [
   'js/features/recipes/shop-view.js',
   'js/features/recipes/pantry.js',
   'js/features/recipes/pantry-view.js',
+  'js/features/recipes/snack-view.js',
+  'js/features/recipes/snack.js',
   'js/core/lock.js',
   'js/features/me/lock-view.js',
+  'js/core/backup.js',
+  'js/features/me/backup-view.js',
+  'js/features/intro/tour-view.js',
+  'js/features/intro/intro.js',
   'js/features/me/look-view.js',
   'js/features/me/today-layout.js',
   'js/features/cycle/model.js',
@@ -99,6 +107,7 @@ const PRECACHE = [
   'js/features/training/controls.js',
   'js/features/training/cycle-view.js',
   'js/features/training/demo.js',
+  'js/features/training/trial-data.js',
   'js/features/training/device.js',
   'js/features/training/diary-view.js',
   'js/features/training/exercises-view.js',
@@ -169,6 +178,7 @@ const PRECACHE = [
   'js/features/analyse/dge.js',
   'js/features/analyse/deficits.js',
   'js/features/analyse/stomach.js',
+  'js/features/analyse/meal-plan.js',
   'js/features/analyse/data.js',
   'js/features/analyse/charts.js',
   'js/features/analyse/analyse-view.js',

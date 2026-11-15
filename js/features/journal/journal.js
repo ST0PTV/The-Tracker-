@@ -171,6 +171,42 @@ export function copyEntries(fromIso, toIso, meal = null) {
   return src.length;
 }
 
+// ---------- Gespeicherte Mahlzeiten (0.5.0) ----------
+// Nach openSaveMeal/openSavedMeal im Calorie-Tracker (js/app.js, ST0PTV, MIT): Einträge einer Mahlzeit mit eingefrorenen
+// Nährwerten unter einem Namen; höchstens 50, neueste zuerst. Verknüpfte Einträge (Koffein, Alkohol) kommen nicht mit.
+export const SAVED_MAX = 50;
+store.define('meals', []); // [{ id, name, items: [Eintrag ohne id/meal/at/t/link], at }]
+const KEEP_OUT = ['id', 'meal', 'at', 't', 'link'];
+const itemOf = (e) => Object.fromEntries(Object.entries(e).filter(([k]) => !KEEP_OUT.includes(k)));
+
+export const savedMeals = () => store.get('meals');
+export const savableEntries = (iso, meal) => entriesOf(iso).filter((e) => e.meal === meal && !e.link);
+
+/** Speichert die Einträge einer Mahlzeit unter einem Namen. Gibt die gespeicherte Mahlzeit zurück. */
+export function saveMeal(iso, meal, name) {
+  const items = savableEntries(iso, meal).map(itemOf);
+  if (!items.length) throw new Error('Diese Mahlzeit hat keine Einträge.');
+  const n = String(name || '').trim().slice(0, 60) || items[0].n.split(',')[0];
+  const m = { id: uuid(), name: n, items, at: nowISO() };
+  store.update('meals', (list) => [m].concat(list).slice(0, SAVED_MAX));
+  changed();
+  return m;
+}
+
+/** Trägt eine gespeicherte Mahlzeit als neue Einträge ein. Gibt die Anzahl zurück. */
+export function addSavedMeal(iso, id, meal) {
+  const m = savedMeals().find((x) => x.id === id);
+  if (!m || !MEALS.some((x) => x.id === meal)) return 0;
+  const at = nowISO();
+  writeDay(iso, (list) => list.concat(m.items.map((it) => ({ ...it, id: uuid(), meal, at }))));
+  return m.items.length;
+}
+
+export function removeSavedMeal(id) {
+  store.update('meals', (list) => list.filter((x) => x.id !== id));
+  changed();
+}
+
 // ---------- Favoriten und Zuletzt ----------
 
 export const favs = () => store.get('favs');

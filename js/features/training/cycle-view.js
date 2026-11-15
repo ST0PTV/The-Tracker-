@@ -59,7 +59,7 @@ export function cycleState(today = isoDate()) {
   const a = cycleAnalysis(today);
   const e = days[today] || {};
   const inPeriod = M.isBleed(e) || (M.isBleed(days[M.addDays(today, -1)]) && !!a.last && a.dayNo <= M.NORMAL_BLEED);
-  const flags = M.flags(a, days, today, { method: c.method, phase: c.phase }).map((f) => f.text);
+  const flags = M.flags(a, days, today, { method: c.method, phase: c.phase, warn: c.warn, tol: c.tol }).map((f) => f.text);
   return { mode: a.last ? 'on' : 'nodata', a, c, e, today, inPeriod, bleedToday: M.isBleed(e), flags,
     next: a.last ? M.nextText(a, today, { phase: c.phase }) : '', hormonal: M.hormonal(c.method) };
 }

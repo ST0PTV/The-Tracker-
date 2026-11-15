@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://world.openfoodfacts.org; media-src 'self' blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>The Tracker</title>
   <meta name="theme-color" content="#000000">
@@ -13,21 +14,7 @@
   <link rel="apple-touch-icon" href="icons/icon-180.png">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="stylesheet" href="css/app.css">
-  <script>
-    // Darstellung vor dem ersten Zeichnen setzen (Apple nativ, dunkel ist Standard). Nur eigene Keys (tt_) lesen.
-    // Gleiche Regeln wie js/core/theme.js; BAR muss dort gleich sein (tests/themes.test.js).
-    try {
-      var s = JSON.parse(localStorage.getItem('tt_settings') || '{}') || {};
-      var BAR = { nativ: ['#000000', '#F2F2F7'], glas: ['#0B0E1A', '#EEF1F8'], sand: ['#14110E', '#F3EDE3'], see: ['#0A1114', '#EEF4F5'] };
-      var pal = BAR[s.palette] ? s.palette : 'nativ';
-      var light = s.appearance === 'light' || (s.appearance === 'system' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches);
-      var root = document.documentElement;
-      if (pal !== 'nativ') root.setAttribute('data-palette', pal);
-      if (light) root.setAttribute('data-theme', 'light');
-      document.querySelector('meta[name="theme-color"]').setAttribute('content', BAR[pal][light ? 1 : 0]);
-      if (light) document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]').setAttribute('content', 'default');
-    } catch (e) { /* ohne Speicher: Dunkel */ }
-  </script>
+  <script src="js/boot-theme.js"></script>
 </head>
 <body>
   <div id="savebar" class="savebar" role="alert" hidden>Nicht gespeichert – Speicher voll?</div>

@@ -14,6 +14,8 @@ import { analyseRoutes } from './features/analyse/routes.js';
 import { loadFoods } from './features/food/foods.js';
 import { cycleRoutes } from './features/cycle/routes.js';
 import { lockSettingsView, lockScreen } from './features/me/lock-view.js';
+import { backupView } from './features/me/backup-view.js';
+import { introView } from './features/intro/tour-view.js';
 import { isLocked } from './core/lock.js';
 import { closeAllSheets } from './core/sheet.js';
 
@@ -35,7 +37,9 @@ const routes = {
   ...ichRoutes,
   ...analyseRoutes,
   ...cycleRoutes,
-  '/ich/sperre': lockSettingsView
+  '/ich/sperre': lockSettingsView,
+  '/ich/daten': backupView,
+  '/ich/einfuehrung': introView
 };
 // PIN-Sperre für die ganze App (core/lock.js): jede Seite zeigt dann den Sperrbildschirm, ohne Tab-Leiste.
 const guarded = {};

@@ -77,3 +77,28 @@ test('Untergrenze: Frauen und ohne Angabe 1.200, Männer 1.500 kcal', () => {
   assert.equal(kcalFloor(null), 1200);
   assert.equal(kcalFloor('m'), 1500);
 });
+
+test('Gespeicherte Mahlzeiten (0.5.0): speichern ohne Verknüpfte, eintragen als neue Einträge, höchstens 50', async () => {
+  fresh();
+  const { saveMeal, addSavedMeal, savedMeals, removeSavedMeal, SAVED_MAX } = await import('../js/features/journal/journal.js');
+  addEntry('2026-11-01', oats, 60, 'breakfast', { t: '07:15' });
+  addEntry('2026-11-01', oats, 30, 'breakfast');
+  addEntry('2026-11-01', oats, 50, 'lunch');
+  const m = saveMeal('2026-11-01', 'breakfast', '  Haferfrühstück  ');
+  assert.equal(m.name, 'Haferfrühstück');
+  assert.equal(m.items.length, 2);
+  assert.ok(m.items.every((x) => !('id' in x) && !('meal' in x) && !('t' in x) && !('at' in x)));
+  assert.equal(addSavedMeal('2026-11-02', m.id, 'snack'), 2);
+  const day = entriesOf('2026-11-02');
+  assert.deepEqual(day.map((e) => e.meal), ['snack', 'snack']);
+  assert.equal(new Set(day.map((e) => e.id)).size, 2);
+  assert.ok(!day.some((e) => entriesOf('2026-11-01').some((x) => x.id === e.id)), 'neue IDs');
+  assert.equal(Math.round(dayTotals('2026-11-02').k), Math.round(348 * 0.9));
+  assert.throws(() => saveMeal('2026-11-01', 'dinner', 'leer'), /keine Einträge/);
+  for (let i = 0; i < SAVED_MAX + 3; i++) saveMeal('2026-11-01', 'lunch', `M${i}`);
+  assert.equal(savedMeals().length, SAVED_MAX);
+  assert.equal(savedMeals()[0].name, `M${SAVED_MAX + 2}`, 'neueste zuerst');
+  removeSavedMeal(savedMeals()[0].id);
+  assert.equal(savedMeals().length, SAVED_MAX - 1);
+  assert.equal(localStorage.getItem('ct.v1'), '{"fremd":1}');
+});

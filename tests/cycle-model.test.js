@@ -188,3 +188,43 @@ test('Hinweise ab 0.3.2: „zu lang“ ab drei Zyklen über 35 Tagen, Ausbleiben
   assert.ok(M.flags(a, mk(starts), today).some((f) => f.id === 'absent'));
   assert.equal(M.ABSENT_DAYS_IRREG, undefined);
 });
+
+test('0.5.0: Hinweise einzeln abschaltbar, eigenes Fenster (Median ± tol)', () => {
+  // Zyklen 28, 22, 34, 28, 21, 35 → Median 28; außerhalb ± 4: 22, 34, 21, 35 = 4
+  const starts = ['2026-01-01'];
+  for (const n of [28, 22, 34, 28, 21, 35]) starts.push(M.addDays(starts[starts.length - 1], n));
+  const days = make(starts);
+  const today = M.addDays(starts[starts.length - 1], 3);
+  const a = M.analyze(days, today);
+  const ids = (o) => M.flags(a, days, today, o).map((f) => f.id);
+  assert.ok(ids({}).includes('spread'));
+  assert.ok(!ids({}).includes('tol'), 'ohne Fenster kein Fenster-Hinweis');
+  const tol = M.flags(a, days, today, { tol: 4 }).find((f) => f.id === 'tol');
+  assert.ok(tol && /4 der letzten 6 Zyklen/.test(tol.text) && /28 ± 4/.test(tol.text), tol && tol.text);
+  assert.ok(!ids({ tol: 8 }).includes('tol'), 'weites Fenster: kein Hinweis');
+  assert.ok(!ids({ warn: { spread: false } }).includes('spread'), 'abgeschaltet');
+  assert.ok(!ids({ tol: 4, warn: { tol: false } }).includes('tol'));
+  assert.ok(M.FLAG_IDS.every(([id]) => typeof id === 'string'));
+});
+
+test('0.5.0: Beschwerden und Stimmung – Häufigkeit und Lage zur Periode', () => {
+  const starts = ['2026-03-01', '2026-03-29', '2026-04-26'];
+  const days = make(starts, 5, {
+    '2026-03-02': { body: ['Unterleibskrämpfe'], pain: 'Stark' },
+    '2026-03-25': { body: ['Kopfweh'], mood: ['Gereizt'] },
+    '2026-03-27': { body: ['Kopfweh'] },
+    '2026-04-10': { mood: ['Gut drauf'] },
+    '2026-04-30': { body: ['Unterleibskrämpfe'] }
+  });
+  const today = '2026-05-05';
+  const st = M.symptomStats(days, M.analyze(days, today), today);
+  assert.equal(st.cycles, 3);
+  const by = Object.fromEntries(st.list.map((x) => [x.label, x]));
+  assert.deepEqual([by.Kopfweh.n, by.Kopfweh.pre, by.Kopfweh.other], [2, 2, 0], 'in den 7 Tagen vor der Periode');
+  assert.deepEqual([by['Unterleibskrämpfe'].n, by['Unterleibskrämpfe'].period, by['Unterleibskrämpfe'].cycles], [2, 2, 2]);
+  assert.equal(by['Schmerzen: Stark'].period, 1);
+  assert.equal(by['Gut drauf'].other, 1);
+  assert.equal(by.Gereizt.kind, 'mood');
+  assert.equal(st.list[0].n, 2, 'nach Häufigkeit sortiert');
+  assert.deepEqual(M.symptomStats({}, M.analyze({}, today), today).list, []);
+});

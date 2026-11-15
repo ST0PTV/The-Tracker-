@@ -2,11 +2,12 @@
 // Vorschläge mit vorhandenen Zutaten kommen zuerst. Einzige Stelle, die tt_vorrat speichert.
 // Nach dem Rezeptbuch, vorrat.js (grams, label, step, take, giveBack) und app.js (matchFood, vorratFood, stockOf,
 // takeIngredients, vorratEntry, addToVorrat, VR_GROUPS, blsGroup; Copyright (c) 2026 JuliaKelp, MIT-Lizenz).
-// Geändert: eigener Speicher statt ct.v1 → pantry, Zeitstempel als ISO-Zeit, keine Snack-Markierung (später), keine
-// Mikronährstoff-Hinweise (0.3.0). Rein bis auf den Speicher; mit Node getestet.
+// Geändert: eigener Speicher statt ct.v1 → pantry, Zeitstempel als ISO-Zeit. Seit 0.5.0 mit Snack-Markierung (snack) und
+// Mikronährstoffen je Eintrag (microsOfItem, Hinweise in snack.js). Rein bis auf den Speicher; mit Node getestet.
 import * as store from '../../core/store.js';
 import { uuid, nowISO } from '../../core/util.js';
-import { FOODS, findFood, parseIngredient, gramsOfText, nutrientsFor } from './ingredients.js';
+import { FOODS, findFood, parseIngredient, gramsOfText, nutrientsFor, microsOf } from './ingredients.js';
+import { foodById } from '../food/foods.js';
 
 store.define('vorrat', []); // [Eintrag] – neueste zuerst
 
@@ -15,7 +16,8 @@ store.define('vorrat', []); // [Eintrag] – neueste zuerst
    fn   – als welche Rezept-Zutat er zählt (Name aus ingredients.js FOODS) oder '' = keine
    qty  – Menge in der Einheit qu: 'g' | 'ml' | 'stk' | 'pkg'; ug = Gramm je Einheit (bei g/ml 1, sonst null = unbekannt)
    k, p, c, f, fi, su, fs – je 100 g/ml (für „Gegessen“); serving, pq (Packung in g/ml), liq
-   grp  – selbst gewählte Gruppe (optional); added – ISO-Zeit des ersten Hinzufügens */
+   grp  – selbst gewählte Gruppe (optional); added – ISO-Zeit des ersten Hinzufügens
+   snack – true = als Snack markiert (0.5.0): erscheint unter „Snack: Was darf ich jetzt?“ */
 export const UNIT = { g: 'g', ml: 'ml', stk: 'Stück', pkg: 'Pkg.' };
 const r2 = (x) => Math.round(x * 100) / 100;
 const num = (x) => String(Math.round(x * 10) / 10).replace('.', ',');
@@ -132,6 +134,18 @@ export function addLoose(foodName, amount, unit) {
   return { ...x, fn: food.name };
 }
 export function setQty(id, qty) { upd((list) => { const x = list.find((y) => y.id === id); if (x) x.qty = Math.max(0, r2(qty)); }); }
+export function setSnack(id, on) { upd((list) => { const x = list.find((y) => y.id === id); if (x) { if (on) x.snack = true; else delete x.snack; } }); }
+
+/**
+ * Mikronährstoffe je 100 g eines Eintrags (0.5.0): aus dem BLS (ref bls:…) oder über die Rezept-Zutat („zählt als“).
+ * Gescannte Packungen ohne BLS-Bezug: null = unbekannt (nie 0).
+ */
+export function microsOfItem(x) {
+  if (String(x.ref || '').startsWith('bls:')) { const f = foodById(x.ref); if (f) return f; }
+  const name = foodOf(x);
+  return name ? microsOf(FOODS.find((f) => f.name === name)) : null;
+}
+
 export function setFoodOf(id, fn) { upd((list) => { const x = list.find((y) => y.id === id); if (x) x.fn = fn || ''; }); }
 export function removeItem(id) { return upd((list) => { const i = list.findIndex((y) => y.id === id); return i >= 0 ? list.splice(i, 1)[0] : null; }); }
 export function restoreItem(x) { if (x) upd((list) => { if (!list.some((y) => y.id === x.id)) list.unshift(x); }); }

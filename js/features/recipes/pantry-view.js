@@ -1,6 +1,7 @@
 // Reiter „Rezepte → Vorrat“, Entwurf A „Liste mit −/+“ (Nutzerwahl 2026-10-29): Suche, Scannen, Zutat dazu, Gruppen
 // mit Menge zum Ändern; Tipp auf den Namen für Menge, „zählt als“, Gegessen und Entfernen.
-// Aufbau nach viewEinkauf/Vorratskammer im Rezeptbuch (JuliaKelp, MIT); ohne Snack-Markierung und Mangel-Hinweise.
+// Aufbau nach viewEinkauf/Vorratskammer im Rezeptbuch (JuliaKelp, MIT). Seit 0.5.0 mit Snack-Markierung, „viel …“-Hinweisen
+// bei eingetragenem Mangel (richLevel, Filter wie „Mangel“ im Rezeptbuch) und dem Weg zu „Snack: Was darf ich jetzt?“.
 import { h } from '../../core/util.js';
 import { icon } from '../../core/icons.js';
 import { toast } from '../../core/ui.js';
@@ -12,9 +13,15 @@ import { openAdd } from '../journal/add-sheet.js';
 import { FOODS } from './ingredients.js';
 import { rs } from './recipes.js';
 import { ensureReady, subnav } from './parts.js';
-import { pantry, pantryById, label, step, foodOf, groupOf, GROUPS, addFood, addLoose, setQty, setFoodOf, removeItem, restoreItem, eat, giveBack, clearEmpty, UNIT } from './pantry.js';
+import { pantry, pantryById, label, step, foodOf, groupOf, GROUPS, addFood, addLoose, setQty, setFoodOf, removeItem, restoreItem, eat, giveBack, clearEmpty, UNIT, setSnack, microsOfItem } from './pantry.js';
+import { richLevel } from './snack.js';
+import { list, switchRow } from '../../core/setui.js';
+import { deficits, refOf } from '../analyse/deficits.js';
+import { DGE } from '../analyse/dge.js';
 
-const ui = { query: '' };
+const ui = { query: '', rich: null }; // rich: Mangel-ID als Filter (0.5.0)
+const levelOf = (x, id) => { const m = microsOfItem(x); return m ? richLevel(m[id], refOf(id), !!x.liq) : null; };
+const richNames = (x) => deficits().filter((id) => levelOf(x, id) === 2).map((id) => DGE[id].name);
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 const LOOSE = FOODS.filter((f) => !['Gewürze', 'Gekochter Reis', 'Kokosmilch light'].includes(f.name)).map((f) => f.name).sort((a, b) => a.localeCompare(b, 'de'));
 const low = (x) => x.qty > 0 && ((x.qu === 'g' || x.qu === 'ml') ? x.qty <= 50 : x.qty <= 0.5);
@@ -115,15 +122,29 @@ function itemSheet(id, rerender) {
     h('label', { class: 'form-label' }, h('span', {}, `Menge (${UNIT[x.qu]}${x.qu === 'pkg' && x.ug ? `, je ${fmt(x.ug)} ${unitG}` : ''})`), qty),
     h('label', { class: 'form-label' }, h('span', {}, 'Zählt beim Kochen als'), fn),
     h('button', { class: 'btn primary block', type: 'button', onclick: saveQty }, 'Speichern'),
+    x.k > 0 ? list(switchRow({ title: 'Als Snack vorschlagen', sub: 'erscheint unter „Snack: Was darf ich jetzt?“', on: !!x.snack, set: (v) => { setSnack(id, v); rerender(); } })) : null,
+    microLines(x),
     h('h3', { class: 'sec' }, 'Gegessen'),
     h('div', { class: 'vr-eat' }, eatG, h('span', {}, unitG), h('button', { class: 'btn', type: 'button', onclick: doEat }, 'Ins Journal')),
     h('p', { class: 'small muted' }, x.ug ? 'Wird als Mahlzeit passend zur Uhrzeit eingetragen und vom Vorrat abgezogen.' : 'Wird eingetragen; ohne Packungsgröße zieht die App nichts ab – ändere die Menge oben.'),
     h('button', { class: 'btn block rp-del', type: 'button', onclick: del }, 'Aus dem Vorrat entfernen')), { title: x.n });
 }
 
+// Mikronährstoffe je 100 g für die eingetragenen Mängel (0.5.0); unbekannt bleibt unbekannt
+function microLines(x) {
+  const ids = deficits();
+  if (!ids.length) return null;
+  const m = microsOfItem(x);
+  return h('div', { class: 'vr-micro' }, h('h3', { class: 'sec' }, 'Bei deinem Mangel'),
+    ...ids.map((id) => {
+      const v = m ? m[id] : null, ref = refOf(id), lvl = richLevel(v, ref, !!x.liq);
+      return h('p', { class: 'small' }, h('b', {}, DGE[id].name), v == null ? ' – Wert unbekannt' : ` ${String(Math.round(v * 10) / 10).replace('.', ',')} ${DGE[id].unit} je 100 ${x.liq ? 'ml' : 'g'} · ${Math.round((v / ref) * 100)} % vom Tageswert${lvl === 2 ? ' · viel' : lvl === 1 ? ' · etwas' : ''}`);
+    }));
+}
+
 function row(x, rerender) {
   const name = foodOf(x);
-  const sub = [x.src === 'off' ? 'Scan' : null, name && name !== x.n ? `zählt als ${name}` : name ? null : 'keine Rezept-Zutat', low(x) ? 'fast leer' : null].filter(Boolean).join(' · ');
+  const sub = [x.snack ? 'Snack' : null, ...richNames(x).map((n) => `viel ${n}`), x.src === 'off' ? 'Scan' : null, name && name !== x.n ? `zählt als ${name}` : name ? null : 'keine Rezept-Zutat', low(x) ? 'fast leer' : null].filter(Boolean).join(' · ');
   const change = (d) => { setQty(x.id, (x.qty || 0) + d); rerender(); };
   const s = step(x);
   return h('div', { class: `vr-row${low(x) ? ' low' : ''}` },
@@ -148,10 +169,11 @@ function pantryView(rerender) {
   const listBox = h('div', {});
   const draw = () => {
     const q = ui.query.trim().toLowerCase();
-    const shown = have.filter((x) => !q || `${x.n} ${x.brand} ${foodOf(x) || ''}`.toLowerCase().includes(q));
+    const shown = have.filter((x) => (!q || `${x.n} ${x.brand} ${foodOf(x) || ''}`.toLowerCase().includes(q)) && (!ui.rich || levelOf(x, ui.rich) >= 1))
+      .sort((a, b) => (ui.rich ? levelOf(b, ui.rich) - levelOf(a, ui.rich) : 0));
     const groups = GROUPS.map(([g, l]) => [l, shown.filter((x) => groupOf(x) === g).sort((a, b) => a.n.localeCompare(b.n, 'de'))]).filter(([, l]) => l.length);
     listBox.replaceChildren(...(groups.length ? groups.flatMap(([l, items]) => [h('h3', { class: 'sec' }, l), h('section', { class: 'card list' }, ...items.map((x) => row(x, rerender)))])
-      : [h('section', { class: 'card' }, h('p', { class: 'small muted' }, q ? `Nichts im Vorrat mit „${ui.query.trim()}“.` : 'Noch nichts im Vorrat. Scanne Einkäufe, lege lose Zutaten dazu oder übernimm Gekauftes von der Einkaufsliste.'))]));
+      : [h('section', { class: 'card' }, h('p', { class: 'small muted' }, ui.rich ? `Gerade nichts im Vorrat mit viel oder etwas ${DGE[ui.rich].name}. Gescannte Packungen ohne BLS-Wert zählen als unbekannt.` : q ? `Nichts im Vorrat mit „${ui.query.trim()}“.` : 'Noch nichts im Vorrat. Scanne Einkäufe, lege lose Zutaten dazu oder übernimm Gekauftes von der Einkaufsliste.'))]));
   };
   search.addEventListener('input', () => { ui.query = search.value; draw(); });
   draw();
@@ -164,6 +186,11 @@ function pantryView(rerender) {
     h('div', { class: 'btn-row wk-bar' },
       h('button', { class: 'btn', type: 'button', onclick: () => openPicker('scan', rerender) }, 'Scannen'),
       h('button', { class: 'btn', type: 'button', onclick: () => looseSheet(rerender) }, 'Zutat dazu')),
+    have.length ? h('a', { class: 'cfg-row cfg-link vr-snacklink card', href: '#/rezepte/snack' }, h('span', { class: 't' }, h('b', {}, 'Snack: Was darf ich jetzt?'), h('small', {}, 'freier Rahmen und passende Portionen')), h('span', { class: 'cfg-val' }, h('span', { class: 'cfg-chev' }, icon('chevron', { size: 15 })))) : null,
+    deficits().length && have.length ? h('div', { class: 'chips vr-rich', role: 'group', 'aria-label': 'Nach Mangel filtern' },
+      h('button', { class: `chip${ui.rich ? '' : ' on'}`, type: 'button', 'aria-pressed': String(!ui.rich), onclick: () => { ui.rich = null; rerender(); } }, 'Alle'),
+      ...deficits().map((id) => h('button', { class: `chip${ui.rich === id ? ' on' : ''}`, type: 'button', 'aria-pressed': String(ui.rich === id), onclick: () => { ui.rich = ui.rich === id ? null : id; rerender(); } }, `${DGE[id].name}`))) : null,
+    ui.rich && deficits().includes(ui.rich) ? h('p', { class: 'small muted' }, `Sortiert nach ${DGE[ui.rich].name}: „viel“ ab 30 %, „etwas“ ab 15 % des Tageswerts je 100 g (Getränke halbe Schwellen). Nur BLS-Werte; Gescanntes ohne Wert fehlt.`) : null,
     listBox,
     empty.length ? h('h3', { class: 'sec' }, 'Aufgebraucht') : null,
     empty.length ? h('section', { class: 'card' },

@@ -16,7 +16,8 @@ export const DEFAULTS = {
   on: true, fert: true, method: 'none', phase: 'normal', card: 'strip', cal: 'circles',
   track: { ...TRACK_DEFAULT }, medList: [],
   rem: { period: true, pill: true, pillTime: '21:00', temp: false, tempTime: '06:30' },
-  days: {}, decoyDays: {}
+  days: {}, decoyDays: {},
+  warn: {}, tol: null // 0.5.0: abgeschaltete Hinweise ({ id: false }) und eigenes Fenster in ± Tagen (null = aus)
 };
 store.define('zyklus', DEFAULTS);
 

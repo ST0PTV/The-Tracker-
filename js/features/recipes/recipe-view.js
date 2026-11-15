@@ -16,6 +16,8 @@ import { rs, recipeById, recipeNutrients, kcalOfRecipe, isFav, toggleFav, reject
   setRs, scaledIngredients, cookRecipe, undoCook, cookedFromPantry, portionLines, removeOwn, restoreOwn, DIET_LABEL, MEAL_SHORT, MEAL_OF, mealBudget } from './recipes.js';
 import { ensureReady, qp, thumb, fmtFactor } from './parts.js';
 import { pantryInUse, recipeStock } from './pantry.js';
+import { deficits, refOf } from '../analyse/deficits.js';
+import { DGE, DGE_ORDER } from '../analyse/dge.js';
 import { weekDays, wk, slotKey, planAt, unplanAt, planMeals, togglePlanMeal, ensureWeek } from './week.js';
 
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
@@ -43,6 +45,25 @@ function nutrientCard(r) {
       goal ? h('span', { class: 'rp-bar' }, h('i', { style: `width:${Math.min(100, (v / goal) * 100)}%` })) : h('span', {}),
       h('small', {}, goal ? `${Math.round((v / goal) * 100)} %` : ''))),
     h('p', { class: 'small muted' }, 'Prozent vom Tagesziel, beim freien Zucker von der Höchstmenge. Schätzung aus dem BLS 4.0.'));
+}
+
+// 0.5.0: Mineralstoffe und Vitamine pro Portion gegen den DGE-Referenzwert (nach app.js im Rezeptbuch, JuliaKelp, MIT).
+// ★ = eigener eingetragener Mangel. Fehlt der BLS-Wert einer Zutat, heißt der Wert „unvollständig“ (zählt nicht als 0).
+function microCard(r) {
+  const n = recipeNutrients(r);
+  const mine = new Set(deficits());
+  const ids = [...DGE_ORDER].sort((a, b) => (mine.has(b) ? 1 : 0) - (mine.has(a) ? 1 : 0));
+  if (!ids.some((id) => n[id] > 0)) return null;
+  return h('section', { class: 'card rp-nut rp-micro' },
+    h('div', { class: 'card-head' }, h('h2', {}, 'Mineralstoffe und Vitamine'), infoBtn('Nährwerte', recipeInfo)),
+    ...ids.map((id) => {
+      const v = n[id] || 0, ref = refOf(id), miss = n['miss_' + id] > 0;
+      return h('div', { class: `rp-nrow${mine.has(id) ? ' mine' : ''}` },
+        h('span', {}, `${mine.has(id) ? '★ ' : ''}${DGE[id].name}`), h('b', {}, `${r1(v)} ${DGE[id].unit}`),
+        h('span', { class: 'rp-bar' }, h('i', { style: `width:${Math.min(100, (v / ref) * 100)}%` })),
+        h('small', {}, miss ? 'unvollständig' : `${Math.round((v / ref) * 100)} %`));
+    }),
+    h('p', { class: 'small muted' }, `Prozent vom DGE-Referenzwert pro Tag für dich.${mine.size ? ' ★ = dein eingetragener Mangel.' : ''} „unvollständig“: Für mindestens eine Zutat nennt der BLS keinen Wert. Schätzung.`));
 }
 
 function rejectSheet(r, rerender) {
@@ -142,6 +163,7 @@ function recipeView(rerender) {
     h('section', { class: 'card list rp-steps' }, ...r.steps.map((st, i) => h('button', { class: `rp-step${done.has(i) ? ' done' : ''}`, type: 'button', role: 'checkbox', 'aria-checked': done.has(i) ? 'true' : 'false', onclick: () => { toggleStep(r.id, i); rerender(); } },
       h('i', {}, done.has(i) ? icon('check', { size: 14 }) : null), h('span', {}, st)))),
     nutrientCard(r),
+    microCard(r),
     h('h3', { class: 'sec' }, 'Meine Notiz'),
     h('section', { class: 'card' }, note, h('small', { class: 'form-hint' }, 'Wird beim Verlassen des Felds gespeichert, nur auf diesem Gerät.')),
     h('div', { class: 'rp-cook' },

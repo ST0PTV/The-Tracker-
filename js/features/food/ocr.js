@@ -38,6 +38,7 @@ export async function ocrImage(file, onProgress) {
   const base = new URL('vendor/tesseract/', location.href).href;
   const worker = await T.createWorker('deu', 1, {
     workerPath: base + 'worker.min.js', corePath: base + 'core', langPath: base + 'lang', gzip: true,
+    workerBlobURL: false, // 0.5.0: Worker direkt aus vendor/ laden – die CSP erlaubt keine blob:-Worker
     logger: (m) => { if (onProgress && m.status === 'recognizing text') onProgress(m.progress); }
   });
   try {

@@ -75,6 +75,7 @@ export function startRouter(routes) {
     view.scrollTop = samePage ? y : 0; // Neu-Rendern derselben Seite behält die Scrollposition
   };
   window.addEventListener('hashchange', () => { closeAllSheets(); render(); });
+  document.addEventListener('tt-rerender', () => render()); // 0.5.0: Einführung (Rundgang, Probetraining)
   render();
   return render;
 }

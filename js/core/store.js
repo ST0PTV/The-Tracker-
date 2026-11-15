@@ -20,9 +20,40 @@ export function keys() {
   return Object.keys(DEFAULTS);
 }
 
-function storage() {
-  return globalThis.localStorage;
+/** Standardwert eines angemeldeten Keys (Kopie), für Formprüfungen beim Backup-Import. */
+export function defaultOf(key) {
+  known(key);
+  return clone(DEFAULTS[key]);
 }
+
+// 0.5.0: Probetraining in der Einführung – solange eine Sandbox läuft, liest und schreibt die App nur im Arbeitsspeicher.
+// Echte Daten im localStorage werden dabei nie angefasst; endSandbox() oder Neuladen führt zurück zu ihnen.
+// Nach Workout-Tracker/js/store.js 3.9 (MemoryStore, startSandbox; MIT, ST0PTV).
+class MemoryStore {
+  constructor() { this.map = new Map(); }
+  get length() { return this.map.size; }
+  key(i) { return [...this.map.keys()][i] ?? null; }
+  getItem(k) { return this.map.has(k) ? this.map.get(k) : null; }
+  setItem(k, v) { this.map.set(k, String(v)); }
+  removeItem(k) { this.map.delete(k); }
+}
+let sandbox = null;
+
+function storage() {
+  return sandbox || globalThis.localStorage;
+}
+
+/** Sandbox starten: Kopie aller eigenen Daten, darüber values (Key ohne Präfix → Wert). false, wenn schon eine läuft. */
+export function startSandbox(values = {}) {
+  if (sandbox) return false;
+  const copy = ownRaw();
+  sandbox = new MemoryStore();
+  for (const [k, raw] of Object.entries(copy)) sandbox.setItem(PREFIX + k, raw);
+  for (const [k, v] of Object.entries(values)) sandbox.setItem(PREFIX + k, JSON.stringify(v));
+  return true;
+}
+export function endSandbox() { sandbox = null; }
+export const inSandbox = () => sandbox !== null;
 
 // Ein Wert mit falscher Form oder kaputtes JSON gilt als beschädigt: Es gilt der Standardwert,
 // der Rohtext wird einmalig unter tt_broken_<key> aufgehoben, damit nichts still verloren geht.
@@ -134,6 +165,40 @@ export function usageKB() {
     return 0;
   }
   return Math.round((chars * 2) / 102.4) / 10;
+}
+
+// Backup (0.5.0): alle eigenen Keys als Rohtext (ohne Präfix), auch von Bereichen, die noch nicht geladen sind.
+// skip(key) → true lässt einen Key weg (z. B. PIN, beschädigte Reste).
+export function ownRaw(skip = () => false) {
+  const out = {};
+  const ls = storage();
+  for (let i = 0; i < ls.length; i++) {
+    const k = ls.key(i);
+    if (!k || !k.startsWith(PREFIX)) continue;
+    const key = k.slice(PREFIX.length);
+    if (!skip(key)) out[key] = ls.getItem(k);
+  }
+  return out;
+}
+
+// Backup-Import (0.5.0): ersetzt alle eigenen Keys außer keep(key) durch values (key → Wert, wird als JSON gespeichert).
+// Alles oder nichts: Scheitert ein Schreibvorgang (Speicher voll), wird der vorherige Stand vollständig zurückgeschrieben.
+export function replaceOwn(values, keep = () => false) {
+  const ls = storage();
+  const before = ownRaw((k) => keep(k));
+  const restore = () => {
+    for (const k of Object.keys(ownRaw((x) => keep(x)))) ls.removeItem(PREFIX + k);
+    for (const [k, raw] of Object.entries(before)) { try { ls.setItem(PREFIX + k, raw); } catch { /* bestmöglich */ } }
+  };
+  try {
+    for (const k of Object.keys(before)) ls.removeItem(PREFIX + k);
+    for (const [k, v] of Object.entries(values)) ls.setItem(PREFIX + k, JSON.stringify(v));
+    ls.setItem(PREFIX + 'schema', JSON.stringify(SCHEMA_VERSION));
+  } catch {
+    restore();
+    return false;
+  }
+  return true;
 }
 
 // Löscht alle eigenen Daten (alle Keys mit Präfix tt_, auch von Bereichen, die noch nicht geladen sind, z. B. Training).

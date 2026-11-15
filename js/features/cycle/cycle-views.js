@@ -96,7 +96,7 @@ function upcomingCard(a) {
 /** Hinweise zum Ansprechen bei der Frauenärztin (neutral, keine Diagnose). */
 export function flagsCard(a) {
   const c = cycleSettings();
-  const list = M.flags(a, cycleDays(), isoDate(), { method: c.method, phase: c.phase });
+  const list = M.flags(a, cycleDays(), isoDate(), { method: c.method, phase: c.phase, warn: c.warn, tol: c.tol });
   if (!list.length) return null;
   return h('section', { class: 'card cy-flags' },
     h('div', { class: 'card-head' }, h('h2', {}, 'Zum Ansprechen'), icon('info', { size: 18 })),
@@ -240,7 +240,27 @@ function tempChart(a) {
     h('p', { class: 'small muted' }, 'Leere Punkte: Messung mit Störung, nicht verbunden. Nach dem Eisprung liegt die Körpertemperatur im Mittel 0,3 bis 0,7 °C höher, am deutlichsten im Schlaf oder direkt nach dem Aufwachen (Baker 2020). Das zeigt einen Eisprung im Nachhinein, nicht vorher.'));
 }
 
-export function historyView() {
+// 0.5.0: Beschwerden und Stimmung über die letzten Zyklen (Häufigkeit und Lage zur Periode, ohne Deutung)
+let statsAll = false;
+function statsCard(a, rerender) {
+  const st = M.symptomStats(cycleDays(), a, isoDate());
+  if (!st.list.length) return null;
+  const shown = statsAll ? st.list : st.list.slice(0, 8);
+  const where = (x) => [x.period ? `${x.period} während der Periode` : null, x.pre ? `${x.pre} in den ${M.PRE_DAYS} Tagen davor` : null, x.other ? `${x.other} sonst` : null].filter(Boolean).join(' · ');
+  const max = st.list[0].n;
+  return [h('h3', { class: 'sec' }, 'Beschwerden und Stimmung'),
+    h('section', { class: 'card list cy-stats' }, ...shown.map((x) => h('div', { class: 'cy-st-row' },
+      h('div', { class: 'cy-st-top' }, h('b', {}, x.label), h('span', {}, `${x.n} ${x.n === 1 ? 'Tag' : 'Tage'} · in ${x.cycles} von ${st.cycles} Zyklen`)),
+      h('div', { class: 'cy-st-bar', role: 'img', 'aria-label': where(x) },
+        x.period ? h('i', { class: 'p', style: `width:${(x.period / max) * 100}%` }) : null,
+        x.pre ? h('i', { class: 'v', style: `width:${(x.pre / max) * 100}%` }) : null,
+        x.other ? h('i', { class: 'o', style: `width:${(x.other / max) * 100}%` }) : null),
+      h('small', {}, where(x)))),
+      st.list.length > 8 ? h('button', { class: 'link cy-st-more', type: 'button', onclick: () => { statsAll = !statsAll; rerender(); } }, statsAll ? 'Weniger zeigen' : `Alle ${st.list.length} zeigen`) : null),
+    h('p', { class: 'small muted page-note' }, `Eingetragene Tage aus den letzten ${st.cycles} Zyklen (der laufende zählt mit). Rot = während der Periode, violett = in den ${M.PRE_DAYS} Tagen vor der nächsten Periode, grau = sonst. Nur Häufigkeiten, keine Deutung.`)];
+}
+
+export function historyView(rerender) {
   const a = cycleAnalysis();
   const c = cycleSettings();
   const ls = a.lengths.slice(-6);
@@ -264,6 +284,7 @@ export function historyView() {
         h('small', {}, r.d === 0 ? 'typisch' : `${r.d > 0 ? '+' : '−'}${Math.abs(r.d)} ${Math.abs(r.d) === 1 ? 'Tag' : 'Tage'}`))))
     ] : h('section', { class: 'card' }, h('p', { class: 'small muted' }, 'Sobald zwei Perioden eingetragen sind, siehst du hier deine typische Zykluslänge und wie stark sie schwankt. Ältere Daten übernimmst du unter „Ich → Zyklus“.')),
     flagsCard(a),
+    statsCard(a, rerender),
     c.track.temp ? tempChart(a) : null,
     h('section', { class: 'card list me-grp' }, h('a', { class: 'me-row k-cyc', href: '#/zyklus/bericht' },
       h('span', { class: 'qa-badge' }, icon('list', { size: 20 })), h('span', { class: 't' }, h('b', {}, 'Bericht für die Ärztin'), h('small', {}, 'Drucken, als PDF oder als Text teilen')),

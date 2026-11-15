@@ -14,6 +14,7 @@ import { plannedFor } from './recipes/week.js';
 import { weekRoutes } from './recipes/week-view.js';
 import { shopRoutes } from './recipes/shop-view.js';
 import { pantryRoutes } from './recipes/pantry-view.js';
+import { snackRoutes } from './recipes/snack-view.js';
 import { pantryInUse, recipeStock } from './recipes/pantry.js';
 import { recipeRoutes } from './recipes/recipe-view.js';
 import { ownRoutes } from './recipes/own-view.js';
@@ -107,5 +108,5 @@ function rezepteView(rerender) {
 
 export const rezepteRoutes = {
   '/rezepte': rezepteView,
-  ...weekRoutes, ...shopRoutes, ...pantryRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
+  ...weekRoutes, ...shopRoutes, ...pantryRoutes, ...snackRoutes, ...recipeRoutes, ...ownRoutes, ...startRoutes
 };

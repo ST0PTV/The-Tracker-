@@ -34,7 +34,8 @@ export const NORMAL_BLEED = 8;
 export const WARN_LONG = 35;
 // Ausbleiben: Hinweis nach 90 Tagen ohne Periode, auch bei unregelmäßigem Zyklus (Nutzerentscheidung 2026-10-31; vorher
 // 6 Monate bei unregelmäßigem nach Klein & Poth 2013, AFP, Abstract). Grenzen 24/38/9/8 aus FIGO 2018, geprüft nur über
-// eine Sekundärquelle (MSD). Eigenes Schwankungsfenster und abschaltbare Hinweise kommen nach der Recherche.
+// eine Sekundärquelle (MSD). Seit 0.5.0: eigenes Schwankungsfenster (tol, ± Tage um den Median) und jeder Hinweis
+// einzeln abschaltbar (warn); Nutzerwunsch 2026-10-31 bzw. 2026-11-15.
 export const ABSENT_DAYS = 90;
 
 export const METHODS = [
@@ -194,7 +195,11 @@ export function dayStatus(a, days, iso, today, { showFert = true, phase } = {}) 
 // ---------- Hinweise zum Ansprechen (neutral, keine Diagnose) ----------
 // Schwellen aus FIGO 2018 (Länge, Schwankung, Blutungsdauer) und Klein & Poth 2013 (Ausbleiben).
 // Nur mit natürlichem Zyklus (ohne hormonelle Methode, Phase „normal“). Schwäche: Daten sind selbst eingetragen.
-export function flags(a, days, today, { method, phase } = {}) {
+export const FLAG_IDS = [['absent', 'Periode bleibt aus'], ['long', 'Zyklen länger als 35 Tage'], ['short', 'Zyklen kürzer als 24 Tage'], ['spread', 'Zyklen schwanken stark'],
+  ['tol', 'Außerhalb deines Fensters'], ['bleed', 'Lange Periode'], ['between', 'Blutung zwischen den Perioden'], ['pain', 'Starke Schmerzen']];
+export const TOL_COUNT = 3; // so viele der letzten 6 Zyklen außerhalb des eigenen Fensters → Hinweis
+
+export function flags(a, days, today, { method, phase, warn = {}, tol = null } = {}) {
   if (paused(phase) || hormonal(method) || !a.last) return [];
   const out = [];
   const since = diff(a.last, today);
@@ -203,6 +208,11 @@ export function flags(a, days, today, { method, phase } = {}) {
   if (recent.length >= 3 && recent.every((n) => n > WARN_LONG)) out.push({ id: 'long', text: `Die letzten 3 Zyklen waren länger als ${WARN_LONG} Tage.` });
   if (recent.length >= 3 && recent.every((n) => n < NORMAL_MIN)) out.push({ id: 'short', text: `Die letzten 3 Zyklen waren kürzer als ${NORMAL_MIN} Tage.` });
   if (a.usable.length >= 3 && a.spread > NORMAL_SPREAD) out.push({ id: 'spread', text: `Deine Zyklen schwanken um ${a.spread} Tage.` });
+  // Eigenes Fenster: Median ± tol Tage; mindestens TOL_COUNT der letzten 6 Zyklen außerhalb
+  if (tol > 0 && a.usable.length >= TOL_COUNT) {
+    const outside = a.usable.filter((n) => Math.abs(n - a.median) > tol).length;
+    if (outside >= TOL_COUNT) out.push({ id: 'tol', text: `${outside} der letzten ${a.usable.length} Zyklen lagen außerhalb deines Fensters (${a.median} ± ${tol} Tage).` });
+  }
   if (a.bleedLens.slice(-2).some((n) => n > NORMAL_BLEED)) out.push({ id: 'bleed', text: `Eine Periode dauerte länger als ${NORMAL_BLEED} Tage.` });
   // Blutung zwischen den Perioden: Tag mit Blutung oder Schmier, der nicht zu einem Periodenlauf (± 2 Tage) gehört
   const runs = a.starts.map((s) => [addDays(s, -2), addDays(s, bleedRun(days, s) + 1)]);
@@ -216,7 +226,39 @@ export function flags(a, days, today, { method, phase } = {}) {
   if (s.length >= 2 && strongIn(s[s.length - 2], s[s.length - 1]) && strongIn(s[s.length - 1], addDays(today, 1))) {
     out.push({ id: 'pain', text: 'Starke Schmerzen in zwei Zyklen hintereinander.' });
   }
-  return out;
+  return out.filter((f) => warn[f.id] !== false);
+}
+
+// ---------- Beschwerden und Stimmung (0.5.0) ----------
+// Zählt eingetragene Tage je Beschwerde, Stimmung und Schmerzstärke über die letzten Zyklen (höchstens 6, der laufende
+// zählt mit) und wann sie lagen: während der Periode, in den 7 Tagen vor der nächsten Periode (nur bei abgeschlossenen
+// Zyklen bekannt) oder sonst. Keine Phasen-Zuordnung und keine Deutung – nur Häufigkeiten aus eigenen Einträgen.
+export const PRE_DAYS = 7;
+export function symptomStats(days, a, today) {
+  const starts = a.starts.slice(-(MAX_CYCLES + 1));
+  const cycles = starts.length;
+  const map = new Map();
+  const add = (kind, label, bucket, ci) => {
+    const k = kind + '|' + label;
+    const x = map.get(k) || { kind, label, n: 0, period: 0, pre: 0, other: 0, cyc: new Set() };
+    x.n++; x[bucket]++; x.cyc.add(ci);
+    map.set(k, x);
+  };
+  starts.forEach((s, i) => {
+    const next = starts[i + 1] || null;
+    const end = next ? addDays(next, -1) : today;
+    for (let d = s, guard = 0; d <= end && guard < 70; d = addDays(d, 1), guard++) {
+      const e = days[d];
+      if (!e) continue;
+      const bucket = isBleed(e) ? 'period' : next && diff(d, next) <= PRE_DAYS ? 'pre' : 'other';
+      (e.body || []).forEach((b) => add('body', b, bucket, i));
+      (e.mood || []).forEach((m) => add('mood', m, bucket, i));
+      if (e.pain) add('pain', `Schmerzen: ${e.pain}`, bucket, i);
+    }
+  });
+  const list = [...map.values()].map((x) => ({ ...x, cycles: x.cyc.size })).sort((p, q) => q.n - p.n || p.label.localeCompare(q.label, 'de'));
+  list.forEach((x) => delete x.cyc);
+  return { cycles, list };
 }
 
 // ---------- Erinnerungen ----------

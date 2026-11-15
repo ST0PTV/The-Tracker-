@@ -7,7 +7,7 @@ import { icon } from '../../core/icons.js';
 import { pageHead, toast } from '../../core/ui.js';
 import { isoDate } from '../../core/format.js';
 import { lockSettings } from '../../core/lock.js';
-import { backLink, sec, list, note, switchRow, timeRow, segRow, linkRow, actionRow } from '../../core/setui.js';
+import { backLink, sec, list, note, switchRow, timeRow, segRow, linkRow, actionRow, numRow } from '../../core/setui.js';
 import * as M from './model.js';
 import { TRACK, cycleSettings, setCycleSettings, cycleAvailable, cycleDays, cycleAnalysis, importBleedDays, deleteCycleDays } from './cycle.js';
 
@@ -52,7 +52,7 @@ export function cycleSettingsView(rerender) {
   // Erinnerung: Schalter, darunter (wenn an) die Uhrzeit
   const rem = (k, title, sub, timeKey) => [
     switchRow({ title, sub, on: c.rem[k], set: (v) => set({ rem: { ...c.rem, [k]: v } }) }),
-    timeKey && c.rem[k] ? timeRow({ title: 'Uhrzeit', value: c.rem[timeKey], set: (v) => { if (/^d{2}:d{2}$/.test(v)) setCycleSettings({ rem: { ...c.rem, [timeKey]: v } }); } }) : null];
+    timeKey && c.rem[k] ? timeRow({ title: 'Uhrzeit', value: c.rem[timeKey], set: (v) => { if (/^\d{2}:\d{2}$/.test(v)) setCycleSettings({ rem: { ...c.rem, [timeKey]: v } }); } }) : null];
   const chips = (items, isOn, onTap) => h('div', { class: 'cfg-pad' }, h('div', { class: 'chips' }, ...items.map(([k, l]) =>
     h('button', { class: `chip${isOn(k) ? ' on' : ''}`, type: 'button', 'aria-pressed': isOn(k) ? 'true' : 'false', onclick: () => onTap(k) }, l))));
 
@@ -81,6 +81,12 @@ export function cycleSettingsView(rerender) {
         shareFile(text, 'the-tracker-erinnerungen.ics', 'text/calendar');
       } })),
     note('Ohne Server kann die App dich nicht von selbst anstupsen. Die Erinnerung steht auf „Heute“, sobald du die App öffnest. Für einen echten Wecker übernimmst du die Termine in den Kalender deines Handys; die Titel heißen nur „The Tracker“.'),
+    // 0.5.0: Hinweise einzeln abschaltbar, eigenes Schwankungsfenster (Nutzerwunsch 2026-10-31)
+    sec('Hinweise zum Ansprechen'),
+    list(numRow({ title: 'Mein Fenster', sub: c.tol ? `typisch ${cycleAnalysis(today).median} ± ${c.tol} Tage` : 'leer = aus', value: c.tol, lo: 1, hi: 15, unit: '± Tage', empty: true, placeholder: 'aus',
+        set: (v) => set({ tol: v == null ? null : Math.round(v) }) }),
+      ...M.FLAG_IDS.filter(([id]) => id !== 'tol' || c.tol).map(([id, title]) => switchRow({ title, on: c.warn[id] !== false, set: (v) => set({ warn: { ...c.warn, [id]: v } }) }))),
+    note(`Die App zeigt einen Hinweis unter „Zyklus → Verlauf“, wenn etwas mehrmals vorkommt – neutral, keine Diagnose. „Mein Fenster“: Hinweis, wenn ${M.TOL_COUNT} der letzten 6 Zyklen weiter als die gewählten Tage von deinem typischen Zyklus abweichen. Die festen Grenzen (24, 35, 9 Tage) stammen aus FIGO und IOC.`),
     sec('Was ich tracke'),
     list(chips(TRACK, (k) => !!c.track[k], (k) => set({ track: { ...c.track, [k]: !c.track[k] } }))),
     note('Ausgeschaltetes erscheint beim Eintragen nicht. Die Blutung ist immer da.'),
@@ -120,7 +126,7 @@ export function reportView() {
   const c = cycleSettings();
   const days = cycleDays();
   const rows = M.cycleRows(a, days, today);
-  const flags = M.flags(a, days, today, { method: c.method, phase: c.phase });
+  const flags = M.flags(a, days, today, { method: c.method, phase: c.phase, warn: c.warn, tol: c.tol });
   const d = (k) => M.dateOf(k).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const tally = (key) => { const s = {}; rows.forEach((r) => Object.entries(r[key]).forEach(([b, n]) => { s[b] = (s[b] || 0) + n; })); return Object.entries(s).sort((x, y) => y[1] - x[1]); };
   const body = tally('body').slice(0, 10), meds = tally('meds');

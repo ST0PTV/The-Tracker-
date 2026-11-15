@@ -19,6 +19,9 @@ import { weightCard } from './goal/weight-card.js';
 import { alcCard, openAlcohol } from './drinks/alcohol-card.js';
 import { alcEntries } from './drinks/alcohol.js';
 import { openQuick } from './quick-add.js';
+import { openSaveMeal } from './journal/meals-sheet.js';
+import { welcomeCard } from './intro/tour-view.js';
+import * as store from '../core/store.js';
 import { cycleCard } from './cycle/cycle-card.js';
 import { trainingTodayCard } from './training/today-card.js';
 import { todayOrder } from './me/today-layout.js';
@@ -84,7 +87,9 @@ function mealCard(iso, meal, entries, prevEntries, rerender) {
         : isQuick(e) ? openQuick(iso, e.meal, e) : openAmount(e, { iso, edit: true }))
   },
   h('span', { class: 't' }, h('b', {}, e.n), h('small', {}, isQuick(e) ? 'nur kcal' : `${r1(e.grams)} ${unitOf(e)}`)),
-  h('span', { class: 'kc' }, `${fmt(entryTotals(e).k)} kcal`)))) : null;
+  h('span', { class: 'kc' }, `${fmt(entryTotals(e).k)} kcal`))),
+  // 0.5.0: Mahlzeit speichern (ohne Koffein/Alkohol-Verknüpfungen)
+  list.some((e) => !e.link) ? h('button', { class: 'link meal-save', type: 'button', onclick: () => openSaveMeal(iso, meal.id) }, 'Als Mahlzeit speichern') : null) : null;
 
   return h('section', { class: `card meal${list.length ? '' : ' is-empty'}` }, head, rows);
 }
@@ -114,6 +119,7 @@ export function heuteView(rerender) {
   };
   return h('div', {},
     dayNav(iso, today, rerender),
+    welcomeCard(Object.keys(store.get('days')).length > 0, rerender),
     dayCard(iso, today),
     ...todayOrder().flatMap((k) => CARD[k]()));
 }

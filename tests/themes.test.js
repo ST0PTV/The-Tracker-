@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { appearanceOf, paletteOf, modeOf, PALETTES, BAR } from '../js/core/theme.js';
 
 const css = readFileSync(new URL('../css/app.css', import.meta.url), 'utf8');
-const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const html = readFileSync(new URL('../js/boot-theme.js', import.meta.url), 'utf8'); // bis 0.4.3 Inline-Skript in index.html
 
 test('Auswahl: unbekannte Werte fallen auf Apple nativ / dunkel zurück', () => {
   assert.equal(appearanceOf({}), 'dark');
@@ -72,7 +72,7 @@ test('Akzent und 3D-Figur als #rrggbb (body3d.js mischt diese Werte)', () => {
 
 test('Leistenfarbe = Grund des Themes, in theme.js und index.html gleich', () => {
   const m = html.match(/var BAR = (\{[^}]+\})/);
-  assert.ok(m, 'BAR in index.html fehlt');
+  assert.ok(m, 'BAR in js/boot-theme.js fehlt');
   const inline = Function(`return ${m[1]}`)();
   for (const [pal] of PALETTES) {
     assert.deepEqual(inline[pal], [BAR[pal].dark, BAR[pal].light], pal);

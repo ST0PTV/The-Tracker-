@@ -11,6 +11,8 @@ import { lookView, lookSummary } from './me/look-view.js';
 import { backLink, sec, list, note } from '../core/setui.js';
 import { todayLayoutView, todaySummary } from './me/today-layout.js';
 import { VERSION } from '../core/version.js';
+import { backupSummary } from './me/backup-view.js';
+import { introSummary } from './intro/tour-view.js';
 import { isoDate, addDays, r1 } from '../core/format.js';
 import { loadFoods, foodsState } from './food/foods.js';
 import { demoCount, loadDemo, removeDemo } from './journal/journal.js';
@@ -73,7 +75,9 @@ function ichView(rerender) {
       meRow({ kind: 'train', ico: 'dumbbell', title: 'Training', href: '#/ich/training', sub: 'Pause, Scheiben, Geräte, Figur' })),
     ...group('App',
       meRow({ kind: 'app', ico: 'palette', title: 'Darstellung', href: '#/ich/darstellung', sub: lookSummary(s) }),
+      meRow({ kind: 'app', ico: 'download', title: 'Daten & Backup', href: '#/ich/daten', sub: backupSummary() }),
       meRow({ kind: 'app', ico: 'lock', title: 'PIN-Sperre', href: '#/ich/sperre', sub: L.on ? 'an · ganze App' : 'aus' }),
+      meRow({ kind: 'app', ico: 'sparkle', title: 'Einführung', href: '#/ich/einfuehrung', sub: introSummary() }),
       meRow({ kind: 'app', ico: 'info', title: 'Quellen & Lizenzen', href: '#/ich/quellen', sub: 'Daten, Studien, übernommener Code' })),
     devCard(rerender),
     h('p', { class: 'me-foot' }, `The Tracker ${VERSION} · ${store.usageKB()} KB lokal gespeichert`));
@@ -174,9 +178,9 @@ function zielView() {
 
 // Quellen und Lizenzen aller übernommenen Teile. Wird mit jeder Phase ergänzt.
 const CREDITS = [
-  ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen. Seit 0.3.1 der ganze Trainingsbereich aus Version 3.14.0 (Training, Pläne, Übungen, Fortschritt, Übungsanimationen, Körperfigur); die Studien dazu stehen in den Info-Sheets der Übungen und Animationen.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
-  ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
-  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js), die Ginger-Zeichnung als Platzhalterbild und der Zyklus (zyklus.js: Rechnung, Kalender, Eintragen, Wissen, Erinnerungen, Bericht, Import, PIN mit Schein-PIN; zerlegt und an die Studienlage angepasst).', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
+  ['Workout-Tracker', 'Speicherschicht, Router, Bottom Sheets, Icons, das Design „Apple nativ“, die Tab-Leiste mit erhöhtem Mittelknopf und die Streifen-Behandlung im iOS-Home-Bildschirm übernommen. Seit 0.3.1 der ganze Trainingsbereich aus Version 3.14.0 (Training, Pläne, Übungen, Fortschritt, Übungsanimationen, Körperfigur); die Studien dazu stehen in den Info-Sheets der Übungen und Animationen. Seit 0.5.0 Backup-Prüfungen, Sicherheitsregeln (CSP), Rundgang mit Spotlight und Probetraining.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Workout-Tracker'],
+  ['Calorie-Tracker', 'Makro-Presets und Datenform der Ziel-Historie übernommen (Herleitung und Studien dort in der README); Aufbau der Ich-Seite und „Schlaf & Körper“ als Vorbild. Seit 0.5.0 gespeicherte Mahlzeiten und der Plan-Vorschlag zum Magen-Modell.', 'ST0PTV · MIT-Lizenz', 'https://github.com/ST0PTV/Calorie-Tracker'],
+  ['Rezeptbuch', 'Aufbau der Navigation (Heute · Rezepte · Ich). Journal, Lebensmittelsuche, Mengen-Dialog, Portionen, Scanner, Foto-Erkennung der Nährwerttabelle und eigene Lebensmittel stammen aus der Tracker-Kopie im Rezeptbuch (Kalorien-Tracker von ST0PTV, von JuliaKelp angepasst). 96 Rezepte mit Zutaten-Nährwerten, Auswahl, Rezeptseite, eigene Rezepte, Wochenplan mit Mengenfaktoren, Einkaufsliste, Vorratskammer (vorrat.js), die Ginger-Zeichnung als Platzhalterbild und der Zyklus (zyklus.js: Rechnung, Kalender, Eintragen, Wissen, Erinnerungen, Bericht, Import, PIN mit Schein-PIN; zerlegt und an die Studienlage angepasst). Seit 0.5.0 Snack-Rahmen und Snack-Markierung im Vorrat, „viel …“-Hinweise im Vorrat und Mineralstoffe auf der Rezeptseite.', 'Copyright (c) 2026 JuliaKelp · MIT-Lizenz', 'https://github.com/juliakelp/Rezeptbuch'],
   ['Eigene Rezepte (ab 0.2.4)', '104 eigene Fassungen klassischer Gerichte (Fleisch, Frühstück, vegetarisch/vegan, Snacks) im Format des Rezeptbuchs, ohne Fisch und Meeresfrüchte. Keine Vorlage aus einer bestimmten Sammlung, keine Bilder. Nährwerte aus den Zutaten geschätzt (BLS 4.0).', 'The Tracker · MIT-Lizenz', 'https://github.com/ST0PTV/The-Tracker-'],
   ['Bundeslebensmittelschlüssel (BLS) 4.0', 'Nährwerte je 100 g für die Lebensmittelsuche (data/bls.json). Verändert: Auszug; freier Zucker, Ernährungsform und Allergene abgeleitet, nicht vom Max Rubner-Institut.', 'Max Rubner-Institut (2025), Karlsruhe · CC BY 4.0 · DOI 10.25826/Data20251217-134202-0', 'https://doi.org/10.25826/Data20251217-134202-0'],
   ['Open Food Facts', 'Produktdaten zum Barcode. Nur die Barcode-Nummer wird gesendet; gefundene Produkte werden auf dem Gerät gespeichert.', 'Open Database License (ODbL) 1.0, Inhalte Database Contents License (DbCL) 1.0', 'https://world.openfoodfacts.org'],

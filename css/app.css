@@ -911,6 +911,7 @@ a.icon-btn { text-decoration: none; }
 .cal-leg i.yoff { background: var(--fill); }
 /* Magen-Modell */
 .st .trk-sum { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin: 0; }
+.st .trk-sum .info-btn { margin-left: auto; align-self: center; }
 .st .trk-sum b { font-size: 34px; font-weight: 300; color: var(--c); font-variant-numeric: tabular-nums; }
 .st .trk-sum span { color: var(--muted); font-size: 14px; flex: 1; min-width: 0; }
 .st-svg .night { fill: color-mix(in srgb, var(--text) 7%, transparent); }
@@ -1276,3 +1277,70 @@ body.tt-locked #tabbar { display: none; }
 body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .link, .cfg-pad .link) { position: relative; }
 body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .link, .cfg-pad .link)::after {
   content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+
+/* 0.5.0: Daten & Backup */
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.privacy p { margin: 0 0 10px; font-size: 15px; line-height: 1.45; }
+.privacy p:last-child { margin-bottom: 0; }
+/* 0.5.0: gespeicherte Mahlzeiten */
+.meal-save { display: block; min-height: 44px; margin: 0; padding: 0; font-size: 15px; }
+.sm .sm-items { margin: 8px 0 14px; }
+.sm .seg { margin-bottom: 14px; }
+/* 0.5.0: Plan-Vorschlag im Magen-Modell */
+.st-mode { margin: 0 0 14px; }
+.tp-win { position: relative; height: 96px; margin: 10px 0 22px; border-radius: 10px; background: var(--fill); }
+.tp-eat { position: absolute; top: 0; bottom: 0; border-radius: 10px; background: color-mix(in srgb, var(--c-wt) 18%, transparent); }
+.tp-sleep, .tp-now { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--muted); }
+.tp-now { background: var(--accent); }
+.tp-bar { position: absolute; bottom: 0; width: 14px; margin-left: -7px; border-radius: 5px 5px 0 0; background: var(--c-body); opacity: .55; }
+.tp-bar.done { opacity: 1; }
+.tp-axis { position: absolute; left: 0; right: 0; top: 100%; height: 18px; }
+.tp-axis span { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted); padding-top: 4px; }
+.tp-axis span:first-child { transform: none; } .tp-axis span:last-child { transform: translateX(-100%); }
+.st-t.open { color: var(--muted); }
+.plan-pct { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.plan-pct.two { grid-template-columns: 1fr 1fr; }
+.plan-set .chips { margin-bottom: 12px; }
+/* 0.5.0: Snack und Mangel im Vorrat, Mikronährstoffe auf der Rezeptseite */
+.vr-snacklink { margin: 0 0 12px; padding: 8px 14px; }
+.vr-rich { margin: 0 0 6px; }
+.vr-micro p { margin: 0 0 4px; }
+.sn-row.off .t b { color: var(--muted); }
+.sn-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 500; vertical-align: 2px; background: var(--fill); color: var(--muted); }
+.sn-tag.rich { background: color-mix(in srgb, var(--c-wt) 18%, transparent); color: var(--text); }
+.rp-micro .rp-nrow.mine > span:first-child { font-weight: 600; }
+/* 0.5.0: Zyklus – Beschwerden und Stimmung */
+.cy-st-row { padding: 10px 14px; }
+.cy-st-row + .cy-st-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
+.cy-st-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.cy-st-top span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.cy-st-bar { display: flex; height: 8px; margin: 6px 0 4px; border-radius: 4px; overflow: hidden; background: var(--fill); }
+.cy-st-bar i { display: block; height: 100%; }
+.cy-st-bar .p { background: var(--c-cyc); } .cy-st-bar .v { background: var(--c-e2, var(--c-alc)); } .cy-st-bar .o { background: var(--muted); opacity: .5; }
+.cy-st-row small { color: var(--muted); font-size: 12px; }
+.cy-st-more { display: block; width: 100%; min-height: 44px; text-align: center; }
+/* 0.5.0: Einführung – Spotlight und Probetraining (aus Workout-Tracker 3.14, Klassen tour-…) */
+.tour-root { position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+.tour-root[hidden] { display: none; }
+.tour-dim { position: fixed; background: rgba(0, 0, 0, 0.62); pointer-events: auto; }
+.tour-hole .tour-dim { background: transparent; }
+.tour-ring { position: fixed; border-radius: 16px; box-shadow: 0 0 0 2px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent); pointer-events: none; }
+.tour-hole .tour-ring { box-shadow: 0 0 0 2px var(--accent), 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent), 0 0 0 200vmax rgba(0, 0, 0, 0.62); }
+.tour-block { position: fixed; pointer-events: auto; }
+.tour-arrow { position: fixed; width: 18px; height: 18px; transform: rotate(45deg); background: var(--sheet-surface, var(--surface)); pointer-events: none; }
+.tour-bub { position: fixed; left: 16px; right: 16px; margin: 0 auto; max-width: 460px; pointer-events: auto; background: var(--sheet-surface, var(--surface)); color: var(--text);
+  border-radius: 18px; padding: 16px 16px 10px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); }
+.tour-title { display: block; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.tour-text { margin: 0; font-size: 16px; line-height: 1.4; }
+.tour-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.tour-step { font-size: 13px; color: var(--muted); }
+.tour-acts { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.tour-acts .btn { min-height: 44px; padding: 0 18px; }
+.tour-link { background: none; border: 0; color: var(--muted); font: inherit; font-size: 15px; min-height: 44px; padding: 0 10px; cursor: pointer; }
+.tour-banner { position: fixed; z-index: 61; left: 12px; right: 12px; top: calc(var(--safe-top) + 8px); margin: 0 auto; max-width: 616px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px; padding: 8px 8px 8px 14px; border-radius: 14px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 15px; }
+.tour-banner-end { flex-shrink: 0; white-space: nowrap; min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
+body.tour-trial .view { padding-top: calc(var(--safe-top) + 72px); }
+@media (prefers-reduced-motion: no-preference) { .tour-bub { transition: top 0.18s ease; } }
+.intro-card h2 { margin: 0 0 6px; }
+.intro-card .btn-row { margin-top: 12px; }

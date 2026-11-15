@@ -10,6 +10,8 @@ import { isoDate, addDays, fmt, num, r1 } from '../core/format.js';
 import { currentWeight, getWeightGoal } from '../core/profile.js';
 import { MEALS, mealByMin, addQuick, updateQuick, removeEntry, restoreEntry, entriesOf, sumEntries, copyEntries } from './journal/journal.js';
 import { openAdd } from './journal/add-sheet.js';
+import { savedMeals } from './journal/journal.js';
+import { openSavedMeals } from './journal/meals-sheet.js';
 import { waterSettings, waterRows, waterTotal } from './drinks/water.js';
 import { quickWater, openWaterDetails } from './drinks/water-card.js';
 import { caffSettings, caffWaterRows } from './drinks/caffeine.js';
@@ -76,6 +78,7 @@ export function openQuickAdd(iso = isoDate(), meal = null) {
         row({ kind: 'food', ico: 'search', title: 'Lebensmittel', sub: 'suchen, Favoriten, Zuletzt', onClick: () => goFood(() => openAdd(iso, sel, { tab: 'search' })) }),
         row({ kind: 'food', ico: 'scan', title: 'Scannen', sub: 'Barcode oder Nährwerttabelle', onClick: () => goFood(() => openAdd(iso, sel, { tab: 'scan' })) }),
         row({ kind: 'food', ico: 'bolt', title: 'Schnell', sub: 'nur kcal', onClick: () => goFood(() => openQuick(iso, sel)) }),
+        savedMeals().length ? row({ kind: 'food', ico: 'list', title: 'Gespeicherte Mahlzeit', sub: `${savedMeals().length} gespeichert`, onClick: () => go(() => openSavedMeals(iso, sel)) }) : null,
         row({ kind: 'food', ico: 'book', title: 'Rezept', sub: 'Vorschläge passend zur Mahlzeit', onClick: () => go(() => { location.hash = `#/rezepte?m=${sel}`; }) }),
         copy),
       trackers.length ? h('h3', { class: 'sec' }, 'Tracker') : null,
