@@ -7,7 +7,7 @@
 // Ausnahmen: iOS-Schalter (51 × 31, Apples eigene Größe); im Training die Satznummer (Breite unsichtbar erweitert, damit
 // die Eingabefelder auf 320 px breit genug bleiben) und Eingabefelder (bereits 44 px).
 // Aufruf: node tests/browser/check-v3100.mjs [Ordner für Screenshots]
-import { launch, startServer, checker, loadPlaywright, startPlan } from './lib.mjs';
+import { launch, startServer, checker, loadPlaywright, startPlan, settle } from './lib.mjs';
 import { join } from 'node:path';
 const shots = process.argv[2] || null;
 const pw = await loadPlaywright();
@@ -73,14 +73,14 @@ for (const devName of ['iPhone SE', 'Pixel 7']) {
     p.on('dialog', (d) => d.accept());
     const shot = (n) => (shots ? p.screenshot({ path: join(shots, `v3100-${devName.replace(/\W+/g, '_')}-${theme}-${n}.png`) }) : null);
     const check = async (name, training = false) => {
-      await p.waitForTimeout(350);
+      await settle(p, 350);
       const r = await audit(p, training);
       ok(r.fails.length === 0, `${T} ${name}: ${r.n} Ziele mit 44-px-Fläche${r.covered ? ` (${r.covered} verdeckt übersprungen)` : ''}${r.fails.length ? '\n      ' + r.fails.join('\n      ') : ''}`);
     };
-    const go = async (h) => { await p.evaluate((x) => { location.hash = x; }, h); await p.waitForTimeout(600); };
-    const closeSheets = async () => { for (let i = 0; i < 3 && await p.locator('.sheet').count(); i++) { await p.keyboard.press('Escape'); await p.waitForTimeout(300); } };
+    const go = async (h) => { await p.evaluate((x) => { location.hash = x; }, h); await settle(p, 600); };
+    const closeSheets = async () => { for (let i = 0; i < 3 && await p.locator('.sheet').count(); i++) { await p.keyboard.press('Escape'); await settle(p, 300); } };
 
-    await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(500);
+    await p.goto(srv.url + '/index.html#/training'); await settle(p, 500);
     await p.evaluate(async (light) => {
       const lib = await import('./js/features/training/exercises.js'); const P = await import('./js/features/training/plans.js'); const H = await import('./js/features/training/history.js'); const st = await import('./js/features/training/store.js');
       localStorage.setItem('tt_settings', JSON.stringify({ ...JSON.parse(localStorage.getItem('tt_settings') || '{}'), appearance: light ? 'light' : 'dark' })); /* The Tracker: Erscheinung app-weit */ st.set('settings', { ...st.get('settings'), hints: false, onboarded: true, persistAsked: true, appearance: light ? 'light' : 'dark' });
@@ -92,7 +92,7 @@ for (const devName of ['iPhone SE', 'Pixel 7']) {
         const r = H.newBackfill({ plan: P.getPlan(pl.id), startISO: s.toISOString(), endISO: new Date(s.getTime() + 3600e3).toISOString() }, byId);
         r.draft.entries.forEach((en) => en.sets.forEach((x) => H.setValues(r.draft, en.id, x.id, { weightKg: 60 + (2 - w) * 5, reps: 8 }))); H.saveNew(r.draft); }
     }, theme === 'light');
-    await p.reload(); await p.waitForTimeout(600);
+    await p.reload(); await settle(p, 600);
     if (theme === 'light') ok(await p.evaluate(() => document.documentElement.dataset.theme === 'light'), `${T}: helles Design aktiv`);
 
     // Außerhalb des Trainings: unsichtbare Flächen genügen
@@ -101,20 +101,20 @@ for (const devName of ['iPhone SE', 'Pixel 7']) {
     for (const tab of ['Routinen']) { const t = p.locator('#view [role=tab]', { hasText: tab }); if (await t.count()) { await t.first().click(); await check(`Pläne · ${tab}`); } }
     await go('#/training/uebungen'); await check('Übungen'); await shot('exercises');
     await p.locator('#view .row', { hasText: 'Bankdrücken' }).first().click(); await check('Übung-Info (Sheet)');
-    await p.locator('.sheet [role=tab], .sheet .seg button', { hasText: 'Technik' }).first().click(); await p.waitForTimeout(500);
-    if (await p.locator('.sheet .ab-play[aria-label="Anhalten"]').count()) { await p.locator('.sheet .ab-play').click(); await p.waitForTimeout(300); } // angehalten: Beschriftungen bewegen sich nicht
+    await p.locator('.sheet [role=tab], .sheet .seg button', { hasText: 'Technik' }).first().click(); await settle(p, 500);
+    if (await p.locator('.sheet .ab-play[aria-label="Anhalten"]').count()) { await p.locator('.sheet .ab-play').click(); await settle(p, 300); } // angehalten: Beschriftungen bewegen sich nicht
     await check('Technik-Animation (Sheet)'); await shot('technik');
     await p.locator('.sheet [role=tab], .sheet .seg button', { hasText: 'Verlauf' }).first().click(); await check('Verlauf (Sheet)'); await closeSheets();
     // Plan-Assistent: Wochentage (7 auf 320 px – siehe Ausnahme in css/glass.css, hier nur auf Überlappung geprüft)
-    await go('#/training/plaene'); await p.locator('#view [role=tab]', { hasText: 'Pläne' }).first().click(); await p.waitForTimeout(300);
-    if (!(await p.getByRole('button', { name: 'Plan vorschlagen lassen' }).count())) { await p.getByRole('button', { name: 'Plan anlegen' }).click(); await p.waitForTimeout(300); }
-    await p.getByRole('button', { name: 'Plan vorschlagen lassen' }).first().click(); await p.waitForTimeout(350);
+    await go('#/training/plaene'); await p.locator('#view [role=tab]', { hasText: 'Pläne' }).first().click(); await settle(p, 300);
+    if (!(await p.getByRole('button', { name: 'Plan vorschlagen lassen' }).count())) { await p.getByRole('button', { name: 'Plan anlegen' }).click(); await settle(p, 300); }
+    await p.getByRole('button', { name: 'Plan vorschlagen lassen' }).first().click(); await settle(p, 350);
     await check('Assistent Frage 1 (Sheet)');
-    await p.getByRole('button', { name: 'Weiter' }).click(); await p.waitForTimeout(300);
+    await p.getByRole('button', { name: 'Weiter' }).click(); await settle(p, 300);
     ok(await p.locator('.as-day').count() === 7, `${T}: Assistent zeigt die Wochentage`);
     await check('Assistent Tage (Sheet)'); await closeSheets();
     // Belege und Quellen (Links)
-    await p.evaluate(async () => { const v = await import('./js/features/training/exercises-view.js'); v.openEvidence('back-squat'); }); await p.waitForTimeout(500);
+    await p.evaluate(async () => { const v = await import('./js/features/training/exercises-view.js'); v.openEvidence('back-squat'); }); await settle(p, 500);
     await check('Belege Kniebeuge (Sheet)'); await p.evaluate(() => { const b = document.querySelector('.sheet .sheet-body'); if (b) b.scrollTop = b.scrollHeight; }); await check('Belege Kniebeuge unten (Sheet)'); await closeSheets();
     await go('#/training/fortschritt');
     for (const tab of ['Je Übung', 'Trainings', 'Muskeln', '4 Wochen']) /* The Tracker: „Je Übung“ */ { await p.locator('#view [role=tab]', { hasText: tab }).first().click(); await check(`Fortschritt · ${tab}`); }
@@ -124,16 +124,16 @@ for (const devName of ['iPhone SE', 'Pixel 7']) {
     await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await check('Einstellungen (unten)');
 
     // Training: sichtbar 44 px
-    await go('#/training'); await startPlan(p, 'Push'); await p.waitForTimeout(600);
-    if (await p.locator('.sheet button', { hasText: /normal/i }).count()) { await p.locator('.sheet button', { hasText: /normal/i }).first().click(); await p.waitForTimeout(300); }
+    await go('#/training'); await startPlan(p, 'Push'); await settle(p, 600);
+    if (await p.locator('.sheet button', { hasText: /normal/i }).count()) { await p.locator('.sheet button', { hasText: /normal/i }).first().click(); await settle(p, 300); }
     await check('Training Satz', true);
-    await p.locator('.setrow').first().locator('.ck').click(); await p.waitForTimeout(500);
+    await p.locator('.setrow').first().locator('.ck').click(); await settle(p, 500);
     await p.evaluate(() => window.scrollTo(0, 0)); await check('Training nach Haken (oben)', true); await shot('training');
     await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await check('Training nach Haken (unten)', true);
     await p.locator('.setrow').first().locator('.sn').click(); await check('Satztyp (Sheet)', true); await closeSheets();
     await p.locator('#view .nav2 .btn', { hasText: 'Übersicht' }).click(); await check('Training Übersicht', true);
     await closeSheets(); await p.evaluate(() => window.scrollTo(0, 0));
-    if (await p.locator('[aria-label="Nächste Übung"]').count()) { await p.locator('[aria-label="Nächste Übung"]').click(); await p.waitForTimeout(500); if (await p.locator('.sheet').count()) await check('Bewertung (Sheet)', true); await shot('rating'); }
+    if (await p.locator('[aria-label="Nächste Übung"]').count()) { await p.locator('[aria-label="Nächste Übung"]').click(); await settle(p, 500); if (await p.locator('.sheet').count()) await check('Bewertung (Sheet)', true); await shot('rating'); }
     ok(errs.length === 0, `${T}: keine Konsolenfehler ${errs.join(' | ')}`);
     await ctx.close();
   }

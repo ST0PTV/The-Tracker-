@@ -2,7 +2,7 @@
 // Rezeptseite mit Vorrats-Hinweis und Abziehen beim „Gekocht“ (Rückgängig), Einkauf minus Vorrat und „Gekauftes in den
 // Vorrat“, Vorschläge „Mit Vorrat zuerst“. Prüft fremde Keys, Konsolenfehler, null/undefined/NaN; Screenshots hell/dunkel.
 // Aufruf: node tests/browser/check-vorrat.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -24,21 +24,21 @@ for (const appearance of ['dark', 'light']) {
     localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f', weightKg: 64, heightCm: 168 }));
     localStorage.setItem('tt_recipes', JSON.stringify({ started: true }));
   }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(300);
-  await p.goto(srv.url + '/index.html#/rezepte/vorrat'); await p.waitForTimeout(1500);
+  await p.reload(); await settle(p, 300);
+  await p.goto(srv.url + '/index.html#/rezepte/vorrat'); await settle(p, 1500);
   const shot = (name, full = false) => p.screenshot({ path: join(out, `${appearance}-${name}.png`), fullPage: full });
   const text = () => p.evaluate(() => document.body.innerText);
   const vr = () => p.evaluate(() => JSON.parse(localStorage.getItem('tt_vorrat') || '[]'));
-  const close = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(250); } };
+  const close = async () => { while (await p.locator('.sheet').count()) { await p.locator('.sheet .sheet-close').last().click(); await settle(p, 250); } };
 
   ok(await p.locator('.rz-sub a').count() === 4 && /Noch nichts im Vorrat/.test(await text()), `${appearance}: Reiter Vorrat, leerer Zustand`);
   // Zutat dazu
-  await p.click('.wk-bar button:has-text("Zutat dazu")'); await p.waitForTimeout(300);
+  await p.click('.wk-bar button:has-text("Zutat dazu")'); await settle(p, 300);
   const addLoose = async (name, amount, unit) => {
     await p.fill('.sheet input[aria-label="Zutat"]', name);
     await p.click(`.sheet .seg button:has-text("${unit}")`);
     await p.fill('.sheet input[aria-label="Menge"]', amount);
-    await p.click('.sheet button:has-text("Dazulegen")'); await p.waitForTimeout(200);
+    await p.click('.sheet button:has-text("Dazulegen")'); await settle(p, 200);
   };
   await addLoose('Zwiebel', '3', 'Stück');
   await addLoose('Nudeln', '500', 'g');
@@ -54,51 +54,51 @@ for (const appearance of ['dark', 'light']) {
   await shot('1-liste');
   // −/+
   const zw = p.locator('.vr-row', { hasText: 'Zwiebel' });
-  await zw.locator('button[aria-label="Zwiebel: mehr"]').click(); await p.waitForTimeout(150);
+  await zw.locator('button[aria-label="Zwiebel: mehr"]').click(); await settle(p, 150);
   ok((await vr()).find((x) => x.fn === 'Zwiebel').qty === 4 && /4 Stück/.test(await zw.innerText()), `${appearance}: + erhöht`);
-  await p.locator('.vr-row', { hasText: 'Zwiebel' }).locator('button[aria-label="Zwiebel: weniger"]').click(); await p.waitForTimeout(150);
+  await p.locator('.vr-row', { hasText: 'Zwiebel' }).locator('button[aria-label="Zwiebel: weniger"]').click(); await settle(p, 150);
   ok((await vr()).find((x) => x.fn === 'Zwiebel').qty === 3, `${appearance}: − verringert`);
   // Bearbeiten-Sheet: Gegessen
-  await p.locator('.vr-main', { hasText: 'Nudeln' }).click(); await p.waitForTimeout(300);
+  await p.locator('.vr-main', { hasText: 'Nudeln' }).click(); await settle(p, 300);
   ok(await p.locator('.sheet select[aria-label="Zählt als"]').inputValue() === 'Nudeln', `${appearance}: zählt als Nudeln`);
   await shot('2-sheet');
   await p.fill('.sheet input[aria-label="Gegessen in g"]', '50');
-  await p.click('.sheet button:has-text("Ins Journal")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Ins Journal")'); await settle(p, 300);
   const days = await p.evaluate(() => JSON.parse(localStorage.getItem('tt_days') || '{}'));
   ok(Object.values(days).flat().some((e) => e.n === 'Nudeln' && e.grams === 50 && e.at), `${appearance}: Gegessen → Journal mit Zeitstempel`);
   ok((await vr()).find((x) => x.fn === 'Nudeln').qty === 450, `${appearance}: Gegessen zieht ab`);
-  await p.click('.toast-act'); await p.waitForTimeout(200);
+  await p.click('.toast-act'); await settle(p, 200);
   ok((await vr()).find((x) => x.fn === 'Nudeln').qty === 500, `${appearance}: Rückgängig gibt zurück`);
 
   // Rezeptseite: Hinweis und Kochen
-  await p.goto(srv.url + '/index.html#/rezepte/rezept?id=spaghetti-bolognese&m=dinner'); await p.waitForTimeout(500);
+  await p.goto(srv.url + '/index.html#/rezepte/rezept?id=spaghetti-bolognese&m=dinner'); await settle(p, 500);
   ok(/Alles im Vorrat/.test(await p.innerText('.rp-stock')), `${appearance}: Rezeptseite „Alles im Vorrat“`);
   await shot('3-rezept');
-  await p.click('button:has-text("Gekocht")'); await p.waitForTimeout(300);
+  await p.click('button:has-text("Gekocht")'); await settle(p, 300);
   v = await vr();
   ok(v.find((x) => x.fn === 'Nudeln').qty === 420 && /Vom Vorrat abgezogen/.test(await p.innerText('.toast')), `${appearance}: Gekocht zieht 80 g Nudeln ab`);
-  await p.click('.toast-act'); await p.waitForTimeout(200);
+  await p.click('.toast-act'); await settle(p, 200);
   ok((await vr()).find((x) => x.fn === 'Nudeln').qty === 500, `${appearance}: Rückgängig beim Kochen`);
 
   // Vorschläge
-  await p.goto(srv.url + '/index.html#/rezepte?m=dinner'); await p.waitForTimeout(500);
+  await p.goto(srv.url + '/index.html#/rezepte?m=dinner'); await settle(p, 500);
   ok(await p.locator('.rz-pf .chip').count() === 2 && /Alles im Vorrat|Fehlt:/.test(await p.locator('.rz-list').first().innerText()), `${appearance}: Vorschläge mit Vorrats-Hinweis`);
   await shot('4-vorschlaege');
 
   // Einkauf minus Vorrat
   await p.evaluate(() => { localStorage.setItem('tt_week', JSON.stringify({ meals: ['dinner'], portions: 1, fit: false, seed: 0, slots: {}, bought: {} })); });
-  await p.goto(srv.url + '/index.html#/rezepte/rezept?id=spaghetti-bolognese&m=dinner'); await p.waitForTimeout(400);
-  await p.click('.rp-acts .chip:has-text("Einplanen")'); await p.waitForTimeout(250);
-  await p.locator('.wk-days .chip').first().click(); await p.waitForTimeout(150);
+  await p.goto(srv.url + '/index.html#/rezepte/rezept?id=spaghetti-bolognese&m=dinner'); await settle(p, 400);
+  await p.click('.rp-acts .chip:has-text("Einplanen")'); await settle(p, 250);
+  await p.locator('.wk-days .chip').first().click(); await settle(p, 150);
   await close();
-  await p.goto(srv.url + '/index.html#/rezepte/einkauf'); await p.waitForTimeout(500);
-  ok(/Schon im Vorrat/i.test(await text()) && !/80 g Spaghetti/.test(await p.locator('.sh-list').innerText().catch(() => '')), `${appearance}: Spaghetti reicht → „Schon im Vorrat“`);
+  await p.goto(srv.url + '/index.html#/rezepte/einkauf'); await settle(p, 500);
+  ok(/Schon im Vorrat/i.test(await text()) && !/80 g Spaghetti/.test(((await p.locator('.sh-list').count()) ? await p.locator('.sh-list').innerText() : '')), `${appearance}: Spaghetti reicht → „Schon im Vorrat“`);
   await shot('5-einkauf', true);
   const rows = await p.locator('.sh-row').count();
   if (rows) {
-    await p.locator('.sh-row').first().click(); await p.waitForTimeout(150);
+    await p.locator('.sh-row').first().click(); await settle(p, 150);
     const before = (await vr()).length;
-    await p.click('.sh-topantry'); await p.waitForTimeout(300);
+    await p.click('.sh-topantry'); await settle(p, 300);
     ok((await vr()).length >= before, `${appearance}: Gekauftes in den Vorrat`);
   }
 

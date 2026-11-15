@@ -1,7 +1,7 @@
 // Foto der Nährwerttabelle im Browser: Etikett als Bild erzeugen (Screenshot einer Tabelle), über die Datei-Auswahl
 // einreichen, tesseract.js aus vendor/ lesen lassen, Werte im Formular prüfen, Häkchen-Pflicht, speichern.
 // Läuft offline; dauert wegen der Texterkennung etwa 20–60 s. Aufruf: node tests/browser/check-ocr.mjs
-import { launch, startServer, checker, outDir, viaPlus } from './lib.mjs';
+import { launch, startServer, checker, outDir, viaPlus, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const LABEL = `<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff;font:28px Arial,sans-serif;color:#000">
@@ -35,9 +35,9 @@ p.on('pageerror', (e) => errs.push(String(e)));
 p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
 await p.goto(srv.url + '/index.html');
 await p.evaluate(() => localStorage.clear());
-await p.reload(); await p.waitForTimeout(300);
+await p.reload(); await settle(p, 300);
 await viaPlus(p, 'Lebensmittel', 'Snacks');
-await p.click('.sheet .seg button:has-text("Neu")'); await p.waitForTimeout(200);
+await p.click('.sheet .seg button:has-text("Neu")'); await settle(p, 200);
 const chooser = p.waitForEvent('filechooser');
 await p.click('.sheet button.row:has-text("Nährwerttabelle fotografieren")');
 await (await chooser).setFiles(labelPng);
@@ -53,10 +53,10 @@ await p.screenshot({ path: join(out, 'formular.png') });
 
 // 3) Ohne Häkchen kein Speichern; mit Häkchen und Name → Mengen-Dialog
 await p.fill('input[aria-label="Name"]', 'Haferkekse vom Foto');
-await p.click('.sheet button:has-text("Speichern & eintragen")'); await p.waitForTimeout(200);
+await p.click('.sheet button:has-text("Speichern & eintragen")'); await settle(p, 200);
 ok(await p.locator('.sheet[aria-label="Eigenes Lebensmittel"]').count() === 1, 'ohne „mit Packung verglichen“ wird nicht gespeichert');
 await p.check('input[aria-label="Mit der Packung verglichen"]');
-await p.click('.sheet button:has-text("Speichern & eintragen")'); await p.waitForTimeout(400);
+await p.click('.sheet button:has-text("Speichern & eintragen")'); await settle(p, 400);
 ok((await p.evaluate(() => document.body.innerText)).includes('Haferkekse vom Foto'), 'nach dem Speichern Mengen-Dialog');
 const custom = await p.evaluate(() => JSON.parse(localStorage.getItem('tt_custom') || '[]'));
 ok(custom.length === 1 && custom[0].ns === 'foto' && Math.abs(custom[0].k - 375) <= 4, 'als eigenes Lebensmittel mit Herkunft „foto“ gespeichert');

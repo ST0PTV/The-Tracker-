@@ -4,7 +4,7 @@
 // Übersicht C (Figur, Legende, „Zum Anpassen“) → Vorschläge E (Schalter, Zähler) → Übernehmen ändert die Pläne.
 // Dazu: „Bewegung reduzieren“ überspringt die Animation. Dunkel und hell.
 // Aufruf: node tests/browser/check-v330.mjs [Ordner für Screenshots]
-import { launch, startServer, checker } from './lib.mjs';
+import { launch, startServer, checker, settle } from './lib.mjs';
 
 const shots = process.argv[2] || null;
 const srv = await startServer();
@@ -28,18 +28,18 @@ for (const theme of ['dark', 'light']) {
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto(srv.url + '/index.html#/training/plaene'); await p.waitForTimeout(300);
+  await p.goto(srv.url + '/index.html#/training/plaene'); await settle(p, 300);
   await seed(p);
-  await p.evaluate(() => { location.hash = '#/training'; }); await p.waitForTimeout(150);
-  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await p.waitForTimeout(300);
+  await p.evaluate(() => { location.hash = '#/training'; }); await settle(p, 150);
+  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await settle(p, 300);
   if (theme === 'light') await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   const tag = theme;
 
-  await p.getByRole('button', { name: 'Pläne analysieren' }).click(); await p.waitForTimeout(700);
+  await p.getByRole('button', { name: 'Pläne analysieren' }).click(); await settle(p, 700);
   const an = await p.evaluate(() => { const o = document.querySelector('.an-overlay'); return o ? { svgs: o.querySelectorAll('svg.fig').length, steps: o.querySelectorAll('.an-step').length, fm: o.querySelectorAll('.fm').length, delayed: [...o.querySelectorAll('.fm')].filter((x) => x.style.animationDelay).length } : null; });
   ok(an && an.svgs === 2 && an.steps === 4 && an.fm > 10 && an.delayed === an.fm, `${tag}: Animation mit echter Figur vorn/hinten, 4 Schritten, Verzögerung je Muskel (${JSON.stringify(an)})`);
   if (shots) await p.screenshot({ path: `${shots}/v330-${theme}-anim.png` });
-  await p.waitForTimeout(2300);
+  await p.waitForFunction(() => !document.querySelector('.an-overlay'), null, { timeout: 2300 }).catch(() => {}); // 0.4.0: gleiche Frist (2,3 s), endet früher, sobald die Animation weg ist
   const gone = await p.evaluate(() => !document.querySelector('.an-overlay'));
   ok(gone, `${tag}: Animation endet von selbst (≈ 2,5 s)`);
   const c = await p.evaluate(() => document.querySelector('.ana')?.innerText || '');
@@ -47,18 +47,18 @@ for (const theme of ['dark', 'light']) {
   const figs = await p.evaluate(() => ({ n: document.querySelectorAll('.ana svg.fig').length, warn: document.querySelectorAll('.ana .fm.an-warn').length }));
   ok(figs.n === 2 && figs.warn >= 1, `${tag}: Figur vorn/hinten, auffällige Muskeln orange (${JSON.stringify(figs)})`);
   if (shots) await p.screenshot({ path: `${shots}/v330-${theme}-c.png` });
-  await p.getByRole('tab', { name: 'Trainiert (4 Wo.)' }).click(); await p.waitForTimeout(150);
+  await p.getByRole('tab', { name: 'Trainiert (4 Wo.)' }).click(); await settle(p, 150);
   const low = await p.evaluate(() => document.querySelector('.ana')?.innerText || '');
   ok(/Vergleich ist noch unsicher/.test(low), `${tag}: Hinweis bei wenig Trainingsdaten`);
-  await p.getByRole('button', { name: 'Vorschläge ansehen' }).click(); await p.waitForTimeout(250);
+  await p.getByRole('button', { name: 'Vorschläge ansehen' }).click(); await settle(p, 250);
   const e = await p.evaluate(() => ({ sw: document.querySelectorAll('.ana .switch').length, on: document.querySelectorAll('.ana .switch:checked').length, btn: [...document.querySelectorAll('.ana .btn.primary')].map((x) => x.textContent).join() }));
   ok(e.sw >= 1 && e.on === e.sw && /Änderung/.test(e.btn), `${tag}: Vorschläge E mit Schaltern, alle an (${JSON.stringify(e)})`);
   if (shots) await p.screenshot({ path: `${shots}/v330-${theme}-e.png` });
   const before = await p.evaluate(async () => (await import('/js/features/training/plans.js')).listPlans().map((x) => x.items.length).join(','));
-  await p.locator('.ana .switch').first().click(); await p.waitForTimeout(100);
+  await p.locator('.ana .switch').first().click(); await settle(p, 100);
   const btn2 = await p.evaluate(() => document.querySelector('.ana .btn.primary').textContent);
   ok(/übernehmen/.test(btn2), `${tag}: Zähler folgt den Schaltern (${btn2})`);
-  await p.locator('.ana .btn.primary').click(); await p.waitForTimeout(400);
+  await p.locator('.ana .btn.primary').click(); await settle(p, 400);
   const after = await p.evaluate(async () => (await import('/js/features/training/plans.js')).listPlans().map((x) => x.items.length).join(','));
   ok(before !== after || /^0 /.test(btn2), `${tag}: Übernehmen ändert die Pläne (${before} → ${after})`);
   ok(errs.length === 0, `${tag}: keine Konsolenfehler ${errs.slice(0, 3).join(' | ')}`);
@@ -69,11 +69,11 @@ for (const theme of ['dark', 'light']) {
 {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, serviceWorkers: 'block', reducedMotion: 'reduce' });
   const p = await ctx.newPage();
-  await p.goto(srv.url + '/index.html#/training/plaene'); await p.waitForTimeout(300);
+  await p.goto(srv.url + '/index.html#/training/plaene'); await settle(p, 300);
   await seed(p);
-  await p.evaluate(() => { location.hash = '#/training'; }); await p.waitForTimeout(150);
-  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await p.waitForTimeout(300);
-  await p.getByRole('button', { name: 'Pläne analysieren' }).click(); await p.waitForTimeout(300);
+  await p.evaluate(() => { location.hash = '#/training'; }); await settle(p, 150);
+  await p.evaluate(() => { location.hash = '#/training/plaene'; }); await settle(p, 300);
+  await p.getByRole('button', { name: 'Pläne analysieren' }).click(); await settle(p, 300);
   const r = await p.evaluate(() => ({ overlay: !!document.querySelector('.an-overlay'), ana: !!document.querySelector('.ana') }));
   ok(!r.overlay && r.ana, `reduced motion: keine Animation, Übersicht sofort (${JSON.stringify(r)})`);
   await ctx.close();

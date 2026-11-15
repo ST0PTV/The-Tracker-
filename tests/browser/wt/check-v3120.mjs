@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // v3.12.0: Fortschritt-Reiter einzeilig (auch 320 px, „4 Wochen“) und Schalter „Grundübung ja/nein“ für eigene Übungen (#309).
 // Aufruf: node tests/browser/check-v3120.mjs [Ordner für Screenshots]
-import { launch, startServer, checker, loadPlaywright, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, loadPlaywright, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 const shots = process.argv[2] || null;
 const pw = await loadPlaywright();
@@ -18,9 +18,9 @@ for (const [devName, vp] of profiles) for (const theme of ['dark', 'light']) {
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   const shot = (n) => (shots ? p.screenshot({ path: join(shots, `v3120-${devName.replace(/\W+/g, '_')}${vp ? '-320' : ''}-${theme}-${n}.png`) }) : null);
-  await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
   await p.evaluate(async (light) => { const st = await import('./js/features/training/store.js'); st.set('settings', { ...st.get('settings'), onboarded: true, hints: false, appearance: light ? 'light' : 'dark' }); }, theme === 'light');
-  await p.goto(srv.url + '/index.html#/training/fortschritt'); await p.reload(); await p.waitForTimeout(500);
+  await p.goto(srv.url + '/index.html#/training/fortschritt'); await p.reload(); await settle(p, 500);
 
   // 1) Reiter einzeilig: Höhe = eine Textzeile, Text bleibt in der Taste, alle vier in einer Reihe
   const tabs = await p.evaluate(() => [...document.querySelectorAll('#view .seg [role=tab]')].map((e) => {
@@ -42,7 +42,7 @@ for (const [devName, vp] of profiles) for (const theme of ['dark', 'light']) {
     window.__open = (name) => v.openEditor(lib.listExercises().find((e) => e.name === name), () => {});
     window.__stored = (name) => lib.listExercises().find((e) => e.name === name);
   });
-  await p.evaluate(() => window.__open('Eigene Fliegende')); await p.waitForTimeout(300);
+  await p.evaluate(() => window.__open('Eigene Fliegende')); await settle(p, 300);
   const typ = await p.evaluate(() => [...document.querySelectorAll('.sheet [aria-label="Typ"] button')].map((e) => { const r = document.createRange(); r.selectNodeContents(e); return [e.textContent, new Set([...r.getClientRects()].map((q) => Math.round(q.top))).size, e.scrollWidth > e.clientWidth + 1]; }));
   ok(typ.length === 3 && typ.every(([, l, o]) => l === 1 && !o), `${T}: Typ-Auswahl einzeilig (${JSON.stringify(typ)})`);
   const sw = p.locator('.sheet [role=radiogroup][aria-label="Grundübung"]');
@@ -54,26 +54,26 @@ for (const [devName, vp] of profiles) for (const theme of ['dark', 'light']) {
   // sichtbar 32 px wie alle Segment-Tasten; die 44-px-Tippfläche (::after) prüft check-v3100 im Sheet „Übung bearbeiten“-Umfeld
   const hit = await sw.locator('button').first().evaluate((e) => { const a = getComputedStyle(e, '::after'); return parseFloat(a.height) || 0; });
   ok(box.height >= 32 && (box.height >= 44 || hit >= 44), `${T}: Schalter-Taste mit 44-px-Tippfläche (${Math.round(box.height)} sichtbar, ::after ${Math.round(hit)})`);
-  await sw.getByRole('radio', { name: 'Ja' }).click(); await p.waitForTimeout(80);
+  await sw.getByRole('radio', { name: 'Ja' }).click(); await settle(p, 80);
   ok(await sw.locator('button.on').innerText() === 'Ja' && (await sw.getByRole('radio', { name: 'Ja' }).getAttribute('aria-checked')) === 'true', `${T}: „Ja“ gewählt`);
   ok(/Von dir festgelegt/.test(await p.locator('.sheet .field:has([aria-label="Grundübung"])').innerText()), `${T}: Hinweis „von dir festgelegt“`);
   await shot('editor-set');
-  await p.getByRole('button', { name: 'Speichern', exact: true }).last().click(); await p.waitForTimeout(250);
+  await p.getByRole('button', { name: 'Speichern', exact: true }).last().click(); await settle(p, 250);
   ok((await p.evaluate(() => window.__stored('Eigene Fliegende').compound)) === true, `${T}: gespeichert (compound = true)`);
 
   // zurück auf automatisch
-  await p.evaluate(() => window.__open('Eigene Fliegende')); await p.waitForTimeout(300);
-  await p.locator('.sheet').getByRole('button', { name: 'Automatisch', exact: true }).click(); await p.waitForTimeout(80);
+  await p.evaluate(() => window.__open('Eigene Fliegende')); await settle(p, 300);
+  await p.locator('.sheet').getByRole('button', { name: 'Automatisch', exact: true }).click(); await settle(p, 80);
   ok(await sw.locator('button.on').innerText() === 'Nein', `${T}: „Automatisch“ stellt die Heuristik wieder her`);
-  await p.getByRole('button', { name: 'Speichern', exact: true }).last().click(); await p.waitForTimeout(250);
+  await p.getByRole('button', { name: 'Speichern', exact: true }).last().click(); await settle(p, 250);
   ok((await p.evaluate(() => 'compound' in window.__stored('Eigene Fliegende'))) === false, `${T}: Feld wieder entfernt`);
 
   // Cardio und Pool-Übung: kein Schalter
-  await p.evaluate(() => window.__open('Eigene Cardio')); await p.waitForTimeout(300);
+  await p.evaluate(() => window.__open('Eigene Cardio')); await settle(p, 300);
   ok(await p.locator('.sheet [aria-label="Grundübung"]').count() === 0, `${T}: Cardio ohne Schalter`);
-  await p.evaluate(() => document.querySelector('.sheet-close')?.click()); await p.waitForTimeout(150);
+  await p.evaluate(() => document.querySelector('.sheet-close')?.click()); await settle(p, 150);
   await p.evaluate(async () => { const lib = await import('./js/features/training/exercises.js'); const r = lib.addFromPool?.('leg-extension'); window.__poolEx = r?.exercise?.name || null; const v = await import('./js/features/training/exercises-view.js'); const ex = lib.listExercises().find((e) => e.source?.ref === 'leg-extension'); if (ex) v.openEditor(ex, () => {}); });
-  await p.waitForTimeout(300);
+  await settle(p, 300);
   ok(await p.locator('.sheet .editor').count() === 1 && await p.locator('.sheet [aria-label="Grundübung"]').count() === 0, `${T}: Pool-Übung ohne Schalter`);
 
   ok(!BAD_TEXT.test(await p.evaluate(() => document.body.innerText)), `${T}: kein null/undefined/NaN im Text`);

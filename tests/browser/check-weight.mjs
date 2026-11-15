@@ -1,7 +1,7 @@
 // Gewicht und Gewichtsziel im Browser: Gewicht eintragen, Ziel mit Bedarf von der Uhr übernehmen, Tempo-Grenze,
 // Untergrenze, Schätzung aus Körperdaten, automatische Anpassung, Beispieldaten mit Verlauf. Hell und dunkel.
 // Aufruf: node tests/browser/check-weight.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -18,7 +18,7 @@ for (const appearance of ['dark', 'light']) {
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(srv.url + '/index.html');
   await p.evaluate(([a, f]) => { localStorage.clear(); for (const [k, v] of Object.entries(f)) localStorage.setItem(k, v); localStorage.setItem('tt_settings', JSON.stringify({ appearance: a })); }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(300);
+  await p.reload(); await settle(p, 300);
   const shot = (name, full = false) => p.screenshot({ path: join(out, `${appearance}-${name}.png`), fullPage: full });
   const text = () => p.evaluate(() => document.body.innerText);
   const goal = () => p.evaluate(() => { const g = JSON.parse(localStorage.getItem('tt_goals') || '[]'); return g.length ? g[g.length - 1].goal : null; });
@@ -26,21 +26,21 @@ for (const appearance of ['dark', 'light']) {
 
   // 1. Leere Karte, Gewicht eintragen
   ok(await p.locator('.trk.weight:not(.on)').count() === 1 && (await p.innerText('.trk.weight .trk-big')).startsWith('–'), `${appearance}: Karte ohne Gewicht (groß mit „+“)`);
-  await p.click('.trk.weight button[aria-label="Gewicht eintragen"]'); await p.waitForTimeout(250);
+  await p.click('.trk.weight button[aria-label="Gewicht eintragen"]'); await settle(p, 250);
   await p.fill('.sheet input[aria-label="Gewicht in kg"]', '25');
-  await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(150);
+  await p.click('.sheet button:has-text("Eintragen")'); await settle(p, 150);
   ok(await p.locator('.sheet').count() === 1 && (await text()).includes('30 und 300'), `${appearance}: 25 kg abgelehnt, Sheet bleibt offen`);
   await p.fill('.sheet input[aria-label="Gewicht in kg"]', '80,4');
   await shot('1-sheet');
-  await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Eintragen")'); await settle(p, 300);
   let t = await text();
   ok(await p.locator('.sheet').count() === 0 && (await p.innerText('.trk.weight .trk-big')).startsWith('80,4') && (await p.innerText('.trk.weight .trk-pill')) === 'heute gewogen', `${appearance}: 80,4 kg auf der kompakten Karte`);
 
   // 2. Gewichtsziel mit Gesamtverbrauch von der Uhr
-  await p.goto(srv.url + '/index.html#/ich/gewichtsziel'); await p.waitForTimeout(250);
+  await p.goto(srv.url + '/index.html#/ich/gewichtsziel'); await settle(p, 250);
   ok((await text()).includes('Aktuell 80,4 kg'), `${appearance}: Seite kennt das aktuelle Gewicht`);
   await p.fill('input[aria-label="Ø Gesamtverbrauch der letzten Wochen (kcal/Tag)"]', '2500');
-  await p.fill('input[aria-label="Zielgewicht"]', '72'); await p.waitForTimeout(100);
+  await p.fill('input[aria-label="Zielgewicht"]', '72'); await settle(p, 100);
   ok(await p.locator('.wg-opt').count() === 4, `${appearance}: drei Tempo-Vorschläge und eigenes Datum`);
   ok(await p.getAttribute('.wg-opt:has-text("Empfohlen")', 'aria-checked') === 'true', `${appearance}: „Empfohlen“ vorgewählt`);
   // 80,4 kg · 0,75 % = 0,603 kg/Woche → −663 kcal → 2500 − 663 = 1837 → 1.840 kcal
@@ -51,23 +51,23 @@ for (const appearance of ['dark', 'light']) {
   await shot('2-gewichtsziel', true);
 
   // 3. Eigenes Datum zu früh → gedeckelt mit Hinweis (2500 − 0,804 · 7700 / 7 = 1616 → 1.620 kcal)
-  await p.click('.wg-opt:has-text("Eigenes Datum")'); await p.waitForTimeout(100);
+  await p.click('.wg-opt:has-text("Eigenes Datum")'); await settle(p, 100);
   const soon = await p.evaluate(() => { const d = new Date(); d.setDate(d.getDate() + 21); return d.toISOString().slice(0, 10); });
-  await p.fill('input[aria-label="Zieldatum"]', soon); await p.dispatchEvent('input[aria-label="Zieldatum"]', 'change'); await p.waitForTimeout(150);
+  await p.fill('input[aria-label="Zieldatum"]', soon); await p.dispatchEvent('input[aria-label="Zieldatum"]', 'change'); await settle(p, 150);
   ok((await text()).includes('Zu schnell'), `${appearance}: zu frühes Datum → Hinweis „Zu schnell“`);
   ok(await p.innerText('.wg-res b') === '1.620 kcal', `${appearance}: gedeckelt auf 1 %/Woche (80,4 kg · 1 % = −884 kcal) (${await p.innerText('.wg-res b')})`);
   await shot('3-zu-schnell');
 
   // 4. Untergrenze bei niedrigem Bedarf
   await p.click('.wg-opt:has-text("Empfohlen")');
-  await p.fill('input[aria-label="Ø Gesamtverbrauch der letzten Wochen (kcal/Tag)"]', '1700'); await p.waitForTimeout(150);
+  await p.fill('input[aria-label="Ø Gesamtverbrauch der letzten Wochen (kcal/Tag)"]', '1700'); await settle(p, 150);
   ok(await p.innerText('.wg-res b') === '1.200 kcal' && (await text()).includes('Untergrenze'), `${appearance}: Untergrenze 1.200 kcal mit Hinweis`);
-  await p.fill('input[aria-label="Ø Gesamtverbrauch der letzten Wochen (kcal/Tag)"]', '2500'); await p.waitForTimeout(100);
+  await p.fill('input[aria-label="Ø Gesamtverbrauch der letzten Wochen (kcal/Tag)"]', '2500'); await settle(p, 100);
 
   // 5. Schätzen aus Körperdaten braucht das Geburtsjahr
-  await p.click('.seg button:has-text("Schätzen")'); await p.waitForTimeout(100);
+  await p.click('.seg button:has-text("Schätzen")'); await settle(p, 100);
   ok((await text()).includes('Geburtsjahr eintragen'), `${appearance}: Schätzung fragt nach dem Geburtsjahr`);
-  await p.fill('input[aria-label="Geburtsjahr"]', '1995'); await p.waitForTimeout(100);
+  await p.fill('input[aria-label="Geburtsjahr"]', '1995'); await settle(p, 100);
   ok(/Erhaltungsbedarf ≈ [\d.]+ kcal/.test(await text()), `${appearance}: geschätzter Erhaltungsbedarf angezeigt`);
   // Aktivität als Slider: Wert und Beschreibung folgen, Rechnung zieht mit, Beschriftung springt, Griff bleibt beim Ziehen im DOM
   const maintOf = async () => Number(((await text()).match(/Erhaltungsbedarf ≈ ([\d.]+) kcal/) || [])[1]?.replace('.', ''));
@@ -77,43 +77,43 @@ for (const appearance of ['dark', 'light']) {
   ok((await p.innerText('.pal-val')) === '1,8' && (await p.innerText('.pal-txt')) === 'viel auf den Beinen', `${appearance}: Slider zeigt 1,8 und Beschreibung`);
   ok(Math.abs((await maintOf()) / m14 - 1.8 / 1.4) < 0.01, `${appearance}: Erhaltungsbedarf rechnet mit dem Slider (${m14} → ${await maintOf()})`);
   ok(await handle.evaluate((e) => e.isConnected), `${appearance}: Slider bleibt beim Ziehen im DOM`);
-  await p.click('.pal-mark:has-text("sitzend")'); await p.waitForTimeout(80);
+  await p.click('.pal-mark:has-text("sitzend")'); await settle(p, 80);
   ok((await p.inputValue('input.range')) === '1.4' && (await p.innerText('.pal-val')) === '1,4', `${appearance}: Beschriftung „sitzend“ springt auf 1,4`);
   await shot('4-schaetzen', true);
-  await p.click('.seg button:has-text("Von der Uhr")'); await p.waitForTimeout(100);
+  await p.click('.seg button:has-text("Von der Uhr")'); await settle(p, 100);
 
   // 6. Übernehmen
-  await p.click('button:has-text("Als Kalorienziel übernehmen")'); await p.waitForTimeout(300);
+  await p.click('button:has-text("Als Kalorienziel übernehmen")'); await settle(p, 300);
   ok(await goal() === 1840, `${appearance}: Kalorienziel 1.840 kcal gespeichert (${await goal()})`);
-  await p.goto(srv.url + '/index.html#/ich'); await p.waitForTimeout(200);
+  await p.goto(srv.url + '/index.html#/ich'); await settle(p, 200);
   t = await text();
   ok(t.includes('1.840 kcal') && t.includes('72 kg'), `${appearance}: „Ich“ zeigt Ziel und Gewichtsziel`);
 
   // 7. Neues Gewicht für heute → automatisch neu gerechnet
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(200);
-  await p.click('.trk.weight'); await p.waitForTimeout(300);
+  await p.goto(srv.url + '/index.html#/'); await settle(p, 200);
+  await p.click('.trk.weight'); await settle(p, 300);
   ok((await p.locator('.sheet').last().innerText()).includes('Ziel 72 kg'), `${appearance}: Details zeigen das Ziel`);
-  await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300);
+  await p.locator('.sheet .sheet-close').last().click(); await settle(p, 300);
   await viaPlus(p, 'Gewicht');
   await p.fill('.sheet input[aria-label="Gewicht in kg"]', '79,6');
-  await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Eintragen")'); await settle(p, 300);
   ok((await text()).includes('Kalorienziel ab heute'), `${appearance}: Toast meldet das neue Kalorienziel`);
   ok(await goal() !== 1840, `${appearance}: Kalorienziel neu gerechnet (${await goal()})`);
 
   // 8. Beispieldaten: Verlauf mit Linie und Trend
-  await p.goto(srv.url + '/index.html#/ich'); await p.waitForTimeout(200);
+  await p.goto(srv.url + '/index.html#/ich'); await settle(p, 200);
   await p.click('button:has-text("Beispieldaten laden")');
   await p.waitForFunction(() => /Beispiel-Einträge vorhanden/.test(document.body.innerText), null, { timeout: 15000 });
-  await p.goto(srv.url + '/index.html#/'); await p.waitForTimeout(3200);
-  await p.click('.trk.weight'); await p.waitForTimeout(300);
+  await p.goto(srv.url + '/index.html#/'); await p.waitForFunction(() => !document.querySelector('.toast.show'), null, { timeout: 3200 }).catch(() => {}); await settle(p, 300); // 0.4.0: bis der Hinweis weg ist (vorher feste 3200 ms)
+  await p.click('.trk.weight'); await settle(p, 300);
   ok(await p.locator('.sheet .wspark path.line').count() === 1, `${appearance}: Verlauf als Linie in den Details`);
   ok(/zur Vorwoche[\s\S]*[+−±]\d/.test(await p.locator('.sheet').last().innerText()), `${appearance}: Trend zur Vorwoche`);
   t = await text();
   ok(!BAD_TEXT.test(t), `${appearance}: kein null/undefined/NaN`);
   await shot('5-details');
-  await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(300);
-  await p.goto(srv.url + '/index.html#/ich'); await p.waitForTimeout(200);
-  await p.click('button:has-text("Entfernen")'); await p.waitForTimeout(300);
+  await p.locator('.sheet .sheet-close').last().click(); await settle(p, 300);
+  await p.goto(srv.url + '/index.html#/ich'); await settle(p, 200);
+  await p.click('button:has-text("Entfernen")'); await settle(p, 300);
   const left = await p.evaluate(() => Object.values(JSON.parse(localStorage.getItem('tt_weight'))).filter((v) => v.demo).length);
   ok(left === 0, `${appearance}: Beispiel-Gewichte entfernt`);
 

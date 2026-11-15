@@ -21,6 +21,7 @@ import { alcEntries } from './drinks/alcohol.js';
 import { openQuick } from './quick-add.js';
 import { cycleCard } from './cycle/cycle-card.js';
 import { trainingTodayCard } from './training/today-card.js';
+import { todayOrder } from './me/today-layout.js';
 
 let day = null;       // gewählter Tag (nur für diese Sitzung)
 let dayAnchor = null; // Datum, an dem „day“ gesetzt wurde: neuer Kalendertag → zurück auf heute
@@ -100,18 +101,20 @@ export function heuteView(rerender) {
   }, `Ganzen Vortag übernehmen (${fmt(sumEntries(prevEntries).k)} kcal)`) : null;
 
   const hint = !entries.length ? h('p', { class: 'heute-hint' }, 'Noch nichts gegessen – Mahlzeiten erscheinen mit dem ersten Eintrag über „+“.') : null;
+  // Reihenfolge aus „Ich → Heute anpassen“ (me/today-layout.js); die Tagesübersicht steht immer oben
+  const CARD = {
+    cycle: () => cycleCard(iso, today),
+    training: () => trainingTodayCard(iso, today),
+    supp: () => suppCard(iso, today),
+    meals: () => [...MEALS.map((m) => mealCard(iso, m, entries, prevEntries, rerender)), hint, copyDay],
+    water: () => waterCard(iso, today),
+    caff: () => caffCard(iso, today),
+    alc: () => alcCard(iso, today),
+    weight: () => weightCard(iso, today)
+  };
   return h('div', {},
     dayNav(iso, today, rerender),
     dayCard(iso, today),
-    cycleCard(iso, today),
-    trainingTodayCard(iso, today),
-    suppCard(iso, today),
-    ...MEALS.map((m) => mealCard(iso, m, entries, prevEntries, rerender)),
-    hint,
-    copyDay,
-    waterCard(iso, today),
-    caffCard(iso, today),
-    alcCard(iso, today),
-    weightCard(iso, today),
+    ...todayOrder().flatMap((k) => CARD[k]()),
     comingSoon('Analyse', 2));
 }

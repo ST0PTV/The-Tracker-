@@ -2,7 +2,7 @@
 // unbekannter Barcode → Abtippen → eigenes Lebensmittel → eintragen → in der Suche auffindbar.
 // Kamera und Foto-Erkennung selbst lassen sich hier nicht echt prüfen (iPhone-Checkliste).
 // Aufruf: node tests/browser/check-scanner.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, viaPlus, smallFakeCamera, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const KNOWN = '4001234567890';
@@ -10,9 +10,9 @@ const PRODUCT = { status: 1, product: { product_name_de: 'Testkekse', brands: 'M
   additives_tags: ['en:e955'], nutriments: { 'energy-kcal_100g': 450, proteins_100g: 7, carbohydrates_100g: 65, fat_100g: 17, sugars_100g: 22 } } };
 
 const srv = await startServer();
-const b = await launch(['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']);
-const { ok, done } = checker();
 const out = outDir('scanner');
+const b = await launch(smallFakeCamera(out)); // kleines Testbild statt 1080p, sonst blockiert der Scanner den Haupt-Thread (lib.mjs)
+const { ok, done } = checker();
 
 for (const appearance of ['dark', 'light']) {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, serviceWorkers: 'block', permissions: ['camera'] });
@@ -30,44 +30,44 @@ for (const appearance of ['dark', 'light']) {
   });
   await p.goto(srv.url + '/index.html');
   await p.evaluate((a) => { localStorage.clear(); localStorage.setItem('ct.v1', '{"fremd":1}'); localStorage.setItem('tt_settings', JSON.stringify({ appearance: a })); }, appearance);
-  await p.reload(); await p.waitForTimeout(300);
+  await p.reload(); await settle(p, 300);
   const shot = (n) => p.screenshot({ path: join(out, `${appearance}-${n}.png`) });
   const text = () => p.evaluate(() => document.body.innerText);
 
   // Reiter Scannen: Kamera startet (Test-Kamera), keine Fehlermeldung
   await viaPlus(p, 'Lebensmittel', 'Frühstück');
-  await p.click('.sheet .seg button:has-text("Scannen")'); await p.waitForTimeout(1500);
+  await p.click('.sheet .seg button:has-text("Scannen")'); await p.waitForFunction(() => { const v = document.querySelector('.scanner video'); return !!v && v.readyState >= 2 && !!v.srcObject; }, null, { timeout: 1500 }).catch(() => {}); // 0.4.0: bis die Kamera läuft (vorher feste 1500 ms)
   const camOk = await p.evaluate(() => { const v = document.querySelector('.scanner video'); return !!v && v.readyState >= 2 && !!v.srcObject; });
   ok(camOk, `${appearance}: Kamera läuft im Scanner (Test-Kamera)`);
   ok(!/Kein Kamerazugriff|nicht verfügbar/.test(await text()), `${appearance}: keine Kamera-Fehlermeldung`);
   await shot('1-scanner');
 
   // Bekannter Barcode eintippen → Mengen-Dialog mit Produkt und Hinweisen
-  await p.fill('input[aria-label="Barcode eintippen"]', '123'); await p.click('.sheet button:has-text("Suchen")'); await p.waitForTimeout(150);
+  await p.fill('input[aria-label="Barcode eintippen"]', '123'); await p.click('.sheet button:has-text("Suchen")'); await settle(p, 150);
   ok(offCalls.length === 0, `${appearance}: ungültige Nummer wird nicht gesendet`);
-  await p.fill('input[aria-label="Barcode eintippen"]', KNOWN); await p.click('.sheet button:has-text("Suchen")'); await p.waitForTimeout(600);
+  await p.fill('input[aria-label="Barcode eintippen"]', KNOWN); await p.click('.sheet button:has-text("Suchen")'); await settle(p, 600);
   ok(offCalls.length === 1 && offCalls[0].includes(`/product/${KNOWN}.json`), `${appearance}: genau eine Anfrage, nur mit der Barcode-Nummer`);
   let t = await text();
   ok(t.includes('Testkekse') && t.includes('Sucralose') && t.includes('Keine Angabe zu Ballaststoffe'), `${appearance}: Mengen-Dialog zeigt Produkt, Süßstoff und fehlende Angabe`);
   ok(await p.evaluate(() => !document.querySelector('.scanner video')?.srcObject), `${appearance}: Kamera im Mengen-Dialog aus`);
   await shot('2-produkt');
-  await p.click('.sheet button:has-text("Packungsportion")'); await p.waitForTimeout(100);
-  await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(1200);
+  await p.click('.sheet button:has-text("Packungsportion")'); await settle(p, 100);
+  await p.click('.sheet button:has-text("Eintragen")'); await settle(p, 1200);
   ok(await p.locator('.sheet').count() === 1, `${appearance}: nach dem Eintragen zurück im Scanner`);
   ok(await p.evaluate(() => !!document.querySelector('.scanner video')?.srcObject), `${appearance}: Kamera läuft wieder`);
 
   // Gleicher Barcode nochmal: aus dem Speicher, ohne Netz
-  await p.fill('input[aria-label="Barcode eintippen"]', KNOWN); await p.click('.sheet button:has-text("Suchen")'); await p.waitForTimeout(500);
+  await p.fill('input[aria-label="Barcode eintippen"]', KNOWN); await p.click('.sheet button:has-text("Suchen")'); await settle(p, 500);
   ok(offCalls.length === 1, `${appearance}: zweiter Scan ohne Anfrage (gespeichert)`);
-  await p.click('.sheet:last-of-type .sheet-close'); await p.waitForTimeout(300);
+  await p.click('.sheet:last-of-type .sheet-close'); await settle(p, 300);
 
   // Unbekannter Barcode → Abtippen → eigenes Lebensmittel
-  await p.fill('input[aria-label="Barcode eintippen"]', '4009999999999'); await p.click('.sheet button:has-text("Suchen")'); await p.waitForTimeout(500);
+  await p.fill('input[aria-label="Barcode eintippen"]', '4009999999999'); await p.click('.sheet button:has-text("Suchen")'); await settle(p, 500);
   ok((await text()).includes('ist unbekannt'), `${appearance}: unbekannter Barcode mit Auswahl`);
   await shot('3-unbekannt');
-  await p.click('.sheet button:has-text("Abtippen")'); await p.waitForTimeout(300);
+  await p.click('.sheet button:has-text("Abtippen")'); await settle(p, 300);
   ok(await p.inputValue('input[aria-label="Barcode"]') === '4009999999999', `${appearance}: Barcode im Formular vorbelegt`);
-  await p.click('.sheet button:has-text("Speichern & eintragen")'); await p.waitForTimeout(150);
+  await p.click('.sheet button:has-text("Speichern & eintragen")'); await settle(p, 150);
   ok((await text()).includes('Bitte einen Namen') || (await text()).includes('Ohne kcal'), `${appearance}: Pflichtfelder geprüft`);
   await p.fill('input[aria-label="Name"]', 'Omas Linsensuppe');
   await p.fill('input[aria-label="kcal in kcal"]', '95');
@@ -75,20 +75,20 @@ for (const appearance of ['dark', 'light']) {
   await p.fill('input[aria-label="Kohlenhydrate in g"]', '12');
   await p.fill('input[aria-label="Fett in g"]', '2');
   await shot('4-formular');
-  await p.click('.sheet button:has-text("Speichern & eintragen")'); await p.waitForTimeout(400);
+  await p.click('.sheet button:has-text("Speichern & eintragen")'); await settle(p, 400);
   t = await text();
   ok(t.includes('Omas Linsensuppe') && t.includes('Eintragen'), `${appearance}: nach dem Speichern Mengen-Dialog`);
   await p.fill('.sheet input[aria-label="Menge in g"]', '300');
-  await p.click('.sheet button:has-text("Eintragen")'); await p.waitForTimeout(1000);
+  await p.click('.sheet button:has-text("Eintragen")'); await settle(p, 1000);
 
   // Suche findet eigenes und gescanntes Produkt
-  await p.click('.sheet .seg button:has-text("Suche")'); await p.waitForTimeout(200);
-  await p.fill('input[aria-label="Lebensmittel suchen"]', 'linsensuppe'); await p.waitForTimeout(200);
+  await p.click('.sheet .seg button:has-text("Suche")'); await settle(p, 200);
+  await p.fill('input[aria-label="Lebensmittel suchen"]', 'linsensuppe'); await settle(p, 200);
   ok((await p.locator('.sheet .results .row b').first().innerText()).includes('Omas Linsensuppe'), `${appearance}: eigenes Lebensmittel in der Suche vorn`);
-  await p.fill('input[aria-label="Lebensmittel suchen"]', 'testkekse'); await p.waitForTimeout(200);
+  await p.fill('input[aria-label="Lebensmittel suchen"]', 'testkekse'); await settle(p, 200);
   ok((await p.locator('.sheet .results .row b').first().innerText()).includes('Testkekse'), `${appearance}: gescanntes Produkt in der Suche`);
   await shot('5-suche');
-  await p.click('.sheet .sheet-close'); await p.waitForTimeout(400);
+  await p.click('.sheet .sheet-close'); await settle(p, 400);
   ok(await p.evaluate(() => !document.querySelector('video')), `${appearance}: Sheet zu, keine Kamera mehr`);
 
   // Journal: 2 × Packungsportion 25 g Kekse (113 kcal) + 300 g Suppe (285 kcal)

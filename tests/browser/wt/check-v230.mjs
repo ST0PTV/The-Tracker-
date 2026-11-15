@@ -3,7 +3,7 @@
 // v2.30.0: Browser-Prüfung – Wiederholungsbereich im Plan-Editor und in der Vorschlagskarte, leichte Woche
 // (Karte auf dem Start, Vorschlag beim Start, „leicht“ im Training, Info mit Quellen).
 // Nur erfundene Testdaten. Aufruf: node tests/browser/check-v230.mjs   (Screenshots in WT_OUT/v230)
-import { launch, startServer, checker, outDir, BAD_TEXT, startPlan, moreAction } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, startPlan, moreAction, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -20,7 +20,7 @@ const shot = (name) => p.screenshot({ path: join(out, `${name}.png`) });
 const text = () => p.evaluate(() => document.body.innerText);
 const sheetText = () => p.locator('.sheet').last().innerText();
 
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
 await p.evaluate(async () => {
   const lib = await import('./js/features/training/exercises.js');
   const P = await import('./js/features/training/plans.js');
@@ -40,23 +40,23 @@ await p.evaluate(async () => {
 });
 
 // Plan-Editor: Bereich festlegen
-await p.goto(srv.url + '/index.html#/training/plaene'); await p.waitForTimeout(400);
-await p.locator('.pcard', { hasText: 'Testplan' }).click(); await p.waitForTimeout(400);
-await p.locator('.sheet button.pill', { hasText: 'Bearbeiten' }).click(); await p.waitForTimeout(300);
-await p.locator('.sheet .stp-toggle').first().click(); await p.waitForTimeout(300);
-await p.locator('.sheet button', { hasText: 'Bereich festlegen' }).click(); await p.waitForTimeout(300);
+await p.goto(srv.url + '/index.html#/training/plaene'); await settle(p, 400);
+await p.locator('.pcard', { hasText: 'Testplan' }).click(); await settle(p, 400);
+await p.locator('.sheet button.pill', { hasText: 'Bearbeiten' }).click(); await settle(p, 300);
+await p.locator('.sheet .stp-toggle').first().click(); await settle(p, 300);
+await p.locator('.sheet button', { hasText: 'Bereich festlegen' }).click(); await settle(p, 300);
 let t = (await sheetText()).toLowerCase();
 ok(t.includes('ab 8') && t.includes('bis 12'), 'B2: Bereich 8–12 gesetzt');
-await p.locator('.sheet button[aria-label="Wiederholungen bis erhöhen"]').click(); await p.waitForTimeout(300);
-await p.locator('.sheet button[aria-label="Wiederholungen bis verringern"]').click(); await p.waitForTimeout(300);
+await p.locator('.sheet button[aria-label="Wiederholungen bis erhöhen"]').click(); await settle(p, 300);
+await p.locator('.sheet button[aria-label="Wiederholungen bis verringern"]').click(); await settle(p, 300);
 ok((await sheetText()).includes('× 8–12 Wdh.'), 'B2: Zeile zeigt „× 8–12 Wdh.“');
 await p.locator('.sheet .item-open').screenshot({ path: join(out, '1-editor-range.png') });
-await p.locator('.sheet button.pill', { hasText: 'Fertig' }).click(); await p.waitForTimeout(200);
-await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+await p.locator('.sheet button.pill', { hasText: 'Fertig' }).click(); await settle(p, 200);
+await p.keyboard.press('Escape'); await settle(p, 300);
 
 // Normales Training: Vorschlagskarte aus dem Bereich
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
-await startPlan(p, 'Testplan'); await p.waitForTimeout(500);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
+await startPlan(p, 'Testplan'); await settle(p, 500);
 t = await text();
 ok(t.includes('Ziel 8–12 Wdh.'), 'B2: „Ziel 8–12 Wdh.“ in der Übung');
 ok(/62,5 kg/.test(t) && t.includes('Alle Sätze bei 12 Wdh.') && t.includes('zurück auf 8'), 'B2: Vorschlag 62,5 kg, Wdh. zurück auf 8');
@@ -65,17 +65,17 @@ await shot('2-suggestion-range');
 await p.evaluate(async () => (await import('./js/features/training/session.js')).discard());
 
 // Leichte Woche
-await p.reload(); await p.waitForTimeout(400);
-await moreAction(p, 'Diese Woche leicht trainieren'); await p.waitForTimeout(400);
+await p.reload(); await settle(p, 400);
+await moreAction(p, 'Diese Woche leicht trainieren'); await settle(p, 400);
 t = await text();
 ok(t.includes('Leichte Woche bis Sonntag'), 'B3: Karte „Leichte Woche bis Sonntag“');
 await shot('3-light-card');
-await startPlan(p, 'Testplan'); await p.waitForTimeout(500);
+await startPlan(p, 'Testplan'); await settle(p, 500);
 t = await sheetText();
 ok(t.includes('4 → 2 Sätze') && /60 → 55 kg/.test(t), `B3: Vorschlag 4 → 2 Sätze, 60 → 55 kg`);
 ok(t.includes('Schätzung'), 'B3: als Schätzung gekennzeichnet');
 await shot('4-light-ask');
-await p.locator('.sheet button', { hasText: 'Leicht trainieren' }).click(); await p.waitForTimeout(500);
+await p.locator('.sheet button', { hasText: 'Leicht trainieren' }).click(); await settle(p, 500);
 t = await text();
 ok(t.includes('Testplan · leicht'), 'B3: Kopfzeile „· leicht“');
 ok(await p.locator('.sug-card').count() === 0, 'B3: keine Vorschlagskarte in der leichten Woche');
@@ -85,15 +85,15 @@ await shot('5-light-training');
 await p.evaluate(async () => (await import('./js/features/training/session.js')).discard());
 
 // Info mit Quellen
-await p.reload(); await p.waitForTimeout(400);
-await p.locator('.light-week button.info-btn').click(); await p.waitForTimeout(400);
-await p.locator('.sheet details.more summary').last().click(); await p.waitForTimeout(200); // ab 2.34.0 eingeklappt
+await p.reload(); await settle(p, 400);
+await p.locator('.light-week button.info-btn').click(); await settle(p, 400);
+await p.locator('.sheet details.more summary').last().click(); await settle(p, 200); // ab 2.34.0 eingeklappt
 t = await sheetText();
 ok(t.includes('Coleman et al. 2024') && t.includes('Pancar et al. 2026') && t.includes('Rogerson et al. 2024') && t.includes('Plotkin et al. 2022'), 'Info: neue Quellen gelistet');
 ok(t.includes('kein Studienwert') || t.includes('keine in Studien getestete'), 'Info: Konvention gekennzeichnet');
 await shot('6-light-info');
-await p.keyboard.press('Escape'); await p.waitForTimeout(300);
-await p.locator('button', { hasText: 'Leichte Woche beenden' }).click(); await p.waitForTimeout(300);
+await p.keyboard.press('Escape'); await settle(p, 300);
+await p.locator('button', { hasText: 'Leichte Woche beenden' }).click(); await settle(p, 300);
 ok(await p.locator('.light-week').count() === 0 && (await p.evaluate(async () => (await import('./js/features/training/store.js')).get('settings').lightWeek)) === null, 'B3: leichte Woche beendet (ab 2.34.0 Einstieg im ⋯-Menü)');
 
 // ---------- B1: Supersätze (Variante B) ----------
@@ -108,24 +108,24 @@ await p.evaluate(async () => {
   P.addExercises(plan.id, [a.id, b.id]);
   P.setItemRest(plan.id, P.getPlan(plan.id).items[1].id, 150);
 });
-await p.goto(srv.url + '/index.html#/training/plaene'); await p.waitForTimeout(400);
-await p.locator('.pcard', { hasText: 'Arme SS' }).click(); await p.waitForTimeout(400);
-await p.locator('.sheet button.pill', { hasText: 'Bearbeiten' }).click(); await p.waitForTimeout(300);
-await p.locator('.sheet button.ss-link').first().click(); await p.waitForTimeout(300);
+await p.goto(srv.url + '/index.html#/training/plaene'); await settle(p, 400);
+await p.locator('.pcard', { hasText: 'Arme SS' }).click(); await settle(p, 400);
+await p.locator('.sheet button.pill', { hasText: 'Bearbeiten' }).click(); await settle(p, 300);
+await p.locator('.sheet button.ss-link').first().click(); await settle(p, 300);
 ok((await p.locator('.sheet button.ss-link.on').count()) === 1, 'B1: im Editor gekoppelt');
 await p.locator('.sheet .plan').screenshot({ path: join(out, '7-plan-link.png') });
-await p.locator('.sheet button.pill', { hasText: 'Fertig' }).click(); await p.waitForTimeout(300);
+await p.locator('.sheet button.pill', { hasText: 'Fertig' }).click(); await settle(p, 300);
 ok((await sheetText()).toLowerCase().includes('supersatz'), 'B1: Ansicht zeigt „Supersatz“');
-await p.keyboard.press('Escape'); await p.waitForTimeout(300);
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
-await startPlan(p, 'Arme SS'); await p.waitForTimeout(500);
-if (await p.locator('.sheet', { hasText: 'Leichte Woche' }).count()) { await p.locator('.sheet button', { hasText: 'Heute normal' }).click(); await p.waitForTimeout(400); }
+await p.keyboard.press('Escape'); await settle(p, 300);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
+await startPlan(p, 'Arme SS'); await settle(p, 500);
+if (await p.locator('.sheet', { hasText: 'Leichte Woche' }).count()) { await p.locator('.sheet button', { hasText: 'Heute normal' }).click(); await settle(p, 400); }
 ok(await p.locator('.ss-seg button').count() === 2, 'B1: Umschalter A | B');
 const fillAndCheck = async () => {
   const row = p.locator('.setrow:not(.done)').first();
   await row.locator('input.val').nth(0).fill('12'); await row.locator('input.val').nth(0).dispatchEvent('change');
   await row.locator('input.val').nth(1).fill('10'); await row.locator('input.val').nth(1).dispatchEvent('change');
-  await row.locator('.ck').click(); await p.waitForTimeout(500);
+  await row.locator('.ck').click(); await settle(p, 500);
 };
 await fillAndCheck();
 t = await text();
@@ -141,13 +141,13 @@ const sub = await p.locator('.restbar .rt-sub').innerText();
 ok(/Runde A \+ B/.test(sub) && /2:2\d|2:30/.test(await p.locator('.restbar .rt-time').innerText()), `B1: Pause nach der Runde, 2:30 (${sub})`);
 await shot('9-ss-rest');
 // Weiter von A → B (in der Gruppe): keine Bewertung; Weiter von B → Bewertung für A und B
-await p.locator('button[aria-label="Nächste Übung"]').click(); await p.waitForTimeout(400);
+await p.locator('button[aria-label="Nächste Übung"]').click(); await settle(p, 400);
 ok(await p.locator('.rate-sheet').count() === 0, 'B1: Wechsel innerhalb der Gruppe ohne Bewertung');
-await p.locator('button', { hasText: 'Beenden' }).last().click(); await p.waitForTimeout(400);
+await p.locator('button', { hasText: 'Beenden' }).last().click(); await settle(p, 400);
 ok(await p.locator('.rate-sheet').count() === 1, 'B1: beim Verlassen der Gruppe Bewertung');
-await p.locator('.rate-sheet .rate-btn').nth(1).click(); await p.waitForTimeout(400);
+await p.locator('.rate-sheet .rate-btn').nth(1).click(); await settle(p, 400);
 ok(await p.locator('.rate-sheet').count() === 1, 'B1: zweite Bewertung für das andere Mitglied');
-await p.locator('.rate-sheet .rate-btn').nth(1).click(); await p.waitForTimeout(600);
+await p.locator('.rate-sheet .rate-btn').nth(1).click(); await settle(p, 600);
 const rated = await p.evaluate(async () => (await import('./js/features/training/store.js')).get('sessions').filter((s) => s.endedAt).at(-1).entries.map((e) => e.rating));
 ok(JSON.stringify(rated) === '["right","right"]', `B1: beide bewertet (${JSON.stringify(rated)})`);
 

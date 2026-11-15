@@ -25,6 +25,7 @@ import { parseWeight, parseReps, fmtNum, parseAddedWeight, fmtAdded, parseDurati
 import { isTimed } from './timed.js';
 import { weightWarning, placeholderFor, lastSetFor, INTENSITIES } from './model.js';
 import { typoText, openBackfill } from './diary-view.js';
+import { recentLine } from './history.js';
 import * as SETS from './sets.js';
 import { openSetSheet, stageRows, tagChips, quickButtons, lastCompletedIndex } from './set-view.js';
 import { swapOptions, candidateLine } from './group-view.js';
@@ -821,10 +822,9 @@ function startView(rerender) {
     h('button', { class: 'btn block subtle', type: 'button', onclick: start(() => S.startEmpty()) }, 'Freies Training starten'),
     recent.length ? h('div', {}, h('div', { class: 'sec' }, 'Letzte Trainings'),
       h('div', { class: 'card list' }, recent.map((s) => {
-        const sum = S.sessionView(s).summary;
-        const name = s.planId ? (P.getPlan(s.planId)?.name || 'Plan') : 'Freies Training';
-        return h('div', { class: 'row' }, h('span', { class: 't' }, h('b', {}, name),
-          h('small', {}, `${new Date(s.startedAt).toLocaleDateString('de-DE')} · ${sum.hardSets} ${sum.hardSets === 1 ? 'Satz' : TERMS.workSets}`)));
+        const line = recentLine(s);
+        return h('div', { class: 'row' }, h('span', { class: 't' }, h('b', {}, line.name),
+          h('small', {}, `${new Date(s.startedAt).toLocaleDateString('de-DE')} · ${line.detail}`)));
       }))) : null);
 }
 

@@ -2,7 +2,7 @@
 import * as store from './core/store.js';
 import { startRouter, toast, setTabAction } from './core/ui.js';
 import { getSettings } from './core/settings.js';
-import { applyTheme, appearanceOf } from './core/theme.js';
+import { applyTheme } from './core/theme.js';
 import { initViewportGap } from './core/viewport-gap.js';
 import './core/profile.js';
 import { heuteView, heuteDay } from './features/heute.js';
@@ -18,7 +18,7 @@ import { isLocked } from './core/lock.js';
 import { closeAllSheets } from './core/sheet.js';
 
 const boot = store.init();
-applyTheme(appearanceOf(getSettings()));
+applyTheme(getSettings());
 initViewportGap(); // Streifen unter dem Fenster im iOS-Home-Bildschirm (Klasse .tt-gap)
 
 // Schlägt ein Speichern fehl, bleibt oben ein Banner, bis das nächste Speichern klappt.

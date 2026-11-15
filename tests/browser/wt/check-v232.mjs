@@ -2,7 +2,7 @@
 // Pfade #/training/…, Module unter js/features/training/, Speicher tt_training_…; Abweichungen unten mit „The Tracker:“ markiert.
 // v2.32.0: Browser-Prüfung – Training nachtragen (Dialog, Editor, Speichern, Abbrechen, Einstiege).
 // Nur erfundene Testdaten. Aufruf: node tests/browser/check-v232.mjs   (Screenshots in WT_OUT/v232)
-import { launch, startServer, checker, outDir, BAD_TEXT, moreAction } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, moreAction, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -21,7 +21,7 @@ const sheetText = () => p.locator('.sheet').last().innerText();
 const sessions = () => p.evaluate(async () => (await import('./js/features/training/store.js')).get('sessions'));
 const local = (d) => { const q = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${q(d.getMonth() + 1)}-${q(d.getDate())}T${q(d.getHours())}:${q(d.getMinutes())}`; };
 
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
 await p.evaluate(async () => {
   const lib = await import('./js/features/training/exercises.js');
   const P = await import('./js/features/training/plans.js');
@@ -31,11 +31,11 @@ await p.evaluate(async () => {
   const plan = P.newPlan('Testplan').plan;
   P.addExercises(plan.id, [bench.id, row.id]);
 });
-await p.reload(); await p.waitForTimeout(500);
+await p.reload(); await settle(p, 500);
 
 // Einstieg auf dem Training-Tab
 await shot('1-start-tab');
-await moreAction(p, 'Training nachtragen'); await p.waitForTimeout(100); // ab 2.34.0 im ⋯-Menü
+await moreAction(p, 'Training nachtragen'); await settle(p, 100); // ab 2.34.0 im ⋯-Menü
 ok(await p.locator('.sheet').count() >= 1, 'N: Einstieg über das ⋯-Menü des Training-Tabs');
 let t = await sheetText();
 ok(t.toLowerCase().includes('beginn') && t.toLowerCase().includes('ende') && t.includes('Dauer 1 h 00 min'), 'N: Dialog mit Beginn, Ende, Dauer 1 h');
@@ -46,7 +46,7 @@ await shot('2-dialog');
 const fut = new Date(Date.now() + 5 * 3600000);
 await p.locator('.sheet input[aria-label="Beginn"]').fill(local(new Date(fut.getTime() - 3600000)));
 await p.locator('.sheet input[aria-label="Ende"]').fill(local(fut));
-await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await p.waitForTimeout(300);
+await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await settle(p, 300);
 ok((await text()).includes('Das Ende liegt in der Zukunft'), 'N: Zeit in der Zukunft wird abgelehnt');
 
 // gestern 18:00–19:00 mit Plan
@@ -54,8 +54,8 @@ const y = new Date(); y.setDate(y.getDate() - 1); y.setHours(18, 0, 0, 0);
 const y2 = new Date(y.getTime() + 3600000);
 await p.locator('.sheet input[aria-label="Beginn"]').fill(local(y));
 await p.locator('.sheet input[aria-label="Ende"]').fill(local(y2));
-await p.locator('.sheet button.chip', { hasText: 'Testplan' }).click(); await p.waitForTimeout(200);
-await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await p.waitForTimeout(500);
+await p.locator('.sheet button.chip', { hasText: 'Testplan' }).click(); await settle(p, 200);
+await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await settle(p, 500);
 t = await sheetText();
 ok(t.includes('Bankdrücken') && t.includes('Rudern am Kabel') && t.includes('Speichern') && t.includes('Abbrechen'), 'N: Editor mit Planübungen');
 ok(await p.locator('.sheet .setrow.edit').count() === 6, `N: 3 + 3 leere Sätze (${await p.locator('.sheet .setrow.edit').count()})`);
@@ -64,7 +64,7 @@ ok((await sessions()).length === 0, 'N: noch nichts gespeichert');
 await shot('3-editor-empty');
 
 // Speichern ohne Werte
-await p.locator('.sheet button.btn.primary', { hasText: 'Speichern' }).click(); await p.waitForTimeout(300);
+await p.locator('.sheet button.btn.primary', { hasText: 'Speichern' }).click(); await settle(p, 300);
 ok((await text()).includes('Noch kein Satz mit Werten'), 'N: ohne Werte nicht gespeichert');
 ok((await sessions()).length === 0, 'N: weiterhin nichts gespeichert');
 
@@ -76,13 +76,13 @@ for (let i = 0; i < 2; i++) {
   await r.locator('input.val').nth(1).fill(String(10 - i)); await r.locator('input.val').nth(1).dispatchEvent('input');
 }
 // Übung hinzufügen
-await p.locator('.sheet button', { hasText: 'Übung hinzufügen' }).click(); await p.waitForTimeout(400);
-await p.locator('.sheet').last().locator('button.row', { hasText: 'Bizepscurls' }).click(); await p.waitForTimeout(400);
+await p.locator('.sheet button', { hasText: 'Übung hinzufügen' }).click(); await settle(p, 400);
+await p.locator('.sheet').last().locator('button.row', { hasText: 'Bizepscurls' }).click(); await settle(p, 400);
 t = await sheetText();
 ok(t.includes('Bizepscurls'), 'N: Übung hinzugefügt');
 ok(await p.locator('.sheet .setrow.edit').count() === 9, 'N: +3 leere Sätze (Standard-Satzzahl)');
 await shot('4-editor-filled');
-await p.locator('.sheet button.btn.primary', { hasText: 'Speichern' }).click(); await p.waitForTimeout(600);
+await p.locator('.sheet button.btn.primary', { hasText: 'Speichern' }).click(); await settle(p, 600);
 const s = await sessions();
 ok(s.length === 1 && s[0].endedAt, 'N: ein abgeschlossenes Training gespeichert');
 ok(s[0].entries.length === 1 && s[0].entries[0].sets.length === 2, `N: nur Sätze mit Werten (${s[0]?.entries.length} Übung, ${s[0]?.entries[0]?.sets.length} Sätze)`);
@@ -94,43 +94,43 @@ ok(!BAD_TEXT.test(t), 'N: kein null/undefined/NaN');
 await shot('5-after-save');
 
 // Vorbelegung: zweiter Nachtrag nach dem ersten übernimmt die Werte vom letzten Mal (nur frühere Trainings)
-await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
 await moreAction(p, 'Training nachtragen');
 const e2 = new Date(); e2.setHours(e2.getHours() - 1, 0, 0, 0);
 await p.locator('.sheet input[aria-label="Beginn"]').fill(local(new Date(e2.getTime() - 3600000)));
 await p.locator('.sheet input[aria-label="Ende"]').fill(local(e2));
-await p.locator('.sheet button.chip', { hasText: 'Testplan' }).click(); await p.waitForTimeout(200);
+await p.locator('.sheet button.chip', { hasText: 'Testplan' }).click(); await settle(p, 200);
 ok((await sheetText()).includes('vorbelegt'), 'N: Dialog sagt, dass die Sätze vorbelegt sind');
-await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await p.waitForTimeout(500);
+await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await settle(p, 500);
 const pre = await p.evaluate(() => [...document.querySelectorAll('.sheet .setrow.edit')].slice(0, 2).map((r) => [...r.querySelectorAll('input.val')].map((i) => i.value).join('×')));
 ok(pre.join('|') === '60×10|62,5×9', `N: Bankdrücken mit Werten vom letzten Mal vorbelegt (${pre.join('|')})`);
 await shot('3b-editor-prefilled');
-await p.locator('.sheet button.btn.primary', { hasText: 'Speichern' }).click(); await p.waitForTimeout(600);
+await p.locator('.sheet button.btn.primary', { hasText: 'Speichern' }).click(); await settle(p, 600);
 const s2 = await sessions();
 ok(s2.length === 2 && s2.every((x) => x.endedAt), 'N: zweiter Nachtrag gespeichert');
 await p.evaluate(async () => { const st = await import('./js/features/training/store.js'); const a = st.get('sessions'); st.set('sessions', a.slice(0, 1)); });
 
 // Tagebuch: Taste, Eintrag, Abbrechen
-await p.goto(srv.url + '/index.html#/training/fortschritt'); await p.waitForTimeout(400);
-await p.locator('.ex-seg button', { hasText: 'Trainings' }).click(); await p.waitForTimeout(400);
+await p.goto(srv.url + '/index.html#/training/fortschritt'); await settle(p, 400);
+await p.locator('.ex-seg button', { hasText: 'Trainings' }).click(); await settle(p, 400);
 t = await text();
 ok(t.includes('Training nachtragen') && t.includes('Testplan'), 'N: Tagebuch zeigt Taste und das nachgetragene Training');
 await shot('6-diary');
-await p.locator('button', { hasText: 'Training nachtragen' }).click(); await p.waitForTimeout(400);
-await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await p.waitForTimeout(500);
-await p.locator('.sheet button', { hasText: 'Übung hinzufügen' }).click(); await p.waitForTimeout(400);
-await p.locator('.sheet').last().locator('button.row', { hasText: 'Bizepscurls' }).click(); await p.waitForTimeout(400);
+await p.locator('button', { hasText: 'Training nachtragen' }).click(); await settle(p, 400);
+await p.locator('.sheet button.btn.primary', { hasText: 'Weiter' }).click(); await settle(p, 500);
+await p.locator('.sheet button', { hasText: 'Übung hinzufügen' }).click(); await settle(p, 400);
+await p.locator('.sheet').last().locator('button.row', { hasText: 'Bizepscurls' }).click(); await settle(p, 400);
 await p.locator('.sheet input.val').nth(0).fill('20'); await p.locator('.sheet input.val').nth(0).dispatchEvent('input');
 await p.locator('.sheet input.val').nth(1).fill('12'); await p.locator('.sheet input.val').nth(1).dispatchEvent('input');
-await p.locator('.sheet button', { hasText: 'Abbrechen' }).click(); await p.waitForTimeout(500);
+await p.locator('.sheet button', { hasText: 'Abbrechen' }).click(); await settle(p, 500);
 ok((await sessions()).length === 1, 'N: Abbrechen speichert nichts');
 
 // bestehendes Training bearbeiten funktioniert weiter (+ Übung hinzufügen auch dort)
-await p.locator('.diary-card', { hasText: 'Testplan' }).click(); await p.waitForTimeout(400);
-await p.locator('.sheet button', { hasText: 'Bearbeiten' }).click(); await p.waitForTimeout(300);
+await p.locator('.diary-card', { hasText: 'Testplan' }).click(); await settle(p, 400);
+await p.locator('.sheet button', { hasText: 'Bearbeiten' }).click(); await settle(p, 300);
 ok((await sheetText()).includes('Fertig') && !(await sheetText()).includes('Speichern'), 'N: Bearbeiten wie bisher („Fertig“)');
 ok((await sheetText()).includes('Training löschen'), 'N: Bearbeiten hat weiter „Training löschen“');
-await p.locator('.sheet button', { hasText: 'Fertig' }).click(); await p.waitForTimeout(400);
+await p.locator('.sheet button', { hasText: 'Fertig' }).click(); await settle(p, 400);
 
 ok(errs.length === 0, `keine Konsolenfehler ${errs.slice(0, 3).join(' | ')}`);
 console.log('Screenshots: ' + out);

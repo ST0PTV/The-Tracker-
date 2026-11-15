@@ -45,6 +45,22 @@ export function diaryRows(sessions = finishedSessions()) {
   });
 }
 
+// The Tracker 0.4.0: Zeile für „Letzte Trainings“. Nur Cardio → Übung und Minuten statt „Freies Training · 0 Sätze“.
+export function recentLine(session, byId = exercisesById()) {
+  const cardio = session.entries.length > 0 && session.entries.every((en) => byId[en.exerciseId]?.kind === 'cardio');
+  if (!cardio) {
+    const n = sessionSummary(session, byId).hardSets;
+    return { name: sessionName(session), detail: `${n} ${n === 1 ? 'Satz' : 'Sätze'}` };
+  }
+  const names = [...new Set(session.entries.map((en) => byId[en.exerciseId]?.name || 'Cardio'))];
+  const sec = session.entries.reduce((a, en) => a + en.sets.filter((x) => x.completedAt).reduce((b, x) => b + (x.durationSec || 0), 0), 0);
+  const min = sec ? Math.round(sec / 60) : durationMin(session); // ohne erfasste Dauer: Zeit von Start bis Ende
+  return {
+    name: session.planId ? sessionName(session) : names.length > 2 ? `${names[0]} · +${names.length - 1}` : names.join(' · '),
+    detail: min ? `${min} min` : 'Cardio'
+  };
+}
+
 // Kurzfassung der Übungen: "Kniebeuge 3 · Bankdrücken 3 · +2"
 export function exerciseLine(exercises, max = 3) {
   const head = exercises.slice(0, max).map((e) => `${e.name} ${e.kind === 'cardio' ? (e.durationSec ? fmtDuration(e.durationSec) : '–') : e.hardSets}`); // Cardio: Dauer statt Satzzahl

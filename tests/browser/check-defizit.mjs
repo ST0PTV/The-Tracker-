@@ -2,7 +2,7 @@
 // Schilder „viel …“ an Rezepten, Wochenplan-Karte, Mikronährstoffe gegen DGE mit Markierung; Erdnuss-Allergie sperrt
 // Erdnuss-Rezepte, Walnuss-Rezepte bleiben. Prüft fremde Keys, Konsolenfehler, null/undefined/NaN; Screenshots hell/dunkel.
 // Aufruf: node tests/browser/check-defizit.mjs
-import { launch, startServer, checker, outDir, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, outDir, BAD_TEXT, settle } from './lib.mjs';
 import { join } from 'node:path';
 
 const srv = await startServer();
@@ -24,8 +24,8 @@ for (const appearance of ['dark', 'light']) {
     localStorage.setItem('tt_profile', JSON.stringify({ sex: 'f', weightKg: 64, heightCm: 168, birthYear: 1995, cycle: 'yes' }));
     localStorage.setItem('tt_recipes', JSON.stringify({ started: true }));
   }, [appearance, FOREIGN]);
-  await p.reload(); await p.waitForTimeout(400);
-  const nav = async (hash, wait = 1500) => { await p.evaluate((x) => { location.hash = x; }, hash); await p.waitForTimeout(wait); };
+  await p.reload(); await settle(p, 400);
+  const nav = async (hash, wait = 1500) => { await p.evaluate((x) => { location.hash = x; }, hash); await settle(p, wait); };
   const text = () => p.evaluate(() => document.body.innerText);
   const shot = (name) => p.screenshot({ path: join(out, `${appearance}-${name}.png`) });
   const prof = () => p.evaluate(() => JSON.parse(localStorage.getItem('tt_profile')));
@@ -33,10 +33,10 @@ for (const appearance of ['dark', 'light']) {
   await nav('#/ich/ernaehrung');
   ok(await p.locator('.df-row').count() === 8 && /16 mg pro Tag \(DGE\) · mit Regelblutung/.test(await text()) && /150 µg pro Tag \(DGE\)/.test(await text()), `${appearance}: 8 Schalter mit DGE-Werten (Eisen 16 mg, Jod 150 µg)`);
   ok(await p.locator('.rz-rich').count() === 0, `${appearance}: ohne Mangel keine Schilder`);
-  await p.locator('.df-row', { hasText: 'Eisen' }).locator('input').check(); await p.waitForTimeout(200);
-  await p.locator('.df-row', { hasText: 'Vitamin B12' }).locator('input').check(); await p.waitForTimeout(200);
+  await p.locator('.df-row', { hasText: 'Eisen' }).locator('input').check(); await settle(p, 200);
+  await p.locator('.df-row', { hasText: 'Vitamin B12' }).locator('input').check(); await settle(p, 200);
   ok(JSON.stringify((await prof()).deficits) === '["fe","b12"]', `${appearance}: Mangel im Profil (tt_profile.deficits)`);
-  await p.evaluate(() => { document.getElementById('view').scrollTop = 99999; }); await p.waitForTimeout(150);
+  await p.evaluate(() => { document.getElementById('view').scrollTop = 99999; }); await settle(p, 150);
   await shot('1-einstellung');
 
   await nav('#/rezepte');
@@ -47,18 +47,18 @@ for (const appearance of ['dark', 'light']) {
   ok(await p.locator('.wk-def .wk-def-bar').count() === 2 && /Schnitt pro Tag \(Schätzung\)/.test(await text()), `${appearance}: Wochenplan-Karte mit 2 Balken`);
   await shot('3-woche');
   await nav('#/analyse/mikro');
-  await p.locator('.info-btn').first().click(); await p.waitForTimeout(300);
+  await p.locator('.info-btn').first().click(); await settle(p, 300);
   ok(/DGE-Referenzwert/.test(await text()), `${appearance}: Mikronährstoffe gegen DGE`);
-  await p.locator('.sheet .sheet-close').last().click(); await p.waitForTimeout(250);
+  await p.locator('.sheet .sheet-close').last().click(); await settle(p, 250);
 
   // Nüsse getrennt
   await nav('#/ich/ernaehrung');
-  await p.locator('.chips[aria-label="Allergene"] .chip', { hasText: 'Erdnuss' }).click(); await p.waitForTimeout(200);
+  await p.locator('.chips[aria-label="Allergene"] .chip', { hasText: 'Erdnuss' }).click(); await settle(p, 200);
   await nav('#/rezepte');
-  await p.fill('input[placeholder="Rezept oder Zutat suchen"]', 'Erdnuss'); await p.waitForTimeout(400);
+  await p.fill('input[placeholder="Rezept oder Zutat suchen"]', 'Erdnuss'); await settle(p, 400);
   const cnt = async () => Number(((await p.locator('.rz-count').innerText()).match(/\d+/) || [0])[0]);
   const pea = await cnt();
-  await p.fill('input[placeholder="Rezept oder Zutat suchen"]', 'Walnüsse'); await p.waitForTimeout(400);
+  await p.fill('input[placeholder="Rezept oder Zutat suchen"]', 'Walnüsse'); await settle(p, 400);
   const wal = await cnt();
   ok(pea === 0 && wal > 0, `${appearance}: Erdnuss-Allergie sperrt Erdnuss (${pea}), Walnuss bleibt (${wal})`);
 

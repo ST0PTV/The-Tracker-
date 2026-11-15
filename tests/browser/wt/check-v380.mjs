@@ -3,7 +3,7 @@
 // v3.8.0: Plan-Assistent, Wochentage mit Kraft/Cardio (Variante A): Tippen schaltet frei → Kraft → Cardio → frei,
 // höchstens 6 Krafttage, Hinweise, Vorschau mit Cardio-Plan und Ausdauer-Minuten. Dunkel und hell.
 // Aufruf: node tests/browser/check-v380.mjs [Ordner für Screenshots]
-import { launch, startServer, checker, BAD_TEXT } from './lib.mjs';
+import { launch, startServer, checker, BAD_TEXT, settle } from './lib.mjs';
 const shots = process.argv[2] || null;
 const srv = await startServer(); const b = await launch(); const { ok, done } = checker();
 const sheetText = (p) => p.evaluate(() => [...document.querySelectorAll('.sheet')].pop()?.innerText || '');
@@ -18,11 +18,11 @@ for (const theme of ['dark', 'light']) {
   const errs = [];
   p.on('pageerror', (e) => errs.push(String(e)));
   p.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
-  await p.goto(srv.url + '/index.html#/training'); await p.waitForTimeout(400);
+  await p.goto(srv.url + '/index.html#/training'); await settle(p, 400);
   if (theme === 'light') await p.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
   await p.evaluate(async () => { const v = await import('./js/features/training/assistant-view.js'); v.openAssistant(() => {}); });
-  await p.waitForTimeout(400);
-  await p.getByRole('button', { name: 'Weiter' }).click(); await p.waitForTimeout(200);
+  await settle(p, 400);
+  await p.getByRole('button', { name: 'Weiter' }).click(); await settle(p, 200);
   let t = await sheetText(p);
   ok(/An welchen Tagen trainierst du\?/.test(t), `${theme}: Frage „An welchen Tagen“`);
   ok(await states(p) === 'k-k-k--', `${theme}: Standard Mo · Mi · Fr Kraft (${await states(p)})`);
@@ -55,23 +55,23 @@ for (const theme of ['dark', 'light']) {
   ok(/freier Tag dazwischen üblich/.test(await sheetText(p)), `${theme}: Hinweis Ganzkörper an Folgetagen`);
   // Di · Do · Sa Kraft, Mo · Mi Cardio → Vorschau
   await setWeek(p, 'ckck-k-');
-  for (let i = 0; i < 3; i++) { await p.getByRole('button', { name: 'Weiter' }).click(); await p.waitForTimeout(150); }
-  await p.getByRole('button', { name: 'Vorschlag ansehen' }).click(); await p.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) { await p.getByRole('button', { name: 'Weiter' }).click(); await settle(p, 150); }
+  await p.getByRole('button', { name: 'Vorschlag ansehen' }).click(); await settle(p, 300);
   t = await sheetText(p);
   ok(/3 Krafttage · 2 Cardio-Tage/.test(t), `${theme}: Kopfzeile Krafttage und Cardio-Tage`);
   ok(/Ganzkörper A · Di · Sa/.test(t), `${theme}: Ganzkörper A · Di · Sa`);
   ok(/Ausdauer pro Woche/.test(t) && /ca\. 90 min/.test(t) && /WHO/.test(t), `${theme}: Ausdauer pro Woche ca. 90 min mit WHO-Orientierung`);
-  await p.getByRole('tab', { name: 'Ausdauer' }).click(); await p.waitForTimeout(150);
+  await p.getByRole('tab', { name: 'Ausdauer' }).click(); await settle(p, 150);
   t = await sheetText(p);
   ok(/Ausdauer · Mo · Mi/.test(t) && /Gehen \(zügig, draußen\)/.test(t) && /ca\. 45 min/.test(t), `${theme}: Cardio-Plan Mo · Mi mit zügigem Gehen, ca. 45 min`);
   ok(!BAD_TEXT.test(t) && !t.includes('[object'), `${theme}: kein null/undefined/[object]`);
   if (shots) await p.screenshot({ path: `${shots}/v380-${theme}-preview.png` });
   // Nur Cardio
-  await p.getByRole('button', { name: 'Anpassen' }).click(); await p.waitForTimeout(150);
-  await p.getByRole('button', { name: 'Weiter' }).click(); await p.waitForTimeout(150);
+  await p.getByRole('button', { name: 'Anpassen' }).click(); await settle(p, 150);
+  await p.getByRole('button', { name: 'Weiter' }).click(); await settle(p, 150);
   await setWeek(p, 'ccccccc');
-  for (let i = 0; i < 3; i++) { await p.getByRole('button', { name: 'Weiter' }).click(); await p.waitForTimeout(150); }
-  await p.getByRole('button', { name: 'Vorschlag ansehen' }).click(); await p.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) { await p.getByRole('button', { name: 'Weiter' }).click(); await settle(p, 150); }
+  await p.getByRole('button', { name: 'Vorschlag ansehen' }).click(); await settle(p, 300);
   t = await sheetText(p);
   ok(/7 Cardio-Tage/.test(t) && !/Sätze pro Muskel/.test(t) && /ca\. 315 min/.test(t), `${theme}: nur Cardio – keine Muskelsätze, 315 min`);
   ok(await p.getByRole('button', { name: 'So entsteht der Vorschlag' }).count() === 1, `${theme}: Info-Knopf auch ohne Krafttage`);
