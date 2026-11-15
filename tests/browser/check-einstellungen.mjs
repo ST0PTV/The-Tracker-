@@ -25,6 +25,8 @@ for (const appearance of ['dark', 'light']) {
   // Muster: keine alten Checkboxen mehr, Abschnittstitel im neuen Stil
   for (const r of SUBPAGES) {
     await nav(r);
+    // 0.4.3: #/ich/training lädt den Trainingsbereich nach – unter paralleler Last reichen 350 ms nicht immer
+    await p.waitForFunction(() => document.querySelector('#view .cfg-sec'), null, { timeout: 8000 }).catch(() => {});
     const s = await p.evaluate(() => ({ old: document.querySelectorAll('#view .check-row, #view .set-line').length, sec: document.querySelectorAll('#view .cfg-sec').length, lists: document.querySelectorAll('#view .cfg-list').length }));
     ok(s.old === 0 && s.sec > 0 && s.lists > 0, `${appearance}: ${r} im neuen Muster (alt ${s.old}, Abschnitte ${s.sec}, Listen ${s.lists})`);
   }

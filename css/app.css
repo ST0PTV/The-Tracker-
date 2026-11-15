@@ -122,6 +122,7 @@
   --bg-art: radial-gradient(120% 60% at 0% 0%, #1F2356 0%, transparent 60%), radial-gradient(90% 50% at 100% 30%, #0A2E38 0%, transparent 60%), radial-gradient(100% 60% at 50% 100%, #2A1539 0%, transparent 65%);
   --fig-base: #3A3F5A; --fig-body: #2F3450; --fig-rest: #40466A; --fig-edge: #8088AA; --fig-gap: #0B0E1A;
   --fig3d-base: #3A3F5A; --fig3d-rest: #454B6E; --stage-bg: #0B0E1A;
+  --c-water: #C9D4FF; /* 0.4.3: Wasser in der Theme-Farbe */
 }
 :root[data-palette="glas"][data-theme="light"], :root[data-theme="light"] [data-pv="glas"] {
   --bg: #EEF1F8; --strip: rgba(246, 248, 253, 0.75);
@@ -133,6 +134,7 @@
   --bg-art: radial-gradient(120% 60% at 0% 0%, #CBD3FF 0%, transparent 60%), radial-gradient(90% 50% at 100% 30%, #BFE9EE 0%, transparent 60%), radial-gradient(100% 60% at 50% 100%, #F0D6F2 0%, transparent 65%);
   --fig-base: #D3D8EA; --fig-body: #FFFFFF; --fig-rest: #E4E8F4; --fig-edge: #9AA2BC; --fig-gap: #FFFFFF;
   --fig3d-base: #E6E9F4; --fig3d-rest: #D8DCEB; --stage-bg: #EEF1F8;
+  --c-water: #2A3A8C; /* 0.4.3: Wasser in der Theme-Farbe */
 }
 :root[data-palette="sand"], [data-pv="sand"] {
   --bg: #14110E; --strip: #14110E; --surface: #211C17; --surface-2: #2E2720; --surface-3: #3B332A;
@@ -143,6 +145,7 @@
   --c-cyc: #FF8AA8; --c-e2: #F49AC8;
   --fig-base: #403830; --fig-body: #352E27; --fig-rest: #463D33; --fig-edge: #87796A; --fig-gap: #14110E;
   --fig3d-base: #403830; --fig3d-rest: #4B4137; --stage-bg: #14110E;
+  --c-water: #E9A27A; /* 0.4.3: Wasser in der Theme-Farbe */
 }
 :root[data-palette="sand"][data-theme="light"], :root[data-theme="light"] [data-pv="sand"] {
   --bg: #F3EDE3; --strip: #F3EDE3; --surface: #FFFCF7; --surface-2: #EDE5D8; --surface-3: #E0D5C4;
@@ -152,6 +155,7 @@
   --c-cyc: #B8164F; --c-e2: #A3306E;
   --fig-base: #DDD3C6; --fig-body: #FFFCF7; --fig-rest: #ECE4D8; --fig-edge: #A39887; --fig-gap: #FFFCF7;
   --fig3d-base: #ECE5DA; --fig3d-rest: #DFD6C8; --stage-bg: #F3EDE3;
+  --c-water: #A4471F; /* 0.4.3: Wasser in der Theme-Farbe */
 }
 :root[data-palette="see"], [data-pv="see"] {
   --bg: #0A1114; --strip: #0A1114; --surface: #121C21; --surface-2: #1B282E; --surface-3: #25353C;
@@ -160,6 +164,7 @@
   --text: #EEF6F7; --muted: #A6BCC1; --faint: #7F979D; --accent: #5FD3C0; --on-accent: #04201B;
   --fig-base: #33424A; --fig-body: #2A383F; --fig-rest: #38474F; --fig-edge: #7A8C93; --fig-gap: #0A1114;
   --fig3d-base: #33424A; --fig3d-rest: #3D4D55; --stage-bg: #0A1114;
+  --c-water: #5FD3C0; /* 0.4.3: Wasser in der Theme-Farbe */
 }
 :root[data-palette="see"][data-theme="light"], :root[data-theme="light"] [data-pv="see"] {
   --bg: #EEF4F5; --strip: #EEF4F5; --surface: #FFFFFF; --surface-2: #E1EBED; --surface-3: #CFDDE0;
@@ -168,6 +173,7 @@
   --text: #0B1E22; --muted: #4C6267; --faint: #6A8187; --accent: #0B6E62; --on-accent: #FFFFFF;
   --fig-base: #CFDCE0; --fig-body: #FFFFFF; --fig-rest: #E2EBED; --fig-edge: #93A5AA; --fig-gap: #FFFFFF;
   --fig3d-base: #E4ECEE; --fig3d-rest: #D5E1E4; --stage-bg: #EEF4F5;
+  --c-water: #0B6E62; /* 0.4.3: Wasser in der Theme-Farbe */
 }
 /* Vorschau von Apple nativ, wenn ein anderes Theme aktiv ist (nur die Tokens, die die Vorschau nutzt) */
 [data-pv="nativ"] { --bg: #000000; --surface: #1C1C1E; --surface-2: #2C2C2E; --line: #38383A; --text: #FFFFFF; --muted: #AEAEB2; --accent: #ECEEF0; --on-accent: #111315; --bg-art: none; }
@@ -354,8 +360,6 @@ body.sheet-open { overflow: hidden; }
 .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .big-num { font-size: 34px; font-weight: 700; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
 .big-num small { font-size: 17px; font-weight: 500; color: var(--muted); }
-.card.placeholder { border: 1px dashed var(--line); background: transparent; }
-.card.placeholder h2 { color: var(--muted); }
 .form label { display: block; margin-bottom: 14px; }
 .form label > span, .form .label { display: block; font-size: 13px; color: var(--muted); margin: 0 0 6px 4px; }
 .back { display: inline-flex; align-items: center; gap: 2px; color: var(--accent); text-decoration: none; font-size: 17px; min-height: var(--tap-s); }
@@ -485,7 +489,8 @@ p.warn { color: var(--warn); }
 .btn.block { white-space: normal; text-align: center; line-height: 1.25; padding-top: 8px; padding-bottom: 8px; }
 
 /* ---------- Phase 2: Wasser, Koffein, Supplements ---------- */
-.info-btn { width: 28px; height: 28px; border-radius: 50%; border: 0; background: none; color: var(--muted); display: inline-flex;
+/* 0.4.3: ⓘ wie im Trainingsbereich: 36 px, runde Fläche (vorher 28 px ohne Fläche) */
+.info-btn { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--fill); color: var(--muted); display: inline-flex;
   align-items: center; justify-content: center; cursor: pointer; vertical-align: middle; flex: none; margin-left: 2px; }
 .icon-btn.sm { width: 32px; height: 32px; }
 .icon-sp { width: 32px; flex: none; }
@@ -714,7 +719,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .cfg-sec { display: flex; align-items: center; justify-content: space-between; min-height: 28px; margin: 22px 4px 7px;
   font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .page-head + .cfg-sec, .back + .cfg-sec { margin-top: 8px; }
-.cfg-sec .info-btn { margin: -6px -6px -6px 0; }
+.cfg-sec .info-btn { margin: -10px -4px -10px 0; }
 .cfg-list { background: var(--surface); border-radius: var(--radius); overflow: hidden; }
 .cfg-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 8px 14px; box-sizing: border-box;
   color: var(--text); text-decoration: none; background: none; border: 0; font: inherit; text-align: left; }
@@ -731,7 +736,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .cfg-row:focus-within { background: color-mix(in srgb, var(--text) 4%, transparent); }
 .cfg-chev { display: inline-flex; color: var(--faint); }
 .cfg-chev .icon { stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-a.cfg-row, .cfg-action { cursor: pointer; }
+a.cfg-row, .cfg-action, .cfg-open { cursor: pointer; }
 .cfg-action { justify-content: center; }
 .cfg-action > .t b { color: var(--accent); text-align: center; }
 .cfg-action.danger > .t b { color: var(--danger); }
@@ -998,7 +1003,7 @@ a.icon-btn { text-decoration: none; }
 .wk-sum { display: flex; flex-direction: column; gap: 2px; margin: 0 4px 10px; }
 .wk-sum b { font-size: 16px; }
 .wk-sum span { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); }
-.wk-sum .info-btn { margin: -10px 0; }
+.wk-sum .info-btn { margin: -14px 0; }
 .wk-bar { margin-bottom: 4px; }
 .wk-bar > .btn { flex: 1 1 0; min-width: 0; padding: 0 10px; }
 .wk-dh { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin: 16px 4px 6px; }
@@ -1084,7 +1089,7 @@ a.icon-btn { text-decoration: none; }
 .rz-steps b { font-size: 12px; color: var(--muted); margin-left: 6px; font-weight: 500; }
 .rz-start > .btn.primary { margin-top: 16px; }
 .rz-backstep { display: block; text-align: center; margin: 12px 0 0; }
-.taste-row { display: flex; align-items: center; gap: 10px; padding: 6px 14px; min-height: 52px; }
+.taste-row { display: flex; align-items: center; gap: 12px; padding: 6px 14px; min-height: 52px; }
 .taste-row + .taste-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
 .taste-row .t { flex: 1; font-size: 16px; }
 .taste-row .icon-btn { color: var(--muted); }
@@ -1265,3 +1270,9 @@ body.tt-locked #tabbar { display: none; }
 .tt-day.now span { color: var(--text); font-weight: 700; }
 .tt-today .tt-foot { margin: 8px 0 0; }
 .tt-today .tt-go { min-height: 40px; padding: 0 14px; }
+
+/* 0.4.3 Feinschliff: Trefferfläche mindestens 44 × 44 px, das Aussehen bleibt. Der Trainingsbereich hat eigene Regeln
+   (css/training.css), daher hier nur außerhalb von body.tt-train. */
+body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .link, .cfg-pad .link) { position: relative; }
+body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .link, .cfg-pad .link)::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }

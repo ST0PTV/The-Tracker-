@@ -84,9 +84,3 @@ export function pageHead(title, sub = '') {
   return h('header', { class: 'page-head' }, h('h1', {}, title), sub ? h('p', { class: 'sub' }, sub) : null);
 }
 
-/** Platzhalterkarte für Bereiche, die in einer späteren Phase einziehen. */
-export function comingSoon(what, phase) {
-  return h('section', { class: 'card placeholder' },
-    h('h2', {}, what),
-    h('p', { class: 'muted' }, `Zieht in Phase ${phase} ein.`));
-}

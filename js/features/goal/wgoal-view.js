@@ -106,7 +106,7 @@ export function wgoalView(rerender) {
     maintOut.replaceChildren(...(d.src !== 'watch' && maint ? [h('p', { class: 'small' }, 'Erhaltungsbedarf ≈ ', h('b', {}, `${fmt(maint)} kcal`), h('span', { class: 'muted' }, ` (${fmt(base)} × ${String(wgPalTotal(d)).replace('.', ',')})`))] : []));
     if (!w) out.push(h('p', { class: 'small muted' }, 'Aktuelles Körpergewicht fehlt. ', h('button', { class: 'link', type: 'button', onclick: () => openWeight(today) }, 'Gewicht eintragen')));
     else if (!maint) out.push(h('p', { class: 'small muted' }, d.src === 'est' && c.age == null ? 'Für die Schätzung bitte das Geburtsjahr eintragen.' : 'Bitte deinen Bedarf eintragen.'));
-    else if (!d.target) out.push(h('p', { class: 'small muted' }, 'Zielgewicht eintragen.'));
+    else if (!d.target) { /* ohne Zielgewicht nichts rechnen; das Feld zeigt den Platzhalter (0.4.3: Hilfetext entfällt) */ }
     else {
       const opts = wgOptions(w, d, c);
       if (opts.keep) out.push(h('div', { class: 'kv' }, h('span', {}, 'Kalorienziel (Gewicht halten)'), h('b', {}, `${fmt(r10(maint))} kcal`)));
@@ -176,8 +176,8 @@ export function wgoalView(rerender) {
     list(h('div', { class: 'cfg-pad' },
       h('p', { class: 'small muted' }, w ? `Aktuell ${r1(w)} kg · ` : '', h('button', { class: 'link', type: 'button', onclick: () => openWeight(today) }, 'Gewicht eintragen')),
       field('Zielgewicht (kg)', targetIn), planBox)),
+    note(`Untergrenze ohne fachliche Begleitung: ${fmt(floor)} kcal pro Tag. Die App rechnet nie darunter.`),
     h('button', { class: 'btn primary block cfg-save', type: 'button', onclick: apply }, o.on ? 'Neu berechnen und übernehmen' : 'Als Kalorienziel übernehmen'),
     sec('Heute'),
-    list(switchRow({ title: 'Gewichtskarte unter „Heute“', on: o.card, set: (v) => setWeightGoal({ card: v }) })),
-    note(`Untergrenze ohne fachliche Begleitung: ${fmt(floor)} kcal pro Tag. Die App rechnet nie darunter.`));
+    list(switchRow({ title: 'Gewichtskarte unter „Heute“', on: o.card, set: (v) => setWeightGoal({ card: v }) })));
 }

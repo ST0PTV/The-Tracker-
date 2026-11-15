@@ -77,6 +77,12 @@ export function linkRow({ title, sub = '', badge = null, value = '', href }) {
     h('span', { class: 'cfg-val' }, value, h('span', { class: 'cfg-chev' }, icon('chevron', { size: 15 }))));
 }
 
+/** Zeile, die ein Sheet öffnet (0.4.3): Name links, Pfeil rechts – wie linkRow, nur als Knopf. */
+export function sheetRow({ title, sub = '', badge = null, onClick }) {
+  return h('button', { type: 'button', class: 'cfg-row cfg-link cfg-open', onclick: onClick }, ...label(title, sub, badge),
+    h('span', { class: 'cfg-val' }, h('span', { class: 'cfg-chev' }, icon('chevron', { size: 15 }))));
+}
+
 /** Auswahl aus wenigen Möglichkeiten: Name oben, Segmente darunter. options = [[key, label], …]; aria = Name für Screenreader. */
 export function segRow({ title, sub = '', options, value, set, aria = title }) {
   return h('div', { class: 'cfg-row cfg-segrow' },

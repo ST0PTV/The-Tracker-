@@ -3,7 +3,7 @@
 // Reihenfolge: Kalorien, Supplements (abhaken), Mahlzeiten (nur mit Einträgen), Wasser, Koffein, Alkohol (nur mit Eintrag),
 // Gewicht. Eintragen über das „+“ in der Tab-Leiste (quick-add.js) oder das „+“ der Karten.
 import { h } from '../core/util.js';
-import { comingSoon, toast } from '../core/ui.js';
+import { toast } from '../core/ui.js';
 import { icon } from '../core/icons.js';
 import { fmt, r1, isoDate, addDays, dayLabel } from '../core/format.js';
 import { unitOf } from './food/foods.js';
@@ -115,6 +115,5 @@ export function heuteView(rerender) {
   return h('div', {},
     dayNav(iso, today, rerender),
     dayCard(iso, today),
-    ...todayOrder().flatMap((k) => CARD[k]()),
-    comingSoon('Analyse', 2));
+    ...todayOrder().flatMap((k) => CARD[k]()));
 }

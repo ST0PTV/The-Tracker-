@@ -16,7 +16,7 @@ import { openSheet } from './sheet.js';
 import { infoBody, cardHead } from './info.js';
 import { openGlossary } from './glossary.js';
 import { pageHead } from '../../core/ui.js';
-import { backLink, sec, list, row, switchRow, segRow, actionRow } from '../../core/setui.js';
+import { backLink, sec, list, row, switchRow, segRow, sheetRow } from '../../core/setui.js';
 
 const save = (patch) => {
   if (store.set('settings', { ...store.get('settings'), ...patch })) return true;
@@ -66,5 +66,5 @@ export function trainingSettingsView(rerender) {
         sub: settings.figureChoice === 'auto' ? `${settings.figure === 'female' ? 'weiblich' : 'männlich'} – aus „Schlaf & Körper“` : '',
         set: (k) => { if (save({ figureChoice: k })) rerender(); } }),
       sw('Hinweise anzeigen', 'hints'),
-      actionRow({ title: 'Begriffe', onClick: openGlossary })));
+      sheetRow({ title: 'Begriffe', onClick: openGlossary })));
 }
