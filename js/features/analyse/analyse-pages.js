@@ -126,15 +126,19 @@ export function yearView(rerender) {
   let logged = 0, first = null;
   const blocks = MON3.map((mn, mi) => {
     const lead = (new Date(year, mi, 1).getDay() + 6) % 7, nd = new Date(year, mi + 1, 0).getDate();
+    // 0.5.3: Tage sind nur Grafik (9–12 px wären zu kleine Tippflächen); der ganze Monat ist das Ziel und öffnet die Monatsansicht.
     const cells = Array.from({ length: lead }, () => h('i', {}));
+    let n = 0;
     for (let k = 1; k <= nd; k++) {
       const d = `${year}-${pad(mi + 1)}-${pad(k)}`;
       const food = foodEntries(d).length > 0;
-      if (food) { logged++; if (!first) first = d; }
-      cells.push(h('button', { class: `yd${d > today ? ' fut' : food ? ' on' : ''}${d === today ? ' today' : ''}`, type: 'button', disabled: d > today,
-        'aria-label': `${k}. ${MON[mi]}${food ? ', eingetragen' : ''}`, onclick: () => goDay(d) }));
+      if (food) { logged++; n++; if (!first) first = d; }
+      cells.push(h('i', { class: `yd${d > today ? ' fut' : food ? ' on' : ''}${d === today ? ' today' : ''}` }));
     }
-    return h('div', { class: 'ym' }, h('div', { class: 'ym-n' }, mn), h('div', { class: 'ym-g' }, ...cells));
+    const key = `${year}-${pad(mi + 1)}`, fut = key > today.slice(0, 7);
+    return h('button', { class: 'ym', type: 'button', disabled: fut, 'aria-label': `${MON[mi]}: ${n} ${n === 1 ? 'Tag' : 'Tage'} eingetragen${key === today.slice(0, 7) ? ', heute' : ''}`,
+      onclick: () => { month = key; location.hash = '#/analyse/monat'; } },
+      h('span', { class: 'ym-n' }, mn), h('span', { class: 'ym-g', 'aria-hidden': 'true' }, ...cells));
   });
   const endD = year === Y0 ? today : `${year}-12-31`;
   const span = first ? Math.round((new Date(endD + 'T12:00:00') - new Date(first + 'T12:00:00')) / 864e5) + 1 : 0;
@@ -151,5 +155,5 @@ export function yearView(rerender) {
         h('div', {}, h('span', {}, 'seit dem ersten Eintrag'), h('b', {}, `${span ? Math.round((logged / span) * 100) : 0} %`))),
       h('div', { class: 'y-grid' }, ...blocks),
       h('div', { class: 'cal-leg' }, h('span', {}, h('i', { class: 'yon' }), 'Essen eingetragen'), h('span', {}, h('i', { class: 'yoff' }), 'leer'))),
-    h('p', { class: 'an-note' }, 'Keine Serie, die reißen kann: Jeder Tag zählt für sich. Tag antippen öffnet ihn auf „Heute“.'));
+    h('p', { class: 'an-note' }, 'Keine Serie, die reißen kann: Jeder Tag zählt für sich. Monat antippen öffnet ihn; dort öffnet ein Tag „Heute“.'));
 }

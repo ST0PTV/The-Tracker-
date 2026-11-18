@@ -93,6 +93,15 @@ for (const appearance of ['dark', 'light']) {
   ok(await p.locator('.yd').count() === daysInYear && await p.locator('.yd.on').count() >= 25, `${appearance}: Jahresansicht mit ${daysInYear} Tagen`);
   ok((await text()).includes('Keine Serie'), `${appearance}: Jahr ohne Serie`);
   await shot('5-jahr');
+  // 0.5.3: Tage sind Grafik, der Monat ist das Tippziel und öffnet die Monatsansicht
+  ok(await p.locator('button.yd').count() === 0 && await p.locator('button.ym').count() === 12, `${appearance}: Jahr – 12 Monatsknöpfe statt Tagesknöpfe`);
+  // Vormonat antippen (nicht der laufende, auf den die Monatsansicht ohnehin zurückfällt); im Januar Dezember des Vorjahrs
+  const MONS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const now = new Date(); let pm = now.getMonth() - 1;
+  if (pm < 0) { await p.click('button[aria-label="Vorheriges Jahr"]'); await settle(p, 300); pm = 11; }
+  await p.locator('button.ym').nth(pm).click(); await settle(p, 300);
+  ok((await p.evaluate(() => location.hash)) === '#/analyse/monat' && (await p.innerText('.page-head h1')) === MONS[pm] && (await p.locator('.cal-d').count()) >= 28,
+    `${appearance}: Monat im Jahr antippen öffnet genau diesen Monat (${MONS[pm]})`);
 
   // Magen-Modell: gestern (Beispieldaten haben Mahlzeiten)
   await p.goto(srv.url + '/index.html#/analyse/magen'); await settle(p, 300);

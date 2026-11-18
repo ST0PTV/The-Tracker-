@@ -67,7 +67,7 @@ await p.evaluate(async () => (await import('./js/features/training/session.js'))
 await go('#/training');
 await startPlan(p, 'Push'); await settle(p, 500);
 t = await text();
-ok(t.includes('1–2 leichte Aufwärmsätze') && t.includes('Werte vom') && !/Zuletzt \d/.test(t), 'T: Aufwärmzeile kurz, „Werte vom …“ statt Werteliste');
+ok(t.includes('1–3 leichte Aufwärmsätze') && t.includes('Werte vom') && !/Zuletzt \d/.test(t), 'T: Aufwärmzeile kurz, „Werte vom …“ statt Werteliste');
 ok(await p.locator('.plates:not([hidden])').count() === 0, 'T: Scheiben-Zeile anfangs verborgen');
 const w = p.locator('.setrow').first().locator('input.val').first();
 await w.focus(); await settle(p, 150);
@@ -127,7 +127,7 @@ await go('#/training/fortschritt');
 ok(await p.locator('.hint-line').count() === 0, 'E: Hinweise aus → keine Hinweiszeilen');
 await go('#/training');
 await startPlan(p, 'Push'); await settle(p, 500);
-ok(!(await text()).includes('1–2 leichte Aufwärmsätze'), 'E: Hinweise aus → keine Aufwärmzeile im Training');
+ok(!(await text()).includes('1–3 leichte Aufwärmsätze'), 'E: Hinweise aus → keine Aufwärmzeile im Training');
 await p.evaluate(async () => (await import('./js/features/training/session.js')).discard());
 await go('#/training/uebungen');
 await p.evaluate(async () => (await import('./js/features/training/exercises-view.js')).openEvidence('bench-press-barbell')); await settle(p, 400);

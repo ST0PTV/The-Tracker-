@@ -453,7 +453,7 @@ export const POOL = [
   }, 'bodyweight'),
   P('close-grip-lat-pulldown', 'Latzug eng/neutral', 'cable', ['lats'], ['biceps', 'upper-back', 'rear-delts', 'forearms'], {
     confidence: 'medium', basis: 'EMG',
-    note: 'Enger oder Parallelgriff, Stange vor dem Kopf zur oberen Brust ziehen, Oberkörper leicht zurückgelehnt.',
+    note: 'Enger oder Parallelgriff, Stange vor dem Kopf zur Brustmitte ziehen, Oberkörper leicht zurückgelehnt.',
     others: ['Teres major', 'Infraspinatus'],
     sources: [
       S('Andersen et al. 2014, J Strength Cond Res', '10.1097/JSC.0000000000000232', 'EMG bei 6RM: Lat, Trapezius ähnlich aktiv bei enger, mittlerer und weiter Griffbreite. Bizeps tendenziell mehr bei mittlerem Griff.'),
@@ -841,7 +841,7 @@ export const POOL = [
     confidence: 'high', basis: 'MRT-Trainingsstudie',
     note: 'Überkopf wächst besonders der lange Kopf, die anderen Köpfe aber ebenfalls stärker.',
     sources: [
-      S('Maeo et al. 2022, Eur J Sport Sci', '10.1080/17461391.2022.2100279', 'MRT: Überkopf-Training ließ den langen Trizepskopf etwa 1,5-mal stärker wachsen als Training mit hängendem Arm.')
+      S('Maeo et al. 2023, Eur J Sport Sci', '10.1080/17461391.2022.2100279', 'MRT: Überkopf-Training ließ den langen Trizepskopf etwa 1,5-mal stärker wachsen als Training mit hängendem Arm.')
     ]
   }),
 
@@ -934,8 +934,8 @@ export const POOL = [
     note: 'Ein- oder beidarmig, sitzend mit Lehne. Ellbogen eng und nach oben zeigend, tief absenken für die volle Dehnung des langen Kopfes.',
     others: ['Anconeus'],
     sources: [
-      S('Maeo et al. 2022, Eur J Sport Sci', '10.1080/17461391.2022.2100279', '12 Wochen, MRT: Strecken überkopf brachte ca. 1,4–1,5× mehr Zuwachs an Trizepsvolumen als in neutraler Armhaltung, v. a. im langen Kopf. Kabel, keine Kurzhantel.'),
-      S('Alves et al. 2017, J Sports Med Phys Fitness', '10.23736/S0022-4707.17.06849-9', 'EMG von langem und lateralem Kopf beim Kurzhantel-Strecken überkopf und im Liegen: sehr ähnliche Muster, Aktivität am höchsten im ersten/mittleren Bewegungsdrittel.'),
+      S('Maeo et al. 2023, Eur J Sport Sci', '10.1080/17461391.2022.2100279', '12 Wochen, MRT: Strecken überkopf brachte ca. 1,4–1,5× mehr Zuwachs an Trizepsvolumen als in neutraler Armhaltung, v. a. im langen Kopf. Kabel, keine Kurzhantel.'),
+      S('Alves et al. 2018, J Sports Med Phys Fitness', '10.23736/S0022-4707.17.06849-9', 'EMG von langem und lateralem Kopf beim Kurzhantel-Strecken überkopf und im Liegen: sehr ähnliche Muster, Aktivität am höchsten im ersten/mittleren Bewegungsdrittel.'),
       S('Tiwana et al. 2023, StatPearls: Triceps Muscle', 'https://www.ncbi.nlm.nih.gov/books/NBK536996/', 'Anatomie: Nur der lange Kopf entspringt am Schulterblatt und wirkt daher auch auf das Schultergelenk.')
     ]
   }),
@@ -945,7 +945,7 @@ export const POOL = [
     others: ['Anconeus'],
     sources: [
       S('Brandão et al. 2020, J Strength Cond Res', '10.1519/JSC.0000000000003550', 'Liegendes Trizepsdrücken mit Langhantel ließ den langen Kopf stärker wachsen als reines Bankdrücken. Der laterale Kopf wuchs mit Bankdrücken stärker.'),
-      S('Alves et al. 2017, J Sports Med Phys Fitness', '10.23736/S0022-4707.17.06849-9', 'Strecken im Liegen (Kurzhantel) aktivierte den Trizeps per EMG ähnlich wie überkopf. Die Autoren raten, nicht beide in dasselbe Trainingsprogramm zu nehmen (Abstract).')
+      S('Alves et al. 2018, J Sports Med Phys Fitness', '10.23736/S0022-4707.17.06849-9', 'Strecken im Liegen (Kurzhantel) aktivierte den Trizeps per EMG ähnlich wie überkopf. Die Autoren raten, nicht beide in dasselbe Trainingsprogramm zu nehmen (Abstract).')
     ]
   }),
   P('close-grip-bench-press', 'Enges Bankdrücken', 'barbell', ['triceps', 'chest'], ['front-delts'], {
@@ -1002,7 +1002,7 @@ export const POOL = [
     confidence: 'medium', basis: 'EMG, Anatomie',
     note: 'Hüftbeuger heben die Beine; der Bauch kippt das Becken. Gestreckte Beine belasten die Wirbelsäule vermutlich stärker (nicht gemessen).',
     sources: [
-      S('McGill, Andersen & Cannon 2014, J Sports Sci', '10.1080/02640414.2014.946437', 'EMG: sehr hohe Bauchmuskel-Aktivität; Wirbelsäulendruck ≈ 3000 N (Modell), der höchste der vier Übungen, laut Autoren aber insgesamt eher schonend.'),
+      S('McGill, Andersen & Cannon 2015, J Sports Sci', '10.1080/02640414.2014.946437', 'EMG: sehr hohe Bauchmuskel-Aktivität; Wirbelsäulendruck ≈ 3000 N (Modell), der höchste der vier Übungen, laut Autoren aber insgesamt eher schonend.'),
       S('Escamilla et al. 2006, Phys Ther', 'https://pubmed.ncbi.nlm.nih.gov/16649890/', 'EMG: hängendes Knieheben unter den stärksten Übungen für gerade und schräge Bauchmuskeln.'),
       S('Bordoni & Varacallo 2026, StatPearls: Iliopsoas Muscle', 'https://www.ncbi.nlm.nih.gov/books/NBK531508/', 'Anatomie: Iliopsoas ist der wichtigste Hüftbeuger.')
     ]
@@ -1150,7 +1150,7 @@ export const POOL = [
     others: ['Tensor fasciae latae', 'Unterer Trapezius'],
     sources: [
       S('Guimaraes et al. 1991, J Sports Med Phys Fitness', 'https://pubmed.ncbi.nlm.nih.gov/1836517/', 'Oberflächen-EMG: V-Sit und Beinheben im Hang zeigten die höchste Aktivität im unteren Rectus abdominis. Rectus femoris gemessen, Iliopsoas nicht.'),
-      S('Devorski et al. 2021, J Sport Rehabil', '10.1123/jsr.2020-0485', 'EMG: Der V-Sit belastete vor allem die Bauchmuskeln und kaum Schulter- oder Rückenmuskeln. Hüftbeuger wurden nicht gemessen.'),
+      S('Devorski et al. 2022, J Sport Rehabil', '10.1123/jsr.2020-0485', 'EMG: Der V-Sit belastete vor allem die Bauchmuskeln und kaum Schulter- oder Rückenmuskeln. Hüftbeuger wurden nicht gemessen.'),
       S('Juker et al. 1998, Med Sci Sports Exerc', '10.1097/00005768-199802000-00020', 'Feindraht-EMG: Der Psoas ist bei Sit-ups deutlich und bei maximaler Hüftbeugung am stärksten aktiv. Das stützt die Rolle der Hüftbeuger.')
     ]
   }, 'bodyweight'),

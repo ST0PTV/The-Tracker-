@@ -4,11 +4,11 @@
 export const WARMUP_CHECKED_AT = '2026-10-13';
 
 // v2.34.0: einzeilig (Ebene 1); Begründung im Info-Sheet.
-export const WARMUP_HINT = 'Erste Übung für diese Muskeln: 1–2 leichte Aufwärmsätze.';
+export const WARMUP_HINT = 'Erste Übung für diese Muskeln: 1–3 leichte Aufwärmsätze, je nach Last.';
 
 export const WARMUP_INFO = {
   short: [
-    '1–2 leichte Sätze vor der ersten Übung je Muskelgruppe (Konvention der App).',
+    '1–3 leichte Sätze vor der ersten Übung je Muskelgruppe, mehr bei schwerer Last (Konvention der App).',
     'Der Nutzen ist uneinheitlich, am ehesten vor schweren Sätzen.',
     'Leicht halten – langes, anstrengenderes Aufwärmen kann Leistung kosten.'
   ],

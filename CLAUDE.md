@@ -9,4 +9,4 @@
 - Farben nur über Tokens in `css/app.css` (später mehrere Themes).
 - Übernommener Code: Herkunft im Dateikopf nennen und in README + „Ich → Quellen & Lizenzen“ eintragen.
 - Level-System bleibt bis nach Phase 5 draußen.
-- Vor dem Commit: `npm test && npm run check`.
+- Vor dem Commit: `npm run vorab` (test, check, privacy; erst nach „VORABCHECK BESTANDEN“ committen). Neue Oberfläche zusätzlich mit `node tests/browser/check-ui.mjs` prüfen.

@@ -9,7 +9,7 @@
 //   Anfang der Einheit und ≥ 2 Einheiten/Woche; Muskelwachstum von ≥ 10 Sätzen/Woche; Geräteart ohne durchgehenden Effekt.
 // - Schoenfeld et al. 2016 (Sports Med 46:1689): jeden großen Muskel mind. 2× pro Woche.
 // - Ramos-Campo et al. 2024 (J Strength Cond Res 38:1330): Split und Ganzkörper bei gleichem Volumen gleichwertig.
-// - Nunes et al. 2020 (Eur J Sport Sci 21:149): Kraft wächst am meisten in den Übungen am Anfang; Muskelwachstum unabhängig
+// - Nunes et al. 2021 (Eur J Sport Sci 21:149): Kraft wächst am meisten in den Übungen am Anfang; Muskelwachstum unabhängig
 //   von der Reihenfolge.
 // - Schoenfeld et al. 2017 (J Strength Cond Res 31:3508): Muskelwachstum über ein breites Lastspektrum ähnlich.
 // - Singer et al. 2024 (Front Sports Act Living 6:1429789): Pausen > 60 s leicht besser, über 90 s kein weiterer Unterschied.
@@ -202,7 +202,7 @@ export function buildDay(templateKey, answers, usedRefs = new Set()) {
     inDay.add(ref);
     total += sec;
   }
-  // Mehrgelenkige vor eingelenkigen (ACSM 2009; Nunes 2020) – auch für mehrgelenkige Zusätze; sonst Reihenfolge der Vorlage.
+  // Mehrgelenkige vor eingelenkigen (ACSM 2009; Nunes 2021) – auch für mehrgelenkige Zusätze; sonst Reihenfolge der Vorlage.
   items.sort((x, y) => Number(SLOTS[y.slot].compound) - Number(SLOTS[x.slot].compound));
   return { key: templateKey, name: tpl.name, items, seconds: total + WARMUP_SEC, missing };
 }

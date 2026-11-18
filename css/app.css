@@ -20,6 +20,8 @@
   --text: #FFFFFF;
   --muted: #AEAEB2;
   --faint: #8E8E93;
+  /* 0.5.3: --dim = Text, der zurücktritt (Tabs, künftige Tage, feste Werte). Dunkel reicht --faint (≥ 4,5:1), hell --muted. */
+  --dim: var(--faint);
   /* Eine Akzentfarbe (Anthrazit) und Signalfarben (nur für echte Hinweise) */
   --accent: #ECEEF0;
   --on-accent: #111315;
@@ -80,6 +82,7 @@
   --text: #000000;
   --muted: #6C6C70;
   --faint: #8A8A8E;
+  --dim: var(--muted);
   --accent: #1C1F23;
   --on-accent: #FFFFFF;
   --warn: #B25000;
@@ -285,7 +288,7 @@ h2 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
 }
 .tab {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-  color: var(--faint); text-decoration: none; font-size: 11px; font-weight: 500; white-space: nowrap; letter-spacing: -0.01em;
+  color: var(--dim); text-decoration: none; font-size: 11px; font-weight: 500; white-space: nowrap; letter-spacing: -0.01em;
 }
 .tab svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .tab[aria-current="page"] { color: var(--accent); font-weight: 600; }
@@ -755,7 +758,7 @@ a.cfg-row, .cfg-action, .cfg-open { cursor: pointer; }
 .cfg-sw:disabled { opacity: 0.4; cursor: default; }
 .cfg-sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .cfg-sw, .cfg-sw::after { transition: none; } }
-.cfg-fixed { flex: none; color: var(--faint); font-size: 15px; }
+.cfg-fixed { flex: none; color: var(--dim); font-size: 15px; }
 /* Ernährung & Rezepte: geteilte Karten (auch im Rezept-Start) bekommen hier die Abschnittstitel der Einstellungsseiten */
 .prefs .sec { margin: 22px 4px 7px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
 .cfg-save { margin-top: 20px; }
@@ -884,15 +887,17 @@ a.icon-btn { text-decoration: none; }
 .cal-d small { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .cal-d:disabled { opacity: 0.35; cursor: default; }
 .cal-d.ok { background: var(--accent); color: var(--on-accent); }
-.cal-d.ok small { color: color-mix(in srgb, var(--on-accent) 75%, transparent); }
-.cal-d.over { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+.cal-d.ok small { color: var(--on-accent); }
+/* 0.5.3: Tönung 30 % statt 45 %, damit Zahl und kcal ≥ 4,5:1 bleiben (check-ui) */
+.cal-d.over { background: color-mix(in srgb, var(--accent) 30%, var(--surface)); }
+.cal-d.over small { color: var(--text); }
 .cal-d.low { background: var(--surface); border-color: color-mix(in srgb, var(--accent) 45%, transparent); border-style: dashed; }
 .cal-d.today { box-shadow: inset 0 0 0 2px var(--c-goal); }
 .cal-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: 12px; color: var(--muted); }
 .cal-leg span { display: inline-flex; align-items: center; gap: 6px; }
 .cal-leg i { width: 12px; height: 12px; border-radius: 3px; background: var(--fill); }
 .cal-leg i.ok, .cal-leg i.yon { background: var(--accent); }
-.cal-leg i.over { background: color-mix(in srgb, var(--accent) 45%, var(--surface)); }
+.cal-leg i.over { background: color-mix(in srgb, var(--accent) 30%, var(--surface)); }
 .cal-leg i.low { background: none; border: 1.5px dashed color-mix(in srgb, var(--accent) 45%, transparent); }
 .an-macro .am-row { display: grid; grid-template-columns: 110px minmax(0, 1fr) 56px 40px; align-items: center; gap: 8px; min-height: 32px; font-size: 14px; }
 .am-row.am-px .am-bar i { background: var(--m-p); }
@@ -900,13 +905,16 @@ a.icon-btn { text-decoration: none; }
 .am-row.am-fx .am-bar i { background: var(--m-f); }
 .an-macro p.small { margin-top: 8px; }
 /* Jahr */
-.y-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 14px; }
-.ym-n { font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
+.y-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 6px; }
+.ym { display: block; width: 100%; min-width: 0; margin: 0; padding: 4px; border: 0; border-radius: 10px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.ym:disabled { cursor: default; }
+.ym:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ym-n { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px 2px; }
 .ym-g { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
 .ym-g > i, .yd { aspect-ratio: 1; border-radius: 2px; }
-.yd { border: 0; padding: 0; background: var(--fill); cursor: pointer; min-width: 0; }
+.yd { display: block; background: var(--fill); min-width: 0; }
 .yd.on { background: var(--accent); }
-.yd.fut { opacity: 0.3; cursor: default; }
+.yd.fut { opacity: 0.3; }
 .yd.today { box-shadow: 0 0 0 1.5px var(--c-goal); }
 .cal-leg i.yoff { background: var(--fill); }
 /* Magen-Modell */
@@ -1015,7 +1023,7 @@ a.icon-btn { text-decoration: none; }
 .wk-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 8px 0 8px 14px; border: 0; background: none;
   color: var(--text); font: inherit; text-align: left; cursor: pointer; }
 .wk-main .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.wk-main em { font-style: normal; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+.wk-main em { font-style: normal; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--dim); }
 .wk-main b { font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .wk-main small { font-size: 13px; color: var(--muted); }
 .wk-row.prop .wk-main .rz-th, .wk-row.prop .wk-main b { opacity: 0.55; }
@@ -1046,7 +1054,7 @@ a.icon-btn { text-decoration: none; }
 .sh-row .t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
 .sh-row b { font-size: 16px; font-weight: 600; }
 .sh-row small { font-size: 12px; color: var(--muted); }
-.sh-row.done b { font-weight: 400; color: var(--faint); text-decoration: line-through; }
+.sh-row.done b { font-weight: 400; color: var(--dim); text-decoration: line-through; }
 .sh-reset { margin-top: 12px; }
 /* Vorrat (0.2.5, Entwurf A „Liste mit −/+“; nach dem Rezeptbuch von JuliaKelp) */
 .vr-search { margin: 0 0 10px; }
@@ -1156,6 +1164,8 @@ body.tt-locked #tabbar { display: none; }
 .cy-d.fut { color: var(--muted); }
 .cy-d.e::after { content: ''; position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--muted); }
 .circles .cy-d.f > span { background: color-mix(in srgb, var(--c-fert) 22%, transparent); }
+/* 0.5.3: künftige fruchtbare Tage auf dem Tint dunkler als --muted (≥ 4,5:1) */
+.cy-d.fut.f, .cy-d.fut.f > span { color: color-mix(in srgb, var(--text) 70%, var(--muted)); }
 .circles .cy-d.s > span { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c-cyc) 60%, transparent); }
 .circles .cy-d.b > span { background: var(--c-cyc); color: var(--surface); font-weight: 600; }
 .circles .cy-d.p > span { outline: 1.5px dashed var(--c-cyc); outline-offset: -2px; color: var(--c-cyc); }
@@ -1312,7 +1322,7 @@ body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .lin
 /* 0.5.0: Zyklus – Beschwerden und Stimmung */
 .cy-st-row { padding: 10px 14px; }
 .cy-st-row + .cy-st-row { border-top: 1px solid color-mix(in srgb, var(--text) 7%, transparent); }
-.cy-st-top { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.cy-st-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; align-items: baseline; }
 .cy-st-top span { font-size: 13px; color: var(--muted); white-space: nowrap; }
 .cy-st-bar { display: flex; height: 8px; margin: 6px 0 4px; border-radius: 4px; overflow: hidden; background: var(--fill); }
 .cy-st-bar i { display: block; height: 100%; }
@@ -1353,7 +1363,7 @@ body.tour-trial .view { padding-top: calc(var(--safe-top) + 72px); }
 .wk-d b { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .wk-d.today b { color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
 .wk-d.sel b { background: var(--accent); color: var(--on-accent); box-shadow: none; }
-.wk-d.fut:not(.sel) b { color: var(--faint); }
+.wk-d.fut:not(.sel) b { color: var(--dim); }
 .wk-d i { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
 .wk-d i.on { background: var(--muted); }
 .mo-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -1366,7 +1376,7 @@ body.tour-trial .view { padding-top: calc(var(--safe-top) + 72px); }
 .mo-d.today { color: var(--accent); font-weight: 600; }
 .mo-d.sel { background: var(--accent); color: var(--on-accent); }
 .mo-d.sel::after { background: var(--on-accent); }
-.mo-d.fut:not(.sel) { color: var(--faint); }
+.mo-d.fut:not(.sel) { color: var(--dim); }
 .mo-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; margin-top: 8px; }
 /* 0.5.1: Wischen auf Einträgen */
 .sw-wrap { position: relative; overflow: hidden; }
