@@ -120,11 +120,14 @@ export function loadDemoAlcohol(map) {
   changed();
 }
 
-// Quellen wie im Calorie-Tracker angegeben (dort mit DOI; hier nicht neu geprüft → „Unverified 0.1.7“)
+// Quellen geprüft im App-Text-Audit 16.11.2026 (Jones nur Abstract, Widmark nur über Maudens 2014)
 export const ALC_REFS = [
-  ['Widmark EMP (1932). Die theoretischen Grundlagen und die praktische Verwendbarkeit der gerichtlich-medizinischen Alkoholbestimmung.', null],
+  ['Widmark EMP (1932). Die theoretischen Grundlagen und die praktische Verwendbarkeit der gerichtlich-medizinischen Alkoholbestimmung. Berlin: Urban & Schwarzenberg.', null],
   ['Jones AW (2010). Evidence-based survey of the elimination rates of ethanol from blood with applications in forensic casework. Forensic Sci Int 200(1–3):1–20.', 'https://doi.org/10.1016/j.forsciint.2010.02.021'],
   ['Maudens KE et al. (2014). The influence of the body mass index on the volume of distribution of ethanol. Forensic Sci Int 243:74–78.', 'https://doi.org/10.1016/j.forsciint.2014.04.036'],
   ['Fraser AG et al. (1995). Inter-individual and intra-individual variability of ethanol concentration-time profiles: comparison of ethanol ingestion before or after an evening meal. Br J Clin Pharmacol 40(4):387–392.', 'https://doi.org/10.1111/j.1365-2125.1995.tb04561.x'],
-  ['DGE (2024). Positionspapier Alkohol (Pressemitteilung vom 15.08.2024).', null]
+  ['DGE (2024). Pressemeldung zum DGE-Positionspapier zu Alkohol.', 'https://www.dge.de/presse/meldungen/2024/dge-positionspapier-zu-alkohol/'],
+  ['Straßenverkehrsgesetz (StVG) § 24a: 0,5 Promille-Grenze (abgerufen 16.11.2026).', 'https://www.gesetze-im-internet.de/stvg/__24a.html'],
+  ['Straßenverkehrsgesetz (StVG) § 24c: Alkoholverbot für Fahranfänger (abgerufen 16.11.2026).', 'https://www.gesetze-im-internet.de/stvg/__24c.html'],
+  ['Strafgesetzbuch (StGB) § 316: Trunkenheit im Verkehr (abgerufen 16.11.2026).', 'https://www.gesetze-im-internet.de/stgb/__316.html']
 ];

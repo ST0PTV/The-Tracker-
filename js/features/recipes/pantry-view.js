@@ -223,7 +223,7 @@ function pantryView(rerender) {
     deficits().length && have.length ? h('div', { class: 'chips vr-rich', role: 'group', 'aria-label': 'Nach Mangel filtern' },
       h('button', { class: `chip${ui.rich ? '' : ' on'}`, type: 'button', 'aria-pressed': String(!ui.rich), onclick: () => { ui.rich = null; rerender(); } }, 'Alle'),
       ...deficits().map((id) => h('button', { class: `chip${ui.rich === id ? ' on' : ''}`, type: 'button', 'aria-pressed': String(ui.rich === id), onclick: () => { ui.rich = ui.rich === id ? null : id; rerender(); } }, `${DGE[id].name}`))) : null,
-    ui.rich && deficits().includes(ui.rich) ? h('p', { class: 'small muted' }, `Sortiert nach ${DGE[ui.rich].name}: „viel“ ab 30 %, „etwas“ ab 15 % des Tageswerts je 100 g (Getränke halbe Schwellen). Nur BLS-Werte; Gescanntes ohne Wert fehlt.`) : null,
+    ui.rich && deficits().includes(ui.rich) ? h('p', { class: 'small muted' }, `Sortiert nach ${DGE[ui.rich].name}: „viel“ ab 30 %, „etwas“ ab 15 % deines DGE-Referenzwerts je 100 g (Getränke: halbe Schwellen; angelehnt an die EU-Regeln für „Quelle von“ und „hoher Gehalt“). Nur BLS-Werte; Gescanntes ohne Wert fehlt.`) : null,
     listBox,
     empty.length ? h('h3', { class: 'sec' }, 'Aufgebraucht') : null,
     empty.length ? h('section', { class: 'card' },

@@ -97,7 +97,7 @@ export function removeItem(id) {
 export function overNote(x) {
   const cat = SUPP_CAT_MAP[x.kind];
   if (!cat) return '';
-  if (cat.max && x.unit === cat.max[1] && +x.amount > cat.max[0]) return `Deine Menge liegt über der BfR-Höchstmenge für Nahrungsergänzungsmittel (${String(cat.max[0]).replace('.', ',')} ${cat.max[1]}).`;
+  if (cat.max && x.unit === cat.max[1] && +x.amount > cat.max[0]) return `Deine Menge liegt über der BfR-Höchstmenge je Tagesdosis eines Präparats (${String(cat.max[0]).replace('.', ',')} ${cat.max[1]}${cat.maxNote ? '; ' + cat.maxNote : ''}).`;
   if (cat.warnAbove && x.unit === cat.warnAbove[1] && +x.amount > cat.warnAbove[0]) return `Deine Menge liegt über den ${cat.warnAbove[2]}.`;
   return '';
 }

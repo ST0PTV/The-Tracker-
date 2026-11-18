@@ -8,8 +8,8 @@
 // - Zykluslänge = Abstand zweier Periodenbeginne; nur 15–60 Tage, die letzten 6 (Lücken in alten Daten fallen raus).
 // - Ohne eigene Zyklen: 29 Tage (Mittel 29,3 in 612.613 Zyklen mit Eisprung, Bull 2019; Volltext geprüft 2026-10-29). Gilt für Erwachsene mit regelmäßigem
 //   Zyklus; für Jugendliche, Wechseljahre, PCOS, nach Geburt kaum aussagekräftig.
-// - Eisprung = Zykluslänge minus Lutealphase. Lutealphase 12,4 Tage im Mittel, SD 2,0 (Fehring 2006; Bull 2019: 7–17).
-//   SD 2,0 aus Fehring 2006 noch ungeprüft (nur Abstract gelesen). Wir nehmen 11–14 Tage (etwa ± 1 SD) und rechnen mit kürzestem und längstem eigenen Zyklus. Ein Zyklus ohne
+// - Eisprung = Zykluslänge minus Lutealphase. Lutealphase 12,4 ± 2,4 Tage (Bull 2019, Tab. 3; 95 % 7–17;
+//   18 % der Zyklen unter 11 Tagen). Wir nehmen 10–15 Tage (etwa ± 1 SD; Entscheidung des Nutzers 2026-11-16) und rechnen mit kürzestem und längstem eigenen Zyklus. Ein Zyklus ohne
 //   Eisprung (anovulatorisch) ist für die App nicht erkennbar.
 // - Fruchtbares Fenster = 5 Tage vor bis zum Eisprungtag (Wilcox 1995, Abstract geprüft), über die ganze Eisprung-Spanne → breit.
 // - Positiver LH-Test im laufenden Zyklus: Eisprung etwa am Tag danach (Mihm 2011: ~38 h nach Beginn des Anstiegs),
@@ -19,8 +19,8 @@
 
 export const DEFAULT_LEN = 29;
 export const DEFAULT_BLEED = 5;
-export const LUTEAL_LO = 11;
-export const LUTEAL_HI = 14;
+export const LUTEAL_LO = 10;
+export const LUTEAL_HI = 15;
 export const PRE_OVU = 5;
 export const AHEAD = 6;
 export const MAX_CYCLES = 6;

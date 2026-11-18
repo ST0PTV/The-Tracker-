@@ -22,14 +22,14 @@ export function caffInfo() {
     title: 'Koffein – so rechnet die App',
     note: 'Alle Pegel sind Schätzungen aus einem Modell, keine Messung.',
     body: [
-      'Modell: Aufnahme und Abbau erster Ordnung (ein Kompartiment). Maximum etwa 30–40 Minuten nach dem Trinken; danach halbiert sich die Menge im Körper je Halbwertszeit (Standard 5 h).',
-      'Die Halbwertszeit ist individuell sehr verschieden (Studien 2,7–9,9 h), bei Rauchern kürzer. Körpergewicht, Mahlzeiten, Gewöhnung und Medikamente berücksichtigt das Modell nicht.',
+      'Modell: Aufnahme und Abbau erster Ordnung (ein Kompartiment). Im Modell liegt das Maximum etwa 30–40 Minuten nach dem Trinken (in Studien je nach Form und Mahlzeit 30 Minuten bis 2 Stunden); danach halbiert sich die Menge im Körper je Halbwertszeit (Standard 5 h, Annahme).',
+      'Die Halbwertszeit ist individuell sehr verschieden (EFSA: etwa 2–8 h; in einer Studie 2,7–9,9 h), bei Rauchern kürzer. Körpergewicht, Mahlzeiten, Gewöhnung und Medikamente berücksichtigt das Modell nicht.',
       sx === 'f'
-        ? 'Für Frauen: Eine östrogenhaltige Pille verlängert die Halbwertszeit deutlich (Studie: 7,9 statt 5,4 h). Wenn das zutrifft, unter „Ich → Koffein“ eher 7–8 h einstellen. In der Schwangerschaft gilt laut EFSA ein Richtwert von 200 mg pro Tag.'
-        : 'Das Geschlecht allein ändert den Abbau kaum; eine östrogenhaltige Pille und eine Schwangerschaft verlängern ihn deutlich.',
-      'Das Ziel zur Bettzeit (Standard 50 mg) ist eine Faustregel, kein belegter Grenzwert. Laut EFSA können schon 100 mg kurz vor dem Schlafen den Schlaf stören; in einer Studie störten 400 mg sogar 6 Stunden vorher noch.',
+        ? 'Für Frauen: Eine östrogenhaltige Pille verlängert die Halbwertszeit deutlich (Studie: 7,9 statt 5,4 h). Wenn das zutrifft, passt unter „Ich → Koffein“ eher ein höherer Wert, etwa 7–8 h (Schätzung nach einer kleinen Studie). In der Schwangerschaft gilt laut EFSA ein Richtwert von 200 mg pro Tag.'
+        : 'Das Geschlecht allein ändert den Abbau nur wenig (bei Frauen etwa 10 % langsamer); eine östrogenhaltige Pille und eine fortgeschrittene Schwangerschaft verlängern ihn deutlich.',
+      'Das Ziel zur Bettzeit (Standard 50 mg) ist eine Faustregel, kein belegter Grenzwert. Laut EFSA können schon 100 mg kurz vor dem Schlafen bei manchen Menschen den Schlaf stören. In einer kleinen Studie (12 Personen) verkürzten 400 mg auch 6 Stunden vorher noch die Schlafzeit (gemessen per Stirnband; im Schlaftagebuch nicht eindeutig).',
       'Richtwert pro Tag: bis 400 mg gelten für gesunde Erwachsene als unbedenklich, Einzeldosen bis 200 mg (EFSA 2015).',
-      'Koffeingehalte sind Richtwerte und schwanken je Sorte und Zubereitung; mit „ca.“ markierte Werte sind übliche Angaben ohne Beleg. Die Packungsangabe hat Vorrang.'
+      'Koffeingehalte sind Richtwerte (BfR, EFSA) und schwanken je Sorte und Zubereitung; mit „ca.“ markierte Werte sind Schätzwerte ohne eigene Quelle. Die Packungsangabe hat Vorrang.'
     ],
     src: CAFF_REFS
   });

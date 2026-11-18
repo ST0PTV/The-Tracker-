@@ -25,32 +25,32 @@ export const ASSISTANT_INFO = {
     'Alles lässt sich danach im Plan ändern.'
   ],
   points: [
-    'Einsteiger: 8–12 Wiederholungen und 2–3 Trainingstage pro Woche (ACSM 2009). Für Kraft mit Erfahrung 4–6 Wiederholungen bei den Grundübungen, weil schwere Lasten die Kraft stärker steigern (ACSM 2026; Schoenfeld 2017).',
-    'Jeder große Muskel kommt mindestens zweimal pro Woche dran (Schoenfeld 2016). Ganzkörper oder Split ist bei gleichem Volumen gleichwertig (Ramos-Campo 2024); die Aufteilung nach Tagen ist eine Konvention der App.',
+    'Einsteiger: 8–12 Wiederholungen und 2–3 Trainingstage pro Woche (ACSM 2009). Für Kraft mit Erfahrung 4–6 Wiederholungen bei den Grundübungen (Wahl der App; ACSM 2009: schwere Lasten 1–6 RM für Fortgeschrittene). Schwere Lasten steigern die Maximalkraft stärker (ACSM 2026; Schoenfeld et al. 2017).',
+    'Jeder große Muskel kommt wenn möglich zweimal pro Woche dran: In einer Meta-Analyse (7 Studien, meist Untrainierte, meist gleiches Wochenvolumen) wuchsen Muskeln bei häufigerem Training etwas mehr; die Autoren folgern „mindestens zweimal pro Woche“ (Schoenfeld 2016). ACSM 2026 fand bei gleichem Volumen keinen Unterschied. Ganzkörper oder Split ist bei gleichem Volumen gleichwertig (Ramos-Campo 2024); die Aufteilung nach Tagen ist eine Konvention der App.',
     'Mehrgelenkige Übungen stehen vorn: So wächst die Kraft in diesen Übungen am meisten (Nunes 2020; ACSM 2009).',
-    'Mehr Sätze bringen mehr Muskelwachstum, ab etwa 10 Sätzen pro Woche deutlich (ACSM 2026; Schoenfeld 2017). Für den Anfang plant die App bewusst weniger; steigern kannst du später.',
-    'Pausen: 2 min bei Grundübungen, 1,5 min sonst, 3 min bei schwerem Krafttraining. Über 90 s fand eine Meta-Analyse keinen weiteren Unterschied fürs Muskelwachstum (Singer 2024).',
+    'Mehr Sätze brachten im Mittel mehr Muskelwachstum (Schoenfeld, Ogborn & Krieger 2017: 15 Studien, meist Untrainierte; der Vorteil ab 10 Sätzen war dort nur ein Trend); ACSM 2026 sieht ab etwa 10 Sätzen pro Muskel und Woche einen Vorteil. Für den Anfang plant die App bewusst weniger; steigern kannst du später.',
+    'Pausen: 2 min bei Grundübungen, 1,5 min sonst, 3 min bei schwerem Krafttraining; bei Ziel Fitness 1,5 bzw. 1 min (Werte der App). Über 90 s fand eine Meta-Analyse keinen weiteren Unterschied fürs Muskelwachstum (Singer 2024).',
     'Dauer = Sätze × (40 s Satz + Pause) + 5 min Aufwärmen. 40 s und 5 min sind Annahmen der App.',
     'Sätze pro Muskel: direkt 1, mitbeteiligt 0,5 – wie in der Muskelkarte.',
-    'Bei nur einem Krafttag kommt jeder Muskel einmal pro Woche dran; zweimal war in Studien günstiger (Schoenfeld 2016).',
+    'Bei nur einem Krafttag kommt jeder Muskel einmal pro Woche dran; häufiger war in einer Meta-Analyse etwas günstiger, aber auch einmal pro Woche ließ die Muskeln deutlich wachsen (Schoenfeld 2016); bei gleichem Volumen sah ACSM 2026 keinen Unterschied.',
     'Cardio-Tage bekommen einen eigenen Plan „Ausdauer“. Kraft und Ausdauer an getrennten Tagen bremsen Muskelaufbau und Maximalkraft im Mittel nicht; die Schnellkraft eher, vor allem in derselben Einheit (Schumann 2022).',
-    'Die WHO empfiehlt Erwachsenen pro Woche 150–300 min Ausdauer mit mittlerer oder 75–150 min mit hoher Intensität (Bull 2020). Die Cardio-Minuten im Vorschlag sind eine Schätzung aus Dauer × Cardio-Tagen.',
+    'Die WHO empfiehlt Erwachsenen pro Woche 150–300 min Ausdauer mit mittlerer oder 75–150 min mit hoher Intensität (Bull 2020). Die Cardio-Minuten im Vorschlag sind eine Schätzung: Dauer × Cardio-Tage plus Cardio-Block × Kombi-Tage.',
     'Höchstens 6 Krafttage: Ein Tag ohne Krafttraining bleibt (Konvention).',
-    'Kraft + Cardio am selben Tag: Cardio kommt nach dem Kraftteil. Kraft zuerst brachte in zwei Meta-Analysen mehr Beinkraft; Muskelwachstum und Ausdauer hingen nicht von der Reihenfolge ab (Eddens 2018; Murlasits 2018). Der Kraftteil wird um die Cardio-Zeit kürzer, mindestens 20 min (Konvention).',
-    'Welches Cardio: Bei Ziel Muskelaufbau oder Kraft schlägt die App Radfahren statt Laufen vor. Laufen ging parallel zum Krafttraining mit weniger Muskel- und Kraftzuwachs einher, Radfahren nicht (Wilson 2012, Vergleich über Studien hinweg). Ohne Rad: zügiges Gehen (Konvention). Am Kombi-Tag im Fitnessstudio ein Cardiogerät, sonst draußen.'
+    'Kraft + Cardio am selben Tag: Cardio kommt nach dem Kraftteil. Kraft zuerst brachte in zwei Meta-Analysen mehr Beinkraft; Beinmuskelwachstum und VO2max hingen nicht von der Reihenfolge ab (Eddens 2018; Murlasits 2018). Der Kraftteil wird um die Cardio-Zeit kürzer, mindestens 20 min (Konvention).',
+    'Welches Cardio: Bei Ziel Muskelaufbau oder Kraft schlägt die App Radfahren statt Laufen vor. Laufen ging parallel zum Krafttraining mit weniger Muskel- und Kraftzuwachs einher, Radfahren nicht (Wilson 2012, Vergleich über Studien hinweg, Abstract). Eine neuere Meta-Analyse fand keinen Unterschied zwischen Rad und Laufen (Schumann 2022). Ohne Rad: zügiges Gehen (Konvention). Am Kombi-Tag im Fitnessstudio ein Cardiogerät, sonst draußen.'
   ],
   sources: [
     { label: 'ACSM 2009, Med Sci Sports Exerc 41:687–708', url: 'https://doi.org/10.1249/MSS.0b013e3181915670', note: 'Position Stand: Einsteiger 8–12 Wdh., 2–3 Tage/Woche; große und mehrgelenkige Übungen zuerst (Abstract).' },
     { label: 'ACSM 2026 (Currier et al.), Med Sci Sports Exerc 58:851–872', url: 'https://doi.org/10.1249/MSS.0000000000003897', note: '137 Reviews: Kraft mit ≥ 80 % 1RM, 2–3 Sätzen, am Anfang der Einheit, ≥ 2×/Woche; Muskelwachstum mit ≥ 10 Sätzen/Woche (Abstract).' },
-    { label: 'Schoenfeld, Ogborn & Krieger 2016, Sports Med 46:1689–1697', url: 'https://doi.org/10.1007/s40279-016-0543-8', note: 'Meta-Analyse: zweimal pro Woche besser als einmal (Abstract).' },
-    { label: 'Schoenfeld, Ogborn & Krieger 2017, J Sports Sci 35:1073–1082', url: 'https://doi.org/10.1080/02640414.2016.1210197', note: 'Dosis-Wirkung: mehr Wochensätze, mehr Muskelzuwachs (Abstract).' },
+    { label: 'Schoenfeld, Ogborn & Krieger 2016, Sports Med 46:1689–1697', url: 'https://doi.org/10.1007/s40279-016-0543-8', note: 'Meta-Analyse, 7 Studien (meist Untrainierte, meist gleiches Volumen): häufigeres Training (1–3×/Woche) etwas mehr Muskelzuwachs; einmal pro Woche ebenfalls wirksam (Volltext).' },
+    { label: 'Schoenfeld, Ogborn & Krieger 2017, J Sports Sci 35:1073–1082', url: 'https://doi.org/10.1080/02640414.2016.1210197', note: 'Dosis-Wirkung, 15 Studien (meist Untrainierte): je Wochensatz mehr Muskelzuwachs; 10+ Sätze nur Trend (P = 0,074), hängt an einer Studie (Volltext).' },
     { label: 'Schoenfeld et al. 2017, J Strength Cond Res 31:3508–3523', url: 'https://doi.org/10.1519/JSC.0000000000002200', note: 'Schwere Lasten besser für Maximalkraft; Muskelwachstum über viele Lastbereiche ähnlich (Abstract).' },
     { label: 'Ramos-Campo et al. 2024, J Strength Cond Res 38:1330–1340', url: 'https://doi.org/10.1519/JSC.0000000000004774', note: 'Split vs. Ganzkörper bei gleichem Volumen gleichwertig (Abstract).' },
     { label: 'Nunes et al. 2020, Eur J Sport Sci 21:149–157', url: 'https://doi.org/10.1080/17461391.2020.1733672', note: 'Reihenfolge: Kraft wächst in den ersten Übungen am meisten; Muskelwachstum ähnlich (Abstract).' },
     { label: 'Schumann et al. 2022, Sports Med 52:601–612', url: 'https://doi.org/10.1007/s40279-021-01587-7', note: 'Meta-Analyse (43 Studien): Ausdauer zusätzlich zu Kraft ändert Muskelwachstum und Maximalkraft nicht; Schnellkraft leidet eher, v. a. in derselben Einheit (Abstract).' },
     { label: 'Bull et al. 2020, Br J Sports Med 54:1451–1462', url: 'https://doi.org/10.1136/bjsports-2020-102955', note: 'WHO-Leitlinie: 150–300 min mittlere oder 75–150 min hohe Ausdauer pro Woche für Erwachsene (Abstract).' },
     { label: 'Eddens, van Someren & Howatson 2018, Sports Med 48:177–188', url: 'https://doi.org/10.1007/s40279-017-0784-1', note: 'Meta-Analyse (10 Studien): Kraft vor Ausdauer +6,9 % dynamische Beinkraft; kein Unterschied für Muskelwachstum, statische Kraft, VO2max und Körperfett (Abstract).' },
-    { label: 'Murlasits, Kneffel & Thalib 2018, J Sports Sci 36:1212–1219', url: 'https://doi.org/10.1080/02640414.2017.1364405', note: 'Meta-Analyse: Kraft zuerst +4 kg Bein-1RM; Ausdauerleistung unabhängig von der Reihenfolge (Abstract).' },
+    { label: 'Murlasits, Kneffel & Thalib 2018, J Sports Sci 36:1212–1219', url: 'https://doi.org/10.1080/02640414.2017.1364405', note: 'Meta-Analyse: Kraft zuerst +4 kg Bein-1RM; VO2max unabhängig von der Reihenfolge (Abstract).' },
     { label: 'Wilson et al. 2012, J Strength Cond Res 26:2293–2307', url: 'https://doi.org/10.1519/JSC.0b013e31823a3e2d', note: 'Meta-Analyse (21 Studien): mit Laufen, nicht mit Radfahren, weniger Muskel- und Kraftzuwachs; mehr Häufigkeit und Dauer der Ausdauer → mehr Einbußen (Abstract; Moderator-Analyse).' },
     { label: 'Singer et al. 2024, Front Sports Act Living 6:1429789', url: 'https://doi.org/10.3389/fspor.2024.1429789', note: 'Pausen > 60 s leicht besser, über 90 s kein weiterer Unterschied (Abstract).' }
   ]
@@ -149,7 +149,7 @@ export function openAssistant(rerender) {
     return [grid, legend,
       h('div', { class: 'card as-split' }, summary),
       k >= STRENGTH_MAX ? h('p', { class: 'muted small' }, `Höchstens ${STRENGTH_MAX} Krafttage: Ein Tag ohne Krafttraining bleibt (Konvention). Weitere Tage werden Cardio.`) : null,
-      k === 1 ? h('p', { class: 'muted small' }, 'Mit einem Krafttag kommt jeder Muskel einmal pro Woche dran. Zweimal war in Studien günstiger (Schoenfeld 2016).') : null,
+      k === 1 ? h('p', { class: 'muted small' }, 'Mit einem Krafttag kommt jeder Muskel einmal pro Woche dran. Das wirkt auch; häufiger war in einer Meta-Analyse etwas günstiger (Schoenfeld 2016).') : null,
       adjacentFullBody(kDays) ? h('p', { class: 'muted small' }, 'Bei Ganzkörper-Training ist ein freier Tag dazwischen üblich (Konvention). Du kannst die Tage trotzdem so lassen.') : null,
       // v3.11.0: neutraler Hinweis zur Studienlage, kein Abraten (Nutzer entscheidet)
       kc ? h('p', { class: 'muted small' }, 'Kraft + Cardio: Cardio kommt nach dem Kraftteil – so war die Beinkraft in Studien höher (Eddens 2018). In derselben Einheit litt eher die Schnellkraft, Muskelaufbau und Maximalkraft im Mittel nicht (Schumann 2022).') : null];

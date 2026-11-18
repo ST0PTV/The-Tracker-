@@ -21,7 +21,7 @@ export function alcWarnInfo() {
   openInfo({
     title: 'Hinweis',
     note: 'Grobe Schätzung, keine Messung.',
-    body: ['Der angezeigte Promillewert ist eine Hochrechnung nach der Widmark-Formel aus Getränk, Uhrzeit, Gewicht und Geschlecht. Der tatsächliche Wert kann deutlich höher oder niedriger liegen.',
+    body: ['Der angezeigte Promillewert ist eine Hochrechnung nach der Widmark-Formel aus Getränk, Uhrzeit, Essen, Gewicht, Größe und Geschlecht. Der tatsächliche Wert kann deutlich höher oder niedriger liegen.',
       'Die Anzeige ist nicht geeignet, um die Fahrtüchtigkeit zu beurteilen. Wer getrunken hat, sollte nicht fahren.']
   });
 }
@@ -32,8 +32,9 @@ export function alcInfo(iso = isoDate()) {
   openInfo({
     title: 'Alkohol – so rechnet die App',
     note: 'Grobe Schätzung, keine Messung – nicht geeignet, um die Fahrtüchtigkeit zu beurteilen.',
-    body: ['Widmark-Formel: Alkohol im Getränk geteilt durch Körpergewicht × Verteilungsfaktor r, minus Abbau. Nüchtern geht Alkohol schneller ins Blut, mit oder nach Essen langsamer und mit niedrigerem Gipfel (Annahme der App).',
-      'Abbau: im Mittel etwa 0,15 ‰ pro Stunde, Spanne etwa 0,10–0,20 (nüchtern eher niedriger, nach Essen höher). Einstellbar unter „Ich → Alkohol“.',
+    body: ['Widmark-Formel: Alkohol im Getränk geteilt durch Körpergewicht × Verteilungsfaktor r, minus Abbau. Nüchtern geht Alkohol schneller ins Blut, nach dem Essen langsamer und mit niedrigerem Gipfel (Studie an Männern, kleine Menge; die Zahlen im Modell sind Annahmen).',
+      'Abbau: im Mittel etwa 0,15 ‰ pro Stunde; typisch 0,10–0,15 nüchtern und 0,15–0,20 nach dem Essen, einzelne Menschen auch deutlich mehr. Einstellbar unter „Ich → Alkohol“.',
+      'Die Linie bei 0,5 ‰ ist die Grenze aus § 24a StVG: Wer mit 0,5 ‰ oder mehr ein Kraftfahrzeug führt, handelt ordnungswidrig. Darunter ist Fahren nicht automatisch sicher. § 316 StGB nennt keinen Grenzwert: Strafbar ist, wer wegen Alkohol ein Fahrzeug nicht sicher führen kann. In der Probezeit und unter 21 Jahren gilt am Steuer ein Alkoholverbot (§ 24c StVG).',
       'Die kcal kommen ins Journal (Snacks); Alkohol zählt nicht zum Wasser. Die DGE empfiehlt (2024), auf Alkohol zu verzichten; keine Menge ist risikofrei.'],
     points: [['Verteilungsfaktor r', `${(Math.round(q.r * 100) / 100).toLocaleString('de-DE')} (${sx === 'm' ? 'Mann' : sx === 'f' ? 'Frau' : 'ohne Geschlecht'}${bmi ? `, aus BMI ${r1(bmi)}` : ', fester Wert – mit Körpergröße unter „Schlaf & Körper“ genauer'})`],
       ['Körpergewicht', q.kg ? `${r1(q.kg)} kg` : 'fehlt'], ['Aufnahme', 'nüchtern ka 4/h, mit Essen 1,5/h; 10 bzw. 20 % gelangen nicht ins Blut (Annahme)']],
@@ -41,7 +42,7 @@ export function alcInfo(iso = isoDate()) {
   });
 }
 
-/** Kurve von 6 bis 6 Uhr: Schlaf, 0,5-‰-Linie, „jetzt“; plan = Vorschau mit neuem Getränk. */
+/** Kurve von 6 bis 6 Uhr: Schlaf, 0,5-‰-Linie (§ 24a StVG), „jetzt“; plan = Vorschau mit neuem Getränk. */
 export function alcChartSvg({ iso, doses, plan = null, nowH = null, p, h: H = 140 }) {
   const W = 326, top = 8, bot = H - 16;
   const t0 = absHours(iso, 360), t1 = t0 + 24;
@@ -144,7 +145,7 @@ export function openAlcohol(iso, entry = null) {
     fedSeg.replaceChildren(...[['Nüchtern', false], ['Mit / nach Essen', true]].map(([l, v]) => h('button', {
       type: 'button', role: 'radio', 'aria-checked': v === fed ? 'true' : 'false', onclick: () => { fed = v; fedTouched = true; drawFed(); preview(); }
     }, l)));
-    fedHint.textContent = fedTouched ? '' : (fed ? 'Automatisch: In den 3 Stunden davor ist eine Mahlzeit im Journal.' : 'Automatisch: Keine Mahlzeit in den 3 Stunden davor im Journal.');
+    fedHint.textContent = fedTouched ? '' : (fed ? 'Automatisch: In den 3 Stunden davor steht eine Mahlzeit (ab 100 kcal) im Journal.' : 'Automatisch: Keine Mahlzeit (ab 100 kcal) in den 3 Stunden davor im Journal.');
   };
   const preview = () => {
     const v = read();

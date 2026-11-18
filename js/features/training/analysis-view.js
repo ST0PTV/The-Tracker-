@@ -22,7 +22,7 @@ export const ANALYSIS_INFO = {
   short: [
     'Letzte 4 abgeschlossene Wochen; Sätze gezählt wie in der Muskelkarte.',
     '„Zuletzt wenig trainiert“ vergleicht nur mit deinen anderen Muskeln – kein Ziel.',
-    'Der Kraft-Trend ist eine grobe Schätzung; unter ±5 % ist Tagesform.'
+    'Der Kraft-Trend ist eine grobe Schätzung; unter ±5 % lässt er sich nicht von der Tagesform trennen.'
   ],
   points: [
     `Zeitraum: die letzten ${WEEKS} abgeschlossenen Kalenderwochen (Mo–So). Die laufende Woche fehlt, damit eine halbe Woche den Schnitt nicht drückt – sie steht unter „Muskeln“.`,
@@ -31,7 +31,7 @@ export const ANALYSIS_INFO = {
     'Die Farben sind dieselben Darstellungsstufen wie in der Muskelkarte (0 · <5 · 5–8 · ≥9). Sie sind keine Zielwerte.',
     `„Zuletzt wenig trainiert“ ist ein Vergleich mit dir selbst: Muskelgruppen, deren Ø unter der Hälfte des Medians deiner trainierten Muskelgruppen liegt. Die Hälfte ist eine Konvention der App, kein Wert aus Studien. Berücksichtigt werden nur Muskeln, für die du eine eigene Übung hast; ab ${MIN_TRAINED} trainierten Muskelgruppen.`,
     'Weniger Sätze sind nicht automatisch ein Problem: Mehr Sätze brachten im Mittel mehr, aber mit abnehmendem Zusatznutzen – bei der Kraft deutlich früher als beim Muskelzuwachs. Auch kleine Wochenmengen steigerten bei bisher Untrainierten die Kraft. Ziele, Beschwerden oder Pausen können gute Gründe sein; der Hinweis ist eine Orientierung, kein Auftrag.',
-    `Kraft-Trend: geschätzte Maximalkraft (e1RM nach Epley, nur Sätze bis ${E1RM_MAX_REPS} Wdh.) der Übung mit den meisten harten Sätzen für diesen Muskel, erstes gegen letztes Training im Zeitraum. Unter ±${NOISE_PCT} % ist normales Tagesrauschen: Schon ein echter 1RM-Test schwankt zwischen zwei Tagen im Median um 4,2 %. Nach 6 Wochen Training stieg das 1RM im Bankdrücken bei College-Footballern im Mittel um 4,2 ± 8,6 kg, und die Änderung der Wiederholungen passte kaum zur Änderung des 1RM. Ein 4-Wochen-Trend ist deshalb nur ein grober Hinweis und gilt nur für diese eine Übung.`
+    `Kraft-Trend: geschätzte Maximalkraft (e1RM nach Epley, nur Sätze bis ${E1RM_MAX_REPS} Wdh.) der Übung mit den meisten harten Sätzen für diesen Muskel, erstes gegen letztes Training im Zeitraum. Unter ±${NOISE_PCT} % lässt sich ein Trend nicht von normaler Tagesschwankung trennen: Schon ein echter 1RM-Test schwankt zwischen zwei Tagen im Median um 4,2 %. Nach 6 Wochen Training stieg das 1RM im Bankdrücken bei College-Footballern im Mittel um 4,2 ± 8,6 kg, und die Änderung der Wiederholungen passte kaum zur Änderung des 1RM. Ein 4-Wochen-Trend ist deshalb nur ein grober Hinweis und gilt nur für diese eine Übung.`
   ],
   sources: [
     { label: 'Pelland et al. 2026, Sports Medicine 56:481–505', url: 'https://doi.org/10.1007/s40279-025-02344-w', note: 'Meta-Regression (67 Studien): Hilfssätze als halbe Sätze zählen passte am besten. Mehr Sätze bringen mehr, aber mit abnehmendem Nutzen, bei Kraft deutlich stärker. Mehr Trainingstage pro Woche halfen nur bei Kraft klar (Volltext).' },

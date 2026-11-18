@@ -10,31 +10,31 @@ export const MUSCLE_INFO = {
   chest: {
     includes: 'Großer Brustmuskel (Pectoralis major) mit Schlüsselbein- und Brustbeinanteil; darunter der kleine Brustmuskel.',
     location: 'Vordere Brustwand, vom Schlüsselbein und Brustbein zum Oberarm.',
-    functions: ['Zieht den Arm zum Körper heran und dreht ihn nach innen.', 'Oberer Anteil hebt den Arm nach vorne.', 'Unterer Anteil führt den gehobenen Arm wieder nach unten.'],
+    functions: ['Zieht den Arm zum Körper heran und dreht ihn nach innen.', 'Oberer Anteil hebt den Arm nach vorne.', 'Unterer Anteil führt den gehobenen Arm wieder nach unten (Lehrbuchwissen, Quelle nicht geprüft).'],
     sources: [{ label: 'Solari & Burns 2023, StatPearls: Pectoralis Major', url: 'https://www.ncbi.nlm.nih.gov/books/NBK525991/' }, TMA('upper-limb/muscles/pectoral-region/', 'Muscles of the Pectoral Region')]
   },
   'front-delts': {
     includes: 'Vorderer Anteil des Deltamuskels (Pars clavicularis).',
     location: 'Vorderseite der Schulter, vom äußeren Schlüsselbein zum Oberarm.',
-    functions: ['Hebt den Arm nach vorne.', 'Dreht den Arm nach innen.', 'Führt den Arm vor dem Körper zusammen (Quelle: Physiopedia).'],
+    functions: ['Hebt den Arm nach vorne.', 'Dreht den Arm nach innen.', 'Führt den Arm vor dem Körper zusammen (Lehrbuchwissen, Quelle nicht geprüft).'],
     sources: [TMA('upper-limb/muscles/shoulder/intrinsic/', 'Intrinsic Muscles of the Shoulder'), { label: 'Physiopedia: Deltoid (Wiki)', url: 'https://www.physio-pedia.com/Deltoid' }]
   },
   'side-delts': {
     includes: 'Seitlicher Anteil des Deltamuskels (Pars acromialis).',
     location: 'Außenseite der Schulter, vom Schulterdach (Akromion) zum Oberarm.',
-    functions: ['Hauptmuskel beim seitlichen Heben des Arms.', 'Die ersten etwa 15° übernimmt der Supraspinatus der Rotatorenmanschette.', 'Alle Deltaanteile stabilisieren den Oberarmkopf.'],
+    functions: ['Hauptmuskel beim seitlichen Heben des Arms.', 'Die ersten etwa 15° übernimmt der Supraspinatus der Rotatorenmanschette.', 'Beim Abspreizen hilft der Supraspinatus von etwa 15° bis 90° mit.'],
     sources: [TMA('upper-limb/muscles/shoulder/intrinsic/', 'Intrinsic Muscles of the Shoulder'), { label: 'Physiopedia: Deltoid (Wiki)', url: 'https://www.physio-pedia.com/Deltoid' }]
   },
   'rear-delts': {
     includes: 'Hinterer Anteil des Deltamuskels (Pars spinalis).',
     location: 'Rückseite der Schulter, von der Schulterblattgräte zum Oberarm.',
-    functions: ['Führt den Arm nach hinten.', 'Dreht den Arm nach außen.', 'Zieht den vorgehobenen Arm seitlich nach hinten (Quelle: Physiopedia).'],
+    functions: ['Führt den Arm nach hinten.', 'Dreht den Arm nach außen.', 'Zieht den vorgehobenen Arm seitlich nach hinten (Lehrbuchwissen, Quelle nicht geprüft).'],
     sources: [TMA('upper-limb/muscles/shoulder/intrinsic/', 'Intrinsic Muscles of the Shoulder'), { label: 'Physiopedia: Deltoid (Wiki)', url: 'https://www.physio-pedia.com/Deltoid' }]
   },
   lats: {
     includes: 'Breiter Rückenmuskel (Latissimus dorsi); der Teres major arbeitet mit ihm zusammen.',
     location: 'Großer, flacher Muskel am unteren und seitlichen Rücken, von Wirbelsäule und Becken zur Vorderseite des Oberarms.',
-    functions: ['Zieht den Arm nach unten, nach hinten und zum Körper.', 'Dreht den Arm nach innen.', 'Zieht bei festgehaltenen Armen (Klimmzug) den Körper nach oben.'],
+    functions: ['Zieht den Arm nach unten, nach hinten und zum Körper.', 'Dreht den Arm nach innen.', 'Zieht bei festgehaltenen Armen (Klimmzug) den Körper nach oben (Lehrbuchwissen).'],
     sources: [{ label: 'Jeno & Varacallo 2023, StatPearls: Latissimus Dorsi', url: 'https://www.ncbi.nlm.nih.gov/books/NBK448120/' }, TMA('upper-limb/muscles/shoulder/extrinsic/', 'Extrinsic Muscles of the Shoulder')]
   },
   'upper-back': {
@@ -46,7 +46,7 @@ export const MUSCLE_INFO = {
   'lower-back': {
     includes: 'Rückenstrecker (Erector spinae) mit Iliocostalis, Longissimus und Spinalis.',
     location: 'Beidseits entlang der Wirbelsäule, vom Kreuzbein bis zu Rippen, Wirbeln und Hinterkopf.',
-    functions: ['Beidseitig: streckt die Wirbelsäule.', 'Einseitig: neigt den Rumpf zur Seite.', 'Hält die Wirbelsäule über dem Becken stabil, z. B. beim Gehen und beim vorgebeugten Rudern.'],
+    functions: ['Beidseitig: streckt die Wirbelsäule.', 'Einseitig: neigt den Rumpf zur Seite.', 'Hält die Wirbelsäule über dem Becken stabil, z. B. beim Gehen.'],
     sources: [KH('erector-spinae-muscles', 'Erector spinae muscles')]
   },
   biceps: {
@@ -93,14 +93,14 @@ export const MUSCLE_INFO = {
   },
   hamstrings: {
     includes: 'Beinbeuger: Biceps femoris (langer und kurzer Kopf), Semitendinosus, Semimembranosus.',
-    location: 'Rückseite des Oberschenkels, vom Sitzbein zu Schien- und Wadenbein.',
-    functions: ['Beugen das Knie.', 'Strecken die Hüfte (außer dem kurzen Bicepskopf).', 'Drehen Unterschenkel und Hüfte nach außen bzw. innen.'],
+    location: 'Rückseite des Oberschenkels, vom Sitzbein (kurzer Kopf des Biceps femoris: vom Oberschenkelknochen) zu Schien- und Wadenbein.',
+    functions: ['Beugen das Knie.', 'Strecken die Hüfte (außer dem kurzen Kopf des Biceps femoris).', 'Drehen den Unterschenkel (nur bei gebeugtem Knie) und die Hüfte: Biceps femoris nach außen, Semitendinosus und Semimembranosus nach innen.'],
     sources: [TMA('lower-limb/muscles/thigh/hamstrings', 'Posterior Compartment of the Thigh'), { label: 'Woodley & Storey 2013: Review of hamstring anatomy (Aspetar)', url: 'https://journal.aspetar.com/en/journals/volume-2-targeted-topic-hamstring-injuries/review-of-hamstring-anatomy' }]
   },
   adductors: {
     includes: 'Adduktor magnus, longus und brevis, Gracilis (Pectineus hilft mit).',
     location: 'Innenseite des Oberschenkels, vom Schambein und Sitzbein zum Oberschenkel.',
-    functions: ['Ziehen das Bein zur Körpermitte.', 'Der hintere Anteil des Adduktor magnus streckt die Hüfte – deshalb arbeiten die Adduktoren bei tiefen Kniebeugen und Kreuzheben mit.', 'Gracilis beugt zusätzlich das Knie.'],
+    functions: ['Ziehen das Bein zur Körpermitte.', 'Der hintere Anteil des Adduktor magnus streckt die Hüfte. Darum arbeiten die Adduktoren vermutlich bei tiefen Kniebeugen und Kreuzheben mit (Schlussfolgerung).', 'Gracilis beugt zusätzlich das Knie.'],
     sources: [TMA('lower-limb/muscles/thigh/medial-compartment', 'Medial Compartment of the Thigh')]
   },
   abductors: {
@@ -112,13 +112,13 @@ export const MUSCLE_INFO = {
   calves: {
     includes: 'Wadenmuskel (Gastrocnemius, zwei Köpfe) und Schollenmuskel (Soleus).',
     location: 'Rückseite des Unterschenkels, über die Achillessehne zur Ferse.',
-    functions: ['Heben die Ferse (Fußspitzenstand).', 'Gastrocnemius überquert auch das Knie, der Soleus nicht.', 'Stehend trainiert vor allem den Gastrocnemius, sitzend vor allem den Soleus (MRT-Studie).'],
+    functions: ['Heben die Ferse (Fußspitzenstand).', 'Gastrocnemius überquert auch das Knie, der Soleus nicht.', 'Stehende Wadenheber ließen den Gastrocnemius deutlich stärker wachsen als sitzende; der Soleus wuchs in beiden ähnlich (MRT, 14 Untrainierte, 12 Wochen).'],
     sources: [KH('triceps-surae-muscle', 'Triceps surae'), TMA('lower-limb/muscles/leg/posterior-compartment', 'Posterior Compartment of the Leg'), { label: 'Kinoshita et al. 2023, Front Physiol', url: 'https://doi.org/10.3389/fphys.2023.1272106' }]
   },
   'hip-flexors': {
     includes: 'Iliopsoas (Psoas major und Iliacus); Rectus femoris und Tensor fasciae latae helfen mit.',
     location: 'Tief im Becken und an der Vorderseite der Hüfte, von Lendenwirbelsäule und Becken zum Oberschenkel.',
     functions: ['Beugen die Hüfte (Knie zur Brust, Beine heben).', 'Iliopsoas ist der wichtigste Hüftbeuger.'],
-    sources: [TMA('lower-limb/muscles/thigh/anterior-compartment', 'Muscles of the Anterior Thigh'), { label: 'StatPearls: Iliopsoas Muscle', url: 'https://www.statpearls.com/point-of-care/23367' }]
+    sources: [TMA('lower-limb/muscles/thigh/anterior-compartment', 'Muscles of the Anterior Thigh'), { label: 'Bordoni & Varacallo 2026, StatPearls: Iliopsoas Muscle', url: 'https://www.ncbi.nlm.nih.gov/books/NBK531508/' }]
   }
 };

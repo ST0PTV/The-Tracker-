@@ -247,15 +247,15 @@ export const PROGRESSION_INFO = {
   },
   rating: [
     'Nach der Übung schätzt du ein, wie viele Wiederholungen beim letzten Arbeitssatz noch gegangen wären. Leicht: 4 oder mehr · Passend: 1–3 · Schwer: keine mehr.',
-    'Die Einschätzung ist eine Schätzung. Im Mittel liegt man etwa eine Wiederholung daneben, bei hohen Wiederholungszahlen und weit weg vom Versagen deutlich mehr.',
+    'Die Einschätzung ist eine Schätzung. Im Mittel unterschätzt man die übrigen Wiederholungen um etwa eine; bei hohen Wiederholungszahlen und weit weg vom Versagen liegt man deutlich weiter daneben.',
     'Du musst nicht bis zum Muskelversagen trainieren. Für Kraft war es gleich, ob Sätze am Versagen oder kurz davor endeten; beim Muskelaufbau war der Unterschied höchstens klein.',
     '„Schwer“ heißt deshalb: Gewicht halten. Fortschritt kommt, wenn es sich wieder passend oder leicht anfühlt.'
   ],
   rules: [
     'Leicht → nächstes Mal ein Gewichtsschritt mehr.',
-    'Passend → erst eine Wiederholung mehr; nach zweimal „Passend“ beim gleichen Gewicht ein Gewichtsschritt mehr, Wiederholungen zurück.',
+    'Passend → erst eine Wiederholung mehr. War es beim gleichen Gewicht zweimal „Passend“ (oder erst „Leicht“, dann „Passend“) und sanken die Wiederholungen nicht, folgt ein Gewichtsschritt, Wiederholungen zurück.',
     'Schwer → Gewicht halten; erst nach zweimal „Schwer“ ein Schritt weniger.',
-    'Ist der kleinste Gewichtsschritt größer als 10 % des Gewichts, schlägt die App erst Wiederholungen vor.',
+    'Ohne Wiederholungsbereich gilt: Ist der kleinste Gewichtsschritt größer als 10 % des Gewichts, schlägt die App erst Wiederholungen vor.',
     'Mehr Wiederholungen sind auch Fortschritt. Nicht jede Einheit muss schwerer werden.',
     'Schrittgröße: der kleinste Schritt, den du bei dieser Übung schon gemacht hast, sonst ein üblicher Wert für das Gerät. Schätzung, kein Studienwert.'
   ],
@@ -266,30 +266,30 @@ export const PROGRESSION_INFO = {
   ],
   light: [
     'Eine leichte Woche (Deload) ist eine geplante Woche mit weniger Trainingsbelastung. Ihre Trainings zählen nicht als Ausgangspunkt: Danach geht es mit den Werten von vorher weiter.',
-    'Vorschlag der App: Arbeitssätze halbieren (aufgerundet) und etwa 10 % weniger Gewicht. Das ist eine Schätzung nach Umfragen unter Athleten und Trainern, kein Studienwert.',
-    'Studienlage: In einer Studie mit Untrainierten brachten zwei Wochen mit stark verringertem Umfang keinen Nachteil. Eine Woche ganz ohne Training schadete in einer Studie mit Trainierten dem Muskelaufbau nicht, die Kraft stieg aber etwas weniger.',
+    'Vorschlag der App: Arbeitssätze halbieren (aufgerundet) und etwa 10 % weniger Gewicht. Das ist eine Schätzung der App, kein Studienwert. In Umfragen kürzen Athleten Sätze und Last; Trainer kürzen Volumen am häufigsten um 0–25 %, Halbieren geht darüber hinaus.',
+    'Studienlage: In einer Studie mit 19 untrainierten Männern brachten zwei einzelne Wochen (Woche 4 und 8) mit stark verringertem Umfang keinen messbaren Nachteil bei Muskeldicke und 10RM. Eine Woche ganz ohne Training schadete in einer Studie mit Trainierten dem Muskelaufbau nicht, die Kraft stieg aber etwas weniger.',
     'Wann und wie oft eine leichte Woche sinnvoll ist, ist nicht geklärt. Athleten berichten im Mittel etwa alle 5–6 Wochen – das ist eine Gewohnheit, keine Empfehlung.'
   ],
   pause: [
-    'Bis etwa 3 Wochen Pause bleibt die Maximalkraft meist fast gleich. Danach wird der Verlust messbar, bei Älteren und wenig Trainierten stärker.',
-    'Kraft kommt nach einer Pause meist schneller zurück, als sie aufgebaut wurde.',
+    'Bis etwa 3 Wochen Pause blieb die Maximalkraft in einer kleinen Studie fast gleich (8 junge, vorher untrainierte Männer nach 6 Wochen Bankdrücken: −1 %). In einer Meta-Analyse wurde der Verlust ab der 3.–4. Woche messbar, anfangs klein; bei über 65-Jährigen und vorher Inaktiven war er größer als bei Freizeitsportlern.',
+    'In einer Studie kam die Kraft nach einer Pause schneller zurück, als sie aufgebaut wurde: Ältere Männer erreichten nach 12 Wochen Pause ihr altes 1RM in unter 8 Wochen. Eine andere Studie fand keine schnellere Antwort.',
     'Wie viel man nach einer Pause reduzieren sollte, ist nicht in Studien getestet. Die Werte hier sind vorsichtige Schätzungen: ab 3 Wochen 5 %, ab 5 Wochen 10 %, ab 8 Wochen 15 %, ab 16 Wochen 20 %, ab 26 Wochen 25 %.',
     'Nach Krankheit oder Verletzung: starte so, wie es sich gut anfühlt, und kläre im Zweifel ärztlich ab. Schmerz ist kein Trainingsziel.'
   ],
   sources: [
     { label: 'Zourdos et al. 2016, J Strength Cond Res', url: 'https://doi.org/10.1519/JSC.0000000000001049', note: 'Führt die RPE-Skala nach Wiederholungen in Reserve ein (RPE 10 = 0 RIR). 29 Personen, Kniebeuge. Abstract geprüft.' },
     { label: 'Halperin et al. 2022, Sports Med (Meta-Analyse)', url: 'https://doi.org/10.1007/s40279-021-01559-x', note: '12 Studien, 414 Personen: Wiederholungen bis zum Versagen im Mittel um 0,95 unterschätzt, große Streuung. Abstract geprüft.' },
-    { label: 'Zourdos et al. 2021, J Strength Cond Res', url: 'https://doi.org/10.1519/JSC.0000000000002995', note: 'Sätze mit ~16 Wdh.: Schätzfehler 2 (nah am Versagen) bis 5 Wdh. (weit davon). Abstract geprüft.' },
+    { label: 'Zourdos et al. 2021, J Strength Cond Res', url: 'https://doi.org/10.1519/JSC.0000000000002995', note: '25 trainierte Männer, Kniebeuge mit 70 % 1RM bis zum Versagen (im Mittel 16 Wdh., 20 ausgewertet): Abweichung im Mittel ≈ 2 Wdh. bei gefühlt 1 RIR, ≈ 5 bei gefühlt 5 RIR; je mehr Wdh. im Satz, desto ungenauer. Volltext geprüft.' },
     { label: 'Grgic et al. 2022, J Sport Health Sci (Meta-Analyse)', url: 'https://doi.org/10.1016/j.jshs.2021.01.007', note: '15 Studien: Versagen vs. kein Versagen ohne signifikanten Unterschied bei Kraft und Muskelaufbau. Abstract geprüft.' },
     { label: 'Refalo et al. 2023, Sports Med (Meta-Analyse)', url: 'https://doi.org/10.1007/s40279-022-01784-y', note: 'Kein Beleg, dass Training bis zum Muskelversagen mehr Muskelaufbau bringt; Vorteil von „Satz-Versagen“ trivial. Abstract geprüft.' },
     { label: 'Robinson et al. 2024, Sports Med (Meta-Regressionen)', url: 'https://doi.org/10.1007/s40279-024-02069-2', note: 'Kraft über viele RIR ähnlich; Muskelaufbau etwas größer, je näher am Versagen. Explorativ, RIR geschätzt. Abstract geprüft.' },
-    { label: 'Refalo et al. 2024, J Sports Sci (RCT)', url: 'https://doi.org/10.1080/02640414.2024.2321021', note: '18 Trainierte, 8 Wochen: Versagen vs. 1–2 Wdh. Reserve – gleicher Zuwachs am Oberschenkel. Abstract geprüft.' },
+    { label: 'Refalo et al. 2024, J Sports Sci (RCT)', url: 'https://doi.org/10.1080/02640414.2024.2321021', note: '18 Trainierte (12 Männer, 6 Frauen), 8 Wochen Beinpresse und Beinstrecker, je ein Bein: Versagen vs. 1–2 Wdh. Reserve – gleiche Zunahme der Quadrizeps-Dicke (Ultraschall). Volltext geprüft.' },
     { label: 'Plotkin et al. 2022, PeerJ (RCT)', url: 'https://doi.org/10.7717/peerj.14142', note: '43 Trainierte: Wiederholungen oder Gewicht steigern – beides wirksam. Abstract geprüft.' },
     { label: 'ACSM 2009, Med Sci Sports Exerc (Position Stand)', url: 'https://doi.org/10.1249/MSS.0b013e3181915670', note: 'Leitlinie: 2–10 % mehr Gewicht, wenn 1–2 Wdh. über dem Ziel gelingen. Abstract geprüft.' },
     { label: 'ACSM 2026 (Currier et al.), Med Sci Sports Exerc (Overview of Reviews)', url: 'https://doi.org/10.1249/MSS.0000000000003897', note: '137 Reviews: Training bis zur Erschöpfung beeinflusste die Ergebnisse nicht durchgehend. Abstract geprüft.' },
-    { label: 'Bosquet et al. 2013, Scand J Med Sci Sports (Meta-Analyse)', url: 'https://doi.org/10.1111/sms.12047', note: '103 Studien: Kraftverlust nach Trainingsstopp, größer bei über 65-Jährigen; signifikant ab Woche 3–4 (Volltext). Abstract und Volltext geprüft.' },
-    { label: 'Ogasawara et al. 2011, Clin Physiol Funct Imaging', url: 'https://doi.org/10.1111/j.1475-097X.2011.01031.x', note: '3 Wochen Pause: kein signifikanter Verlust beim 1RM (Untrainierte). Abstract geprüft.' },
-    { label: 'Blocquiaux et al. 2020, Exp Gerontol', url: 'https://doi.org/10.1016/j.exger.2020.110860', note: 'Ältere Männer: 12 Wochen Pause −5 bis −15 %, nach unter 8 Wochen wieder auf altem 1RM. Abstract geprüft.' },
+    { label: 'Bosquet et al. 2013, Scand J Med Sci Sports (Meta-Analyse)', url: 'https://doi.org/10.1111/sms.12047', note: '103 Studien: Kraftverlust nach Trainingsstopp, wächst mit der Pausendauer; Maximalkraft erstmals signifikant bei 15–28 Tagen, dort klein (SMD ≈ −0,2, Abb. 2 abgelesen). Größer bei über 65-Jährigen und vorher Inaktiven als bei Freizeitsportlern. Volltext geprüft.' },
+    { label: 'Ogasawara et al. 2011, Clin Physiol Funct Imaging', url: 'https://doi.org/10.1111/j.1475-097X.2011.01031.x', note: '15 junge, vorher untrainierte Männer, Bankdrücken 3×/Woche; 8 pausierten nach 6 Wochen 3 Wochen: 1RM −1,2 % (nicht signifikant), nach 15 Wochen gleicher Zuwachs wie bei durchgehendem Training. Volltext geprüft.' },
+    { label: 'Blocquiaux et al. 2020, Exp Gerontol', url: 'https://doi.org/10.1016/j.exger.2020.110860', note: '30 ältere, vorher untrainierte Männer: nach 12 Wochen Pause Kniestrecker-Kraft und -Leistung −5 bis −15 %; Beinpresse-1RM nach unter 8 Wochen Wiedertraining wieder auf altem Stand. Volltext geprüft.' },
     { label: 'Psilander et al. 2019, J Appl Physiol', url: 'https://doi.org/10.1152/japplphysiol.00917.2018', note: 'Nach 20 Wochen Pause blieb ~60 % des Kraftzuwachses erhalten. Abstract geprüft.' },
     { label: 'Coleman et al. 2024, PeerJ (RCT)', url: 'https://doi.org/10.7717/peerj.16777', note: '39 Trainierte, 9 Wochen: eine Woche ohne Training in der Mitte – gleicher Muskelaufbau, etwas weniger Kraftzuwachs. Abstract geprüft.' },
     { label: 'Pancar et al. 2026, Sci Rep (RCT, innerhalb der Personen)', url: 'https://doi.org/10.1038/s41598-026-40612-5', note: '19 untrainierte Männer, 8 Wochen: Wochen 4 und 8 mit 2 statt 6–8 Sätzen und einmal statt zweimal pro Woche – kein Unterschied bei Muskeldicke und 10RM. Abstract geprüft.' },

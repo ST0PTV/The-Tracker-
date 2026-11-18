@@ -86,7 +86,7 @@ export function cycleSettingsView(rerender) {
     list(numRow({ title: 'Mein Fenster', sub: c.tol ? `typisch ${cycleAnalysis(today).median} ± ${c.tol} Tage` : 'leer = aus', value: c.tol, lo: 1, hi: 15, unit: '± Tage', empty: true, placeholder: 'aus',
         set: (v) => set({ tol: v == null ? null : Math.round(v) }) }),
       ...M.FLAG_IDS.filter(([id]) => id !== 'tol' || c.tol).map(([id, title]) => switchRow({ title, on: c.warn[id] !== false, set: (v) => set({ warn: { ...c.warn, [id]: v } }) }))),
-    note(`Die App zeigt einen Hinweis unter „Zyklus → Verlauf“, wenn etwas mehrmals vorkommt – neutral, keine Diagnose. „Mein Fenster“: Hinweis, wenn ${M.TOL_COUNT} der letzten 6 Zyklen weiter als die gewählten Tage von deinem typischen Zyklus abweichen. Die festen Grenzen (24, 35, 9 Tage) stammen aus FIGO und IOC.`),
+    note(`Die App zeigt einen Hinweis im Kalender und unter „Zyklus → Verlauf“, wenn deine Einträge über eine Grenze gehen – neutral, keine Diagnose. „Mein Fenster“: Hinweis, wenn ${M.TOL_COUNT} der letzten 6 Zyklen weiter als die gewählten Tage von deinem typischen Zyklus abweichen. Die festen Grenzen stammen aus FIGO 2018 (24 Tage, 8 Tage Blutung; Unterschied je nach Alter 7–9 Tage, die App nimmt 9) und dem IOC-Werkzeug REDs CAT2 (35 Tage); 90 Tage ohne Periode sind eine eigene Wahl, angelehnt an Klein & Poth 2013.`),
     sec('Was ich tracke'),
     list(chips(TRACK, (k) => !!c.track[k], (k) => set({ track: { ...c.track, [k]: !c.track[k] } }))),
     note('Ausgeschaltetes erscheint beim Eintragen nicht. Die Blutung ist immer da.'),

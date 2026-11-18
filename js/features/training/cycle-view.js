@@ -70,17 +70,17 @@ export const CYCLE_INFO = {
   checkedAt: '2026-10-22',
   short: [
     'Freiwillig, nur auf diesem Gerät. Kein Verhütungs- oder Fruchtbarkeitsmittel.',
-    'Keine Trainingsregeln je Phase – Studien zeigen dafür keinen Vorteil.',
+    'Keine Trainingsregeln je Phase – bisher zeigen Studien dafür keinen Vorteil.',
     'Die nächste Periode ist nur ein grobes Zeitfenster; Arzt-Hinweise sind keine Diagnose.'
   ],
   points: [
     'Die Funktion ist freiwillig und speichert alles nur auf diesem Gerät (auch im Backup). Sie ersetzt keine ärztliche Beratung und ist kein Verhütungs- oder Fruchtbarkeitsmittel.',
-    'Warum keine Trainingstipps je Phase: In einer randomisierten Studie mit hormonell bestätigten Phasen (24 Frauen, 3 Zyklen) brachte Training mit Schwerpunkt in der ersten oder zweiten Zyklushälfte keinen Vorteil für Muskelaufbau oder Kraft gegenüber gleichmäßigem Training; entscheidend war das Trainingsvolumen. Eine Übersicht über mehrere Meta-Analysen kam zum selben Schluss.',
-    'Akute Leistung: In einer großen Meta-Analyse (78 Studien) war die Leistung in den ersten Zyklustagen höchstens trivial geringer als in den übrigen Phasen; die meisten Studien hatten niedrige Qualität. Allgemeine Regeln lassen sich daraus nicht ableiten – wie du dich fühlst, ist der bessere Maßstab.',
-    'Regelschmerzen: Regelmäßiges Training über den ganzen Monat (Dehnen, Rumpftraining, Yoga oder Ausdauer, meist 45–60 min, 3× pro Woche) ging in Studien mit deutlich weniger Regelschmerzen einher – die Evidenz ist aber von niedriger Qualität, und Krafttraining wurde dort nicht untersucht.',
-    'Die nächste Periode ist nur ein grobes Zeitfenster aus deinen Angaben. Zykluslängen schwanken; in über 600.000 Zyklen lag die zweite Zyklushälfte zwischen etwa 7 und 17 Tagen. Nur deine eingetragenen Periodentage sind sicher. Einen Eisprung zeigt die App bewusst nicht an.',
-    'Mit Pille, Ring oder Pflaster gibt es keine natürlichen Zyklusphasen; die App zeigt dann keine Schätzung. Die Pille hatte in einer Meta-Analyse keinen Einfluss auf Muskelaufbau und Kraft durch Training. Mit Hormonspirale, Implantat, Minipille oder Spritze sind Blutungen oft unregelmäßig – deshalb auch hier keine Vorhersage.',
-    'Hinweise zum Arztbesuch erscheinen nur bei deinen eigenen Angaben, z. B. wenn über 90 Tage keine Periode eingetragen ist, Zyklen mehrfach länger als 35 Tage sind oder du sehr starke Blutung oder starke Schmerzen einträgst. Sie sind keine Diagnose.'
+    'Warum keine Trainingstipps je Phase: In einer randomisierten Studie mit hormonell bestätigten Phasen (24 Frauen, 3 Zyklen) brachte Training mit mehr Volumen in der Follikel- oder in der Lutealphase keinen Vorteil für Muskelaufbau oder Kraft gegenüber gleichmäßigem Training; mit mehreren Anpassungen hing eher das Trainingsvolumen zusammen. Eine Übersicht über mehrere Meta-Analysen fand keine belastbaren Hinweise auf einen Vorteil, die Studienlage ist aber dünn.',
+    'Akute Leistung: In einer großen Meta-Analyse (78 Studien) war die Leistung in den ersten Zyklustagen höchstens trivial geringer als in den übrigen Phasen; die meisten Studien hatten niedrige Qualität. Allgemeine Regeln lassen sich daraus nicht ableiten; die Autorinnen und Autoren empfehlen, auf die eigene Reaktion auf Training zu achten.',
+    'Regelschmerzen: Regelmäßiges Training über den ganzen Monat (Dehnen, Rumpftraining, Yoga oder Ausdauer, meist 45–60 min, mindestens 3× pro Woche) ging in Studien an meist jungen Frauen mit Regelschmerzen ohne erkennbare Ursache mit deutlich weniger Schmerzen einher – die Evidenz ist aber von niedriger Qualität, und Krafttraining wurde dort nicht untersucht.',
+    'Die nächste Periode ist nur ein grobes Zeitfenster aus deinen Angaben. Zykluslängen schwanken; in über 600.000 Zyklen mit Eisprung (Daten einer App) dauerte die Lutealphase (nach dem Eisprung) meist zwischen 7 und 17 Tagen. Nur deine eingetragenen Periodentage sind sicher. Einen Eisprung zeigt die App bewusst nicht an.',
+    'Mit Pille, Ring oder Pflaster gibt es keine natürlichen Zyklusphasen; die App zeigt dann keine fruchtbaren Tage, die Blutung bleibt eine grobe Schätzung. Die Pille hatte in einer Meta-Analyse keinen signifikanten Einfluss auf Muskelaufbau und Kraft durch Training. Mit Hormonspirale, Implantat, Minipille oder Spritze können Blutungen unregelmäßig sein; Vorhersagen sind dann unsicher.',
+    'Hinweise zum Arztbesuch erscheinen nur bei deinen eigenen Angaben, z. B. wenn seit über 90 Tagen keine Periode eingetragen ist, die letzten 3 Zyklen länger als 35 Tage waren, eine Periode länger als 8 Tage dauert oder du in zwei Zyklen hintereinander starke Schmerzen einträgst. Sie sind keine Diagnose.'
   ],
   sources: [
     { label: "D'Souza et al. 2026, Med Sci Sports Exerc", url: 'https://doi.org/10.1249/MSS.0000000000004031', note: 'RCT, 24 Frauen, hormonell bestätigte Phasen: kein Vorteil durch phasenbasiertes Training (Abstract)' },

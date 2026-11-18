@@ -19,7 +19,7 @@ export function waterSettingsView(rerender) {
     list(switchRow({ title: 'Wasser tracken', on: w.enabled, set: (v) => { setWaterSettings({ enabled: v }); rerender(); } }),
       w.enabled ? numRow({ title: 'Tagesziel', value: w.goal, lo: 500, hi: 6000, unit: 'ml', set: (v) => setWaterSettings({ goal: v }) }) : null,
       w.enabled ? numRow({ title: '„+“ trägt ein', value: w.step, lo: 50, hi: 1000, unit: 'ml', set: (v) => setWaterSettings({ step: v }) }) : null),
-    note('Standard 1,5 l (DGE). Koffein-Getränke und Getränke aus dem Journal zählen mit, wenn sie so markiert sind.'));
+    note('Standard 1,5 l (nach DGE, gerundet). Koffein-Getränke und Getränke aus dem Journal zählen mit, wenn sie so markiert sind.'));
 }
 
 /** „Ich → Koffein“ (Bett- und Aufstehzeit stehen unter „Schlaf & Körper“) */
@@ -34,7 +34,7 @@ export function caffSettingsView(rerender) {
       list(numRow({ title: 'Halbwertszeit', value: c.halfLife, lo: 1.5, hi: 12, unit: 'h', dec: true, set: (v) => setCaffSettings({ halfLife: v }) }),
         numRow({ title: 'Ziel zur Bettzeit', value: c.threshold, lo: 10, hi: 200, unit: 'mg', set: (v) => setCaffSettings({ threshold: v }) }),
         numRow({ title: 'Richtwert pro Tag', value: c.limit, lo: 50, hi: 1000, unit: 'mg', set: (v) => setCaffSettings({ limit: v }) })),
-      note('Standard: 5 h, 50 mg, 400 mg (EFSA). Alles im ⓘ erklärt; die Pegel sind Schätzungen.'),
+      note('Standard: 5 h (Annahme), 50 mg (Faustregel), 400 mg (EFSA). Alles im ⓘ erklärt; die Pegel sind Schätzungen.'),
       sec('Schlaf'),
       list(linkRow({ title: 'Bettzeit · Aufstehen', value: `${c.bed} · ${c.wake}`, href: '#/ich/koerper' })),
       note('Kommt aus „Schlaf & Körper“.')] : null);
@@ -48,5 +48,5 @@ export function alcSettingsView(rerender) {
     sec('Alkohol', ['Alkohol', () => alcInfo()]),
     list(switchRow({ title: 'Alkohol tracken', sub: 'Karte erscheint mit dem ersten Eintrag', on: a.enabled, set: (v) => { setAlcSettings({ enabled: v }); rerender(); } }),
       a.enabled ? numRow({ title: 'Abbau', value: a.beta, lo: 0.05, hi: 0.35, unit: '‰/h', dec: 2, set: (v) => setAlcSettings({ beta: Math.round(v * 100) / 100 }) }) : null),
-    note('Standard 0,15 ‰/h (Spanne etwa 0,10–0,20). Gewicht, Größe und Geschlecht kommen aus „Schlaf & Körper“. Grobe Schätzung – nicht geeignet, um die Fahrtüchtigkeit zu beurteilen.'));
+    note('Standard 0,15 ‰/h (typisch etwa 0,10–0,20, einzelne Menschen auch mehr). Gewicht, Größe und Geschlecht kommen aus „Schlaf & Körper“. Grobe Schätzung – nicht geeignet, um die Fahrtüchtigkeit zu beurteilen.'));
 }

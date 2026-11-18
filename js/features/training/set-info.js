@@ -12,7 +12,7 @@ export const SET_INFO = {
     'Beide zählen als 1 Satz; im Volumen zählen alle Stufen.'
   ],
   what: [
-    'Drop-Satz: Satz bis kurz vor oder bis zum Versagen, dann ohne Pause mit weniger Gewicht weiter (Stufen).',
+    'Drop-Satz: Satz bis zum Versagen (in der App auch knapp davor), dann ohne Pause mit weniger Gewicht weiter (Stufen).',
     'Rest-Pause-Satz: Satz, kurze Pause, dann mit dem gleichen Gewicht weitere Mini-Sätze.'
   ],
   counting: [
@@ -20,7 +20,7 @@ export const SET_INFO = {
     'Volumen und Gesamt-Wiederholungen zählen alle Stufen.',
     'Bester Satz und e1RM (Schätzung) nutzen nur die erste Stufe – sonst würden die Gesamt-Wiederholungen die Schätzung aufblähen.'
   ],
-  evidence: 'Studien finden für Drop- und Rest-Pause-Sätze ähnliches Muskelwachstum wie für normale Sätze, oft in kürzerer Zeit. Wie viele „normale“ Sätze ein Drop- oder Rest-Pause-Satz wert ist, legt keine gefundene Studie fest – die Zählung als 1 Satz ist eine Konvention dieser App und unterschätzt den Reiz möglicherweise.',
+  evidence: 'Studien finden für Drop- und Rest-Pause-Sätze ähnliches Muskelwachstum wie für normale Sätze. Einige Drop-Satz-Varianten brauchten dafür nur die Hälfte bis ein Drittel der Zeit. Wie viele „normale“ Sätze ein Drop- oder Rest-Pause-Satz wert ist, legt keine gefundene Studie fest – die Zählung als 1 Satz ist eine Konvention dieser App und unterschätzt den Reiz möglicherweise.',
   sources: [
     { label: 'Sødal et al. 2023, Sports Med Open', url: 'https://doi.org/10.1186/s40798-023-00620-5', note: 'Meta-Analyse: Drop- vs. normale Sätze, kein signifikanter Unterschied im Wachstum' },
     { label: 'Havers et al. 2026, Sports Med Open', url: 'https://doi.org/10.1186/s40798-026-01012-1', note: 'Meta-Analyse (12 Studien): ähnliche Langzeit-Effekte, höhere empfundene Anstrengung' },

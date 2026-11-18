@@ -22,16 +22,16 @@ export const ANALYSIS_INFO = {
   ],
   points: [
     'Balance: Die App vergleicht Beine vorn mit hinten und Drücken mit Ziehen. Ein Hinweis kommt, wenn eine Seite deutlich kleiner ist (unter 50 % bzw. 2/3). Diese Schwellen sind Annahmen der App, keine Studienwerte.',
-    'Frequenz: Große Muskeln wuchsen in einer Meta-Analyse mit zweimal pro Woche besser als mit einmal (Schoenfeld 2016).',
+    'Frequenz: In einer Meta-Analyse wuchsen Muskeln bei häufigerem Training (1–3-mal pro Woche verglichen, meist gleiches Volumen, meist Untrainierte) etwas mehr; die Autoren folgern „mindestens zweimal“ (Schoenfeld 2016). ACSM 2026 sah bei gleichem Volumen keinen Unterschied, Pelland 2026 einen mit vernachlässigbarem Effekt vereinbaren.',
     'Spanne: Für Muskelwachstum fand ACSM 2026 mehr Wirkung ab etwa 10 Sätzen pro Woche. Die App schlägt erst unter 5 Sätzen eine Änderung vor (Grenze ist eine Konvention der App); 5 bis 9 Sätze nennt sie nur als Hinweis.',
-    'Dauer: Sätze × (40 s + Pause) + 5 min Aufwärmen; ab 75 min schlägt die App vor, eine Einzelgelenk-Übung zu verschieben. 40 s, 5 min und 75 min sind Annahmen.',
+    'Dauer: Sätze × (40 s + Pause) + 5 min Aufwärmen; über 75 min schlägt die App vor, eine Einzelgelenk-Übung in den kürzesten anderen Plan zu verschieben. 40 s, 5 min und 75 min sind Annahmen.',
     'Pläne ohne Trainingstage zählen als einmal pro Woche.',
     '„Trainiert“ zeigt den Schnitt der letzten vier abgeschlossenen Wochen aus deinen Trainings.'
   ],
   sources: [
     { label: 'ACSM 2026 (Currier et al.), Med Sci Sports Exerc 58:851–872', url: 'https://doi.org/10.1249/MSS.0000000000003897', note: 'Muskelwachstum mit ≥ 10 Sätzen/Woche; Kraft mit ≥ 2 Einheiten/Woche (Abstract).' },
-    { label: 'Schoenfeld, Ogborn & Krieger 2016, Sports Med 46:1689–1697', url: 'https://doi.org/10.1007/s40279-016-0543-8', note: 'Zweimal pro Woche besser als einmal (Abstract).' },
-    { label: 'Schoenfeld, Ogborn & Krieger 2017, J Sports Sci 35:1073–1082', url: 'https://doi.org/10.1080/02640414.2016.1210197', note: 'Mehr Wochensätze, mehr Muskelzuwachs (Abstract).' },
+    { label: 'Schoenfeld, Ogborn & Krieger 2016, Sports Med 46:1689–1697', url: 'https://doi.org/10.1007/s40279-016-0543-8', note: 'Häufigeres Training (1–3×/Woche, meist gleiches Volumen) etwas mehr Muskelzuwachs; Autoren: mindestens zweimal (Volltext).' },
+    { label: 'Schoenfeld, Ogborn & Krieger 2017, J Sports Sci 35:1073–1082', url: 'https://doi.org/10.1080/02640414.2016.1210197', note: 'Mehr Wochensätze, mehr Muskelzuwachs; Vorteil ab 10 Sätzen nur Trend (Volltext).' },
     { label: 'Pelland et al. 2026, Sports Medicine 56:481–505', url: 'https://doi.org/10.1007/s40279-025-02344-w', note: 'Mitbeteiligte Sätze halb zählen (Volltext).' }
   ]
 };

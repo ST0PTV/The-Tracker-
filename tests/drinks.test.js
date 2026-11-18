@@ -48,7 +48,7 @@ test('Modell: Zeit bis unter die Schwelle, Bettzeit am Folgetag', () => {
 });
 
 test('Koffein-Vorschlag nach Name, keine Schätzung bei koffeinfrei', () => {
-  assert.equal(caffGuess({ n: 'Cola', liq: true }).v, 10);
+  assert.equal(caffGuess({ n: 'Cola', liq: true }).v, 11, 'BfR: 35 mg je 330 ml');
   assert.equal(caffGuess({ n: 'Kaffee entkoffeiniert', liq: true }), null);
   assert.equal(caffGuess({ n: 'Kaffeebohnen', liq: false }), null, 'nur Flüssigkeiten');
   assert.equal(caffGuess({ n: 'Orangensaft', liq: true }), null);

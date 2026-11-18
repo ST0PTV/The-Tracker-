@@ -595,7 +595,7 @@ export const POOL = [
     confidence: 'medium', basis: 'EMG, Anatomie',
     note: 'Ob die oberen Fasern des großen Gesäßmuskels relevant mitarbeiten, ist nicht belegt.',
     sources: [
-      S('de Almeida Paz et al. 2022, J Bodyw Mov Ther', '10.1016/j.jbmt.2022.01.001', 'EMG: Gluteus medius an der Maschine stärker aktiv als der Tensor fasciae latae.'),
+      S('de Almeida Paz et al. 2022, J Bodyw Mov Ther', '10.1016/j.jbmt.2022.01.001', 'EMG: Gluteus medius in allen drei Übungen aktiver als der Tensor fasciae latae; das Verhältnis war an der Maschine am größten (Abstract).'),
       S('StatPearls: Gluteus Medius Muscle', 'https://www.statpearls.com/point-of-care/22326', 'Anatomie: Gluteus medius ist der wichtigste Abduktor der Hüfte.')
     ]
   }),
@@ -673,7 +673,7 @@ export const POOL = [
     others: ['Hüftstabilisatoren des unteren Beins'],
     sources: [
       S('Serner et al. 2013, Br J Sports Med', '10.1136/bjsports-2012-091746', 'Unter 8 Adduktionsübungen gehörte die Copenhagen-Adduktion zu den intensivsten für den Adductor longus.'),
-      S('Harøy et al. 2017, Am J Sports Med', '10.1177/0363546517720194', 'RCT, 8 Wo.: Copenhagen-Adduktion steigerte die exzentrische Adduktionskraft um ca. 9 %; Wachstum nicht gemessen.')
+      S('Harøy et al. 2017, Am J Sports Med', '10.1177/0363546517720194', 'RCT, 8 Wo., 33 U19-Fußballer ausgewertet: mit Copenhagen-Adduktion ca. 9 % größerer Zuwachs der exzentrischen Adduktionskraft als ohne; Wachstum nicht gemessen.')
     ]
   }),
   P('cable-hip-adduction', 'Adduktion am Kabel', 'cable', ['adductors'], ['glutes'], {
@@ -945,7 +945,7 @@ export const POOL = [
     others: ['Anconeus'],
     sources: [
       S('Brandão et al. 2020, J Strength Cond Res', '10.1519/JSC.0000000000003550', 'Liegendes Trizepsdrücken mit Langhantel ließ den langen Kopf stärker wachsen als reines Bankdrücken. Der laterale Kopf wuchs mit Bankdrücken stärker.'),
-      S('Alves et al. 2017, J Sports Med Phys Fitness', '10.23736/S0022-4707.17.06849-9', 'Strecken im Liegen (Kurzhantel) aktivierte den Trizeps per EMG ähnlich wie überkopf. Daher beide nicht zwingend in dieselbe Einheit legen.')
+      S('Alves et al. 2017, J Sports Med Phys Fitness', '10.23736/S0022-4707.17.06849-9', 'Strecken im Liegen (Kurzhantel) aktivierte den Trizeps per EMG ähnlich wie überkopf. Die Autoren raten, nicht beide in dasselbe Trainingsprogramm zu nehmen (Abstract).')
     ]
   }),
   P('close-grip-bench-press', 'Enges Bankdrücken', 'barbell', ['triceps', 'chest'], ['front-delts'], {
@@ -1002,9 +1002,9 @@ export const POOL = [
     confidence: 'medium', basis: 'EMG, Anatomie',
     note: 'Hüftbeuger heben die Beine; der Bauch kippt das Becken. Gestreckte Beine belasten die Wirbelsäule vermutlich stärker (nicht gemessen).',
     sources: [
-      S('McGill, Andersen & Cannon 2014, J Sports Sci', '10.1080/02640414.2014.946437', 'EMG: sehr hohe Aktivität von geradem und äußerem schrägem Bauchmuskel, hohe Wirbelsäulenlast.'),
+      S('McGill, Andersen & Cannon 2014, J Sports Sci', '10.1080/02640414.2014.946437', 'EMG: sehr hohe Bauchmuskel-Aktivität; Wirbelsäulendruck ≈ 3000 N (Modell), der höchste der vier Übungen, laut Autoren aber insgesamt eher schonend.'),
       S('Escamilla et al. 2006, Phys Ther', 'https://pubmed.ncbi.nlm.nih.gov/16649890/', 'EMG: hängendes Knieheben unter den stärksten Übungen für gerade und schräge Bauchmuskeln.'),
-      S('StatPearls: Iliopsoas Muscle', 'https://www.statpearls.com/point-of-care/23367', 'Anatomie: Iliopsoas ist der wichtigste Hüftbeuger.')
+      S('Bordoni & Varacallo 2026, StatPearls: Iliopsoas Muscle', 'https://www.ncbi.nlm.nih.gov/books/NBK531508/', 'Anatomie: Iliopsoas ist der wichtigste Hüftbeuger.')
     ]
   }, 'bodyweight'),
 

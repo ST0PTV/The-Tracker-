@@ -124,7 +124,7 @@ export const TEMPLATES = [
 export const ROUTINE_INFO = {
   short: {
     warmup: [
-      'Kurz und locker aufwärmen – länger ist nicht automatisch besser.',
+      'Locker aufwärmen – langes, anstrengenderes Aufwärmen kann Kraft kosten.',
       'Dann 1–3 leichte Sätze der ersten Übung.',
       'Optional: zählt nicht als Sätze und nicht in die Muskelkarte.'
     ],
@@ -146,11 +146,11 @@ export const ROUTINE_INFO = {
   ],
   warmup: [
     'Wärmere Muskeln verbessern in Studien schnelle Kraft und Leistung, aber nicht die Maximalkraft.',
-    'In einer Studie mit 16 Kraftsportlern senkten 15 min Aufwärmen bei mittlerer Intensität das 1RM leicht; 15 min locker erhöhten es leicht, 5 min änderten nichts. Darum ist das Aufwärmen hier locker angelegt – länger heißt nicht automatisch besser.',
+    'In einer Studie (16 krafttrainierte Männer, Radfahren vor dem Beinpresse-1RM) hob 15 min lockeres Aufwärmen (40 % der maximalen Sauerstoffaufnahme) das 1RM leicht (+3 %), 15 min mittelintensives (70 %) senkte es (−4 %); 5 min änderten nichts. Darum ist das Aufwärmen hier locker angelegt.',
     'Dynamisches Dehnen direkt vor dem Training verschlechterte die Leistung im Mittel nicht, eher leicht besser.',
-    'Statisches Dehnen unter 60 s pro Muskel hatte kaum Einfluss auf die Leistung; 60 s und mehr pro Muskel senkte die Kraft kurzzeitig stärker.',
-    'Ob Aufwärmen im Krafttraining Verletzungen vorbeugt, ist nicht untersucht. Ein Review zu Aufwärmen für den Oberkörper fand dazu keine einzige Studie.',
-    'Spezifisch aufwärmen: 1–3 leichte Sätze der ersten Übung. Das ist eine Empfehlung aus einem narrativen Review (Expertenmeinung).'
+    'Statisches Dehnen unter 60 s pro Muskelgruppe senkte die Leistung kaum (etwa −1 %); 60 s und mehr kurzzeitig stärker (etwa −5 %). Bei Kraftmessungen war der Verlust etwas größer (etwa −3 % bzw. −5 %); getestet meist 3–5 min nach dem Dehnen.',
+    'Ob Aufwärmen im Krafttraining Verletzungen vorbeugt, ist kaum untersucht. Ein Review zu Aufwärmen für den Oberkörper fand dazu keine einzige Studie.',
+    'Spezifisch aufwärmen: leichte Sätze der Übung, vor allem vor schweren Lasten. Das empfiehlt ein narrativer Review (Expertenmeinung); 1–3 Sätze vor der ersten Übung sind eine Konvention der App.'
   ],
   cooldown: [
     'Lockeres Auslaufen verbessert die meisten Erholungswerte und die Leistung am Folgetag kaum und beugt nach heutigem Stand keinen Verletzungen vor.',
@@ -168,8 +168,8 @@ export const ROUTINE_INFO = {
   ],
   sources: [
     { label: 'Wilson, Nunes, Blazevich et al. 2025, J Sport Health Sci (Meta-Analyse)', url: 'https://doi.org/10.1016/j.jshs.2025.101024', note: '33 Studien, n = 921: höhere Muskeltemperatur verbessert schnelle Kraft und Leistung, nicht die Maximalkraft. Abstract geprüft.' },
-    { label: 'Barroso et al. 2013, J Strength Cond Res (RCT, Crossover)', url: 'https://doi.org/10.1519/JSC.0b013e3182606cd9', note: '16 Kraftsportler, Beinpresse-1RM: 15 min locker +3 %, 15 min mittel −4 %, 5 min ohne Unterschied. Eine Studie. Abstract geprüft.' },
-    { label: 'Behm, Blazevich, Kay & McHugh 2016, Appl Physiol Nutr Metab (Systematic Review)', url: 'https://doi.org/10.1139/apnm-2015-0235', note: 'Statisch −3,7 %, dynamisch +1,3 %; ≥ 60 s statisch pro Muskel −4,6 %, < 60 s −1,1 %. Abstract geprüft.' },
+    { label: 'Barroso et al. 2013, J Strength Cond Res (RCT, Crossover)', url: 'https://doi.org/10.1519/JSC.0b013e3182606cd9', note: '16 krafttrainierte Männer, Radfahren vor dem Beinpresse-1RM: 15 min bei 40 % VO2max +3 %, 15 min bei 70 % −4 %, 5 min ohne Unterschied. Eine Studie. Volltext geprüft.' },
+    { label: 'Behm, Blazevich, Kay & McHugh 2016, Appl Physiol Nutr Metab (Systematic Review)', url: 'https://doi.org/10.1139/apnm-2015-0235', note: 'Statisch −3,7 %, dynamisch +1,3 %; statisch ≥ 60 s pro Muskel −4,6 %, < 60 s −1,1 % (Kraft: −5,1 / −2,8 %). Meist 3–5 min danach getestet. Volltext geprüft.' },
     { label: 'Warneke & Lohmann 2024, J Sport Health Sci (Meta-Analyse)', url: 'https://doi.org/10.1016/j.jshs.2024.05.002', note: '83 Studien: kleiner Kraftverlust nach statischem Dehnen, deutlich bei ≥ 60 s pro Durchgang; sportliche Leistung insgesamt nicht verschlechtert. Abstract geprüft.' },
     { label: 'McCrary, Ackermann & Halaki 2015, Br J Sports Med (Systematic Review)', url: 'https://doi.org/10.1136/bjsports-2014-094228', note: 'Aufwärmen für den Oberkörper: keine Studie zur Verletzungsvorbeugung gefunden. Abstract geprüft.' },
     { label: 'Iversen, Norum, Schoenfeld & Fimland 2021, Sports Med (Narrative Review)', url: 'https://doi.org/10.1007/s40279-021-01490-1', note: 'Empfiehlt, sich auf übungsspezifisches Aufwärmen zu beschränken, und Dehnen nur bei Beweglichkeitsziel. Expertenmeinung. Abstract geprüft.' },
@@ -180,7 +180,7 @@ export const ROUTINE_INFO = {
     { label: 'Thomas, Bianco, Paoli & Palma 2018, Int J Sports Med (Review)', url: 'https://doi.org/10.1055/s-0044-101146', note: 'Wöchentliche Dehnzeit (≥ 5 min) und Häufigkeit hängen mit mehr Beweglichkeit zusammen. Abstract geprüft.' },
     { label: 'Ingram, Tomkinson, d’Unienville et al. 2025, Sports Med (Meta-Analyse)', url: 'https://doi.org/10.1007/s40279-024-02143-9', note: '189 Studien: Beweglichkeit maximal bei etwa 4 min pro Einheit bzw. 10 min pro Woche, darüber kein Zusatznutzen. Abstract geprüft.' },
     { label: 'Alizadeh, Daneshjoo, Zahiri et al. 2023, Sports Med (Meta-Analyse)', url: 'https://doi.org/10.1007/s40279-022-01804-x', note: '55 Studien: Krafttraining verbessert Beweglichkeit wie Dehnen (nicht mit reinem Körpergewicht). Abstract geprüft.' },
-    { label: 'Garber et al. 2011, Med Sci Sports Exerc (ACSM Position Stand)', url: 'https://doi.org/10.1249/MSS.0b013e318213fefb', note: 'Leitlinie: Dehnübungen je Muskelgruppe insgesamt 60 s, an ≥ 2 Tagen pro Woche. Abstract geprüft.' },
+    { label: 'Garber et al. 2011, Med Sci Sports Exerc (ACSM Position Stand)', url: 'https://doi.org/10.1249/MSS.0b013e318213fefb', note: 'Leitlinie: für jede große Muskel-Sehnen-Gruppe Dehnübungen, je Übung insgesamt 60 s, an ≥ 2 Tagen pro Woche. Abstract geprüft.' },
     { label: 'Behm, Alizadeh, Daneshjoo et al. 2023, Sports Med Open (Meta-Analyse)', url: 'https://doi.org/10.1186/s40798-023-00652-x', note: '47 Studien: einmaliges Dehnen verbessert Beweglichkeit leicht; Dehnintensität ohne Einfluss. Abstract geprüft.' }
   ]
 };

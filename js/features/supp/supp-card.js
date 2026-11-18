@@ -43,9 +43,9 @@ export function suppIcon(x, size = 34) {
 const NOREC = 'Keine Empfehlung. Diese Angaben fassen Fachquellen zusammen und ersetzen keine ärztliche oder pharmazeutische Beratung. Ob ein Supplement für dich sinnvoll ist, klärst du am besten mit deiner Ärztin, deinem Arzt oder in der Apotheke.';
 function ironRef() {
   const sx = getProfile().sex;
-  if (sx === 'm') return 'Bedarf laut DGE (2024) für Männer: 11 mg/Tag.';
-  if (sx === 'f') return 'Bedarf laut DGE (2024) für Frauen: 14–16 mg/Tag (je nach Alter; in der Schwangerschaft 27 mg).';
-  return 'Bedarf laut DGE (2024): Männer 11 mg, Frauen 14–16 mg pro Tag.';
+  if (sx === 'm') return 'Bedarf laut DGE für Männer: 11 mg/Tag.';
+  if (sx === 'f') return 'Bedarf laut DGE für Frauen: 16 mg/Tag vor und 14 mg nach den Wechseljahren; in der Schwangerschaft 27 mg.';
+  return 'Bedarf laut DGE: Männer 11 mg, Frauen 16 mg (vor den Wechseljahren) bzw. 14 mg pro Tag.';
 }
 export function suppInfo(kind) {
   const c = SUPP_CAT_MAP[kind];
@@ -54,7 +54,7 @@ export function suppInfo(kind) {
   openInfo({
     title: c.name, note: NOREC,
     points: [['Was', c.what], ['Studienlage', `${evT} – ${c.study}${c.iron ? ' ' + ironRef() : ''}`],
-      ...(c.max ? [['BfR-Höchstmenge', `für Nahrungsergänzungsmittel ${String(c.max[0]).replace('.', ',')} ${c.max[1]} pro Tag`]] : []),
+      ...(c.max ? [['BfR-Höchstmenge', `${String(c.max[0]).replace('.', ',')} ${c.max[1]} je Tagesdosis eines Präparats (ab 15 Jahren)${c.maxNote ? '; ' + c.maxNote : ''}`]] : []),
       ['Vorsicht', c.care]],
     src: c.src
   });
@@ -149,7 +149,7 @@ function pickSheet(rerender) {
   let sheet = null;
   const pick = (kind) => { const x = addItem(kind); toast(`${x.name} hinzugefügt`); sheet.close(); rerender(); editSheet(x, rerender); };
   sheet = openSheet(h('div', {},
-    h('p', { class: 'small muted' }, 'Zu jedem Supplement gibt es ein ⓘ mit Studienlage, BfR-Höchstmenge und Quellen – keine Empfehlung.'),
+    h('p', { class: 'small muted' }, 'Zu den Supplements aus dem Katalog gibt es ein ⓘ mit Studienlage, Quellen und – wo vorhanden – der BfR-Höchstmenge. Keine Empfehlung.'),
     h('div', { class: 'card list' }, ...SUPP_CAT.map((c) => h('div', { class: 'row' },
       h('button', { class: 't plain-btn', type: 'button', onclick: () => pick(c.kind) },
         suppIcon(c, 28), h('span', {}, h('b', {}, c.name), h('small', {}, SUPP_EV[c.ev][0]))),

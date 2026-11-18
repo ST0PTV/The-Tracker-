@@ -23,8 +23,8 @@ test('Ohne eigene Zyklen: 29 Tage, Fenster breit, keine Längen', () => {
   assert.equal(a.own, false);
   assert.equal(a.avg, 29); assert.equal(a.min, 29); assert.equal(a.max, 29);
   assert.equal(a.last, '2026-10-18'); assert.equal(a.dayNo, 12);
-  assert.deepEqual(a.ovu, { lo: 15, hi: 18, sure: false });
-  assert.deepEqual(a.fert, { lo: 10, hi: 18 });
+  assert.deepEqual(a.ovu, { lo: 14, hi: 19, sure: false });
+  assert.deepEqual(a.fert, { lo: 9, hi: 19 });
 });
 
 test('Eigene Zyklen: Median, Spanne, Ausreißer > 60 Tage und Lücken zählen nicht, nur die letzten 6', () => {
@@ -35,8 +35,8 @@ test('Eigene Zyklen: Median, Spanne, Ausreißer > 60 Tage und Lücken zählen ni
   assert.equal(a.min, 27); assert.equal(a.max, 29);
   assert.equal(a.median, 28);
   assert.equal(a.spread, 2);
-  // Fenster: Eisprung 27−14 = 13 bis 29−11 = 18 → fruchtbar Tag 8 bis 18
-  assert.deepEqual(a.fert, { lo: 8, hi: 18 });
+  // Fenster: Eisprung 27−15 = 12 bis 29−10 = 19 → fruchtbar Tag 7 bis 19
+  assert.deepEqual(a.fert, { lo: 7, hi: 19 });
   assert.equal(a.bleedAvg, 5);
 });
 

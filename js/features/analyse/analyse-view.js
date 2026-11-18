@@ -48,7 +48,7 @@ export function averagesInfo() {
       'Jeder Tag wird mit dem Ziel verglichen, das an diesem Tag galt. „Im Zielbereich“ heißt: höchstens 10 % über oder unter dem Ziel. Die Balken zeigen das ohne Wertung.',
       'Beim Wasser zählen Tage mit Wasser-Einträgen, beim Koffein Tage mit Koffein. Koffein zur Bettzeit, Gewichtstrend und Energiebedarf sind Modellwerte, keine Messungen.'],
     points: [['Gewicht', 'Linie = geglätteter Trend (jeder neue Wert zählt 10 %). „pro Woche“ = Änderung dieses Trends im Zeitraum, auf eine Woche umgerechnet. Der Trend läuft echten Änderungen einige Tage hinterher.'], ['Eiweiß', 'Durchschnitt pro Tag gegen das Eiweißziel der jeweiligen Tage.']],
-    src: [['Walker J. The Hacker’s Diet (Trend)', null], ['Calorie-Tracker (ST0PTV) – Analytics', 'https://github.com/ST0PTV/Calorie-Tracker']]
+    src: [['Walker J. The Hacker’s Diet – Pencil and Paper (Trend mit 10 %)', 'https://www.fourmilab.ch/hackdiet/e4/pencilpaper.html'], ['Calorie-Tracker (ST0PTV) – Analytics', 'https://github.com/ST0PTV/Calorie-Tracker']]
   });
 }
 
@@ -71,10 +71,10 @@ export function openEnergy(today = isoDate()) {
     body: [...body, 'So rechnet die App: Bedarf ≈ Ø Aufnahme − Gewichtsänderung × 7.700 kcal/kg (ähnlich wie MacroFactor).'],
     points: [...(e.ok && cmp.length ? cmp.map(([l, v]) => [l, `${fmt(v)} kcal (${v - r50(e.tdee) >= 0 ? '+' : '−'}${fmt(Math.abs(v - r50(e.tdee)))})`]) : []),
       ['Unvollständige Tage', 'Vergessene Einträge lassen Aufnahme und Bedarf zu niedrig erscheinen.'],
-      ['Wasser statt Energie', 'Kreatin-Start, mehr Kohlenhydrate, Salz oder Ballaststoffe ändern das Gewicht ohne Energie (1–2 Wochen).'],
-      ['7.700 kcal pro kg', 'Faustregel; bei längerer Abnahme eher zu hoch.'],
+      ['Wasser statt Energie', 'Kreatin-Start, mehr Kohlenhydrate, Ballaststoffe oder Salz ändern das Gewicht ohne Energie. Die Schätzung kann dann für 1–2 Wochen danebenliegen.'],
+      ['7.700 kcal pro kg', 'Faustregel; passt am ehesten bei mäßigen Änderungen mit Übergewicht, sonst eher zu hoch.'],
       ['Spanne', '95-%-Intervall der Ausgleichsgeraden; die echte Unsicherheit ist größer, weil Wiegewerte nicht unabhängig schwanken.']],
-    src: [['MacroFactor – Algorithms and Core Philosophy (Methode; im Calorie-Tracker geprüft 13.10.2026)', null], ['Calorie-Tracker (ST0PTV) – js/insights.js', 'https://github.com/ST0PTV/Calorie-Tracker']]
+    src: [['MacroFactor – Algorithms and Core Philosophy (Methode)', 'https://macrofactor.com/macrofactors-algorithms-and-core-philosophy/'], ['Hall KD, Chow CC (2013). Why is the 3500 kcal per pound weight loss rule wrong? Int J Obes 37:1614', 'https://doi.org/10.1038/ijo.2013.112'], ['Calorie-Tracker (ST0PTV) – js/insights.js', 'https://github.com/ST0PTV/Calorie-Tracker']]
   });
 }
 

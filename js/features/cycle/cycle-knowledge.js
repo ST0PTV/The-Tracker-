@@ -12,7 +12,7 @@ import { icon } from '../../core/icons.js';
 // [Text, Link, Prüfung]
 export const CYCLE_REFS = [
   ['Mihm M, Gangooly S, Muttukrishna S. The normal menstrual cycle in women. Anim Reprod Sci 124 (2011) 229–236.', 'https://pubmed.ncbi.nlm.nih.gov/20869180/', 'PubMed-Abstract'],
-  ['Stricker R et al. Establishment of detailed reference values for LH, FSH, estradiol, and progesterone during different phases of the menstrual cycle. Clin Chem Lab Med 44 (2006) 883–887.', 'https://pubmed.ncbi.nlm.nih.gov/16776638/', 'PubMed-Abstract'],
+  ['Stricker R et al. Establishment of detailed reference values for luteinizing hormone, follicle stimulating hormone, estradiol, and progesterone during different phases of the menstrual cycle on the Abbott ARCHITECT analyzer. Clin Chem Lab Med 44 (2006) 883–887.', 'https://pubmed.ncbi.nlm.nih.gov/16776638/', 'PubMed-Abstract'],
   ['Anckaert E et al. Extensive monitoring of the natural menstrual cycle using the serum biomarkers estradiol, luteinizing hormone and progesterone. Pract Lab Med 25 (2021) e00211.', 'https://pubmed.ncbi.nlm.nih.gov/33869706/', 'PubMed-Abstract'],
   ['Bull JR et al. Real-world menstrual cycle characteristics of more than 600,000 menstrual cycles. npj Digit Med 2 (2019) 83.', 'https://pubmed.ncbi.nlm.nih.gov/31482137/', 'Volltext'],
   ['Baker FC, Siboza F, Fuller A. Temperature regulation in women: effects of the menstrual cycle. Temperature 7 (2020) 226–262.', 'https://pubmed.ncbi.nlm.nih.gov/33123618/', 'PubMed-Abstract'],
@@ -22,14 +22,14 @@ export const CYCLE_REFS = [
   ['Fehring RJ. Methods used to self-predict ovulation. A comparative study. JOGNN 19 (1990) 233–237.', 'https://pubmed.ncbi.nlm.nih.gov/2358920/', 'PubMed-Abstract'],
   ['Bigelow JL et al. Mucus observations in the fertile window: a better predictor of conception than timing of intercourse. Hum Reprod 19 (2004) 889–892.', 'https://pubmed.ncbi.nlm.nih.gov/14990542/', 'PubMed-Abstract'],
   ['Parenteau-Carreau S, Infante-Rivard C. Self-palpation to assess cervical changes in relation to mucus and temperature. Int J Fertil 33 Suppl (1988) 10–16.', 'https://pubmed.ncbi.nlm.nih.gov/2902020/', 'PubMed-Abstract'],
-  ['Munro MG, Critchley HOD, Fraser IS; FIGO. The two FIGO systems for normal and abnormal uterine bleeding symptoms … 2018 revisions. Int J Gynaecol Obstet 143 (2018) 393–408.', 'https://pubmed.ncbi.nlm.nih.gov/30198563/', 'Grenzwerte nur über Sekundärquelle (MSD Manual)'],
+  ['Munro MG, Critchley HOD, Fraser IS; FIGO. The two FIGO systems for normal and abnormal uterine bleeding symptoms … 2018 revisions. Int J Gynaecol Obstet 143 (2018) 393–408.', 'https://doi.org/10.1002/ijgo.12666', 'Volltext (Abb. 1)'],
   ['McNulty KL et al. The effects of menstrual cycle phase on exercise performance in eumenorrheic women: a systematic review and meta-analysis. Sports Med 50 (2020) 1813–1827.', 'https://pubmed.ncbi.nlm.nih.gov/32661839/', 'PubMed-Abstract'],
   ['Colenso-Semple LM et al. Current evidence shows no influence of women’s menstrual cycle phase on acute strength performance or adaptations to resistance exercise training. Front Sports Act Living 5 (2023) 1054542.', 'https://pubmed.ncbi.nlm.nih.gov/37033884/', 'PubMed-Abstract'],
-  ['D’Souza AC et al. Menstrual cycle phase-based resistance training. Med Sci Sports Exerc 58 (2026) 2255–2273.', 'https://pubmed.ncbi.nlm.nih.gov/42160459/', 'PubMed-Abstract'],
+  ['D’Souza AC et al. Menstrual cycle phase does not influence training-induced muscle hypertrophy or strength: a randomized controlled trial. Med Sci Sports Exerc 58 (2026) 2255–2273.', 'https://pubmed.ncbi.nlm.nih.gov/42160459/', 'PubMed-Abstract'],
   ['Elliott-Sale KJ et al. The effects of oral contraceptives on exercise performance in women: a systematic review and meta-analysis. Sports Med 50 (2020) 1785–1812.', 'https://pubmed.ncbi.nlm.nih.gov/32666247/', 'PubMed-Abstract'],
   ['Armour M et al. Exercise for dysmenorrhoea. Cochrane Database Syst Rev 2019;9:CD004142.', 'https://pubmed.ncbi.nlm.nih.gov/31538328/', 'PubMed-Abstract'],
   ['Klein DA, Poth MA. Amenorrhea: an approach to diagnosis and management. Am Fam Physician 87 (2013) 781–788.', 'https://pubmed.ncbi.nlm.nih.gov/23939500/', 'PubMed-Abstract'],
-  ['NICE NG88. Heavy menstrual bleeding: assessment and management.', 'https://www.nice.org.uk/guidance/ng88', 'Originalseite'],
+  ['NICE NG88 (2018, aktualisiert 2026). Heavy menstrual bleeding: assessment and management.', 'https://www.nice.org.uk/guidance/ng88', 'Originalseite'],
   ['NHS. Vaginal bleeding between periods or after sex.', 'https://www.nhs.uk/symptoms/vaginal-bleeding-between-periods-or-after-sex/', 'Originalseite']
 ];
 
@@ -39,35 +39,35 @@ const TEXTS = {
     ['Ein Follikel setzt sich durch', 'Etwa eine Woche vor dem Eisprung bildet ein führender Follikel immer mehr Östradiol [1].'],
     ['LH-Gipfel und Eisprung', 'Der steile Östradiol-Anstieg löst den LH-Anstieg aus, kurz darauf folgt der Eisprung [1]. Ein Eisprungtest misst dieses LH im Urin.'],
     ['Lutealphase', 'Aus dem Follikel wird der Gelbkörper. Er bildet Progesteron, am meisten etwa 6 bis 7 Tage nach dem Eisprung [1]. Ohne Schwangerschaft bildet er sich zurück, die Hormone fallen, und die nächste Periode beginnt.'],
-    ['Wie lang die Phasen sind', 'In 612.613 Zyklen mit Eisprung (Daten einer Zyklus-App) dauerte die Follikelphase im Mittel 16,9 Tage, meist zwischen 10 und 30. Die Lutealphase war mit 12,4 Tagen (meist 7 bis 17) beständiger [4].'],
-    ['Körpertemperatur', 'Nach dem Eisprung liegt die Körpertemperatur im Mittel 0,3 bis 0,7 °C höher, am deutlichsten im Schlaf oder direkt nach dem Aufwachen [5]. So lässt sich ein Eisprung im Nachhinein erkennen, nicht vorhersagen.']]],
+    ['Wie lang die Phasen sind', 'In 612.613 Zyklen mit Eisprung (Daten einer Zyklus-App) dauerte die Follikelphase im Mittel 16,9 Tage (Bereich laut Studie 10 bis 30), die Lutealphase 12,4 Tage (7 bis 17). Die Lutealphase schwankte weniger [4].'],
+    ['Körpertemperatur', 'Nach dem Eisprung liegt die Körpertemperatur etwa 0,3 bis 0,7 °C höher, am deutlichsten im Schlaf oder direkt nach dem Aufwachen [5]. So lässt sich ein Eisprung im Nachhinein erkennen, nicht vorhersagen.']]],
   mucus: ['So verändert sich der Zervixschleim', [
-    ['Vor dem Eisprung: mehr und flüssiger', 'Mit steigendem Östrogen wird der Schleim mehr und besser: von trocken über feucht und cremig bis glasig und dehnbar [7].'],
-    ['Höhepunkt', 'Der letzte Tag mit bester Qualität heißt Höhepunkt (Peak-Tag). In einer kleinen Studie mit 20 Frauen lag der LH-Anstieg immer am Höhepunkt-Tag oder bis zu 3 Tage davor [9].'],
+    ['Vor dem Eisprung: mehr und flüssiger', 'Mit steigendem Östrogen wird der Schleim mehr und besser: von trocken über feucht und cremig bis glasig und dehnbar [7], [8].'],
+    ['Höhepunkt', 'Der letzte Tag mit bester Qualität heißt Höhepunkt (Peak-Tag). In einer kleinen Studie mit 20 Frauen lag der per Test erkannte LH-Anstieg in 28 von 29 Zyklen am Höhepunkt-Tag oder bis zu 3 Tage davor; in 9 von 38 Zyklen wurde kein Anstieg erkannt [9].'],
     ['Wie lange und wie verlässlich', 'In 2.488 Zyklen gab es im Mittel 6,4 Tage mit Schleim bester Qualität (Median 6). Bei 72 % der Frauen schwankte diese Zahl zwischen ihren Zyklen um mehr als 3 Tage [7]. Die Tage mit bestem Schleim trafen in 96 % der Fälle mindestens einen der fruchtbaren Tage [8].'],
     ['Schleim und Empfängnis', 'Je besser die Schleimqualität an einem Tag, desto höher war die Chance auf eine Schwangerschaft an diesem Tag [10].']]],
   cervix: ['So verändert sich der Muttermund', [
     ['Rund um den Eisprung', 'Um den Eisprung wird der Muttermund höher, weicher und offener, danach wieder tiefer, fester und geschlossen [11].'],
     ['Zeitlicher Ablauf', 'In 215 Zyklusblättern lag der fruchtbarste Muttermund im Mittel weniger als einen Tag neben dem Schleim-Höhepunkt (Spanne etwa 3 Tage davor bis 6 Tage danach). Der Wechsel zurück dauerte 1 bis 7 Tage, im Mittel 2,65 [11].'],
-    ['Wie gut belegt', 'Zum Muttermund gibt es viel weniger Forschung als zu Schleim und Temperatur. Die Studie ist von 1988, und die Autorinnen nennen unerfahrene Anwenderinnen als Fehlerquelle [11].']]],
+    ['Wie gut belegt', 'Zum Muttermund fanden wir viel weniger Studien als zu Schleim und Temperatur. Die Studie ist von 1988, und die Autorinnen nennen unerfahrene Anwenderinnen als Fehlerquelle [11].']]],
   training: ['Zyklus und Training', [
-    ['Plane nicht nach Phasen', 'Kraft und Leistung schwanken über den Zyklus allenfalls trivial, am ehesten in der frühen Follikelphase [13]. Ob Hormonschwankungen Kraft oder Muskelaufbau beeinflussen, ist nicht belegt [14]. In einer Studie mit 24 Frauen brachte Training nach Zyklusphasen keinen Vorteil; entscheidend war die Trainingsmenge [15].'],
+    ['Plane nicht nach Phasen', 'Kraft und Leistung schwanken über den Zyklus allenfalls trivial, möglicherweise etwas in der frühen Follikelphase; die Belege sind schwach [13]. Ob Hormonschwankungen Kraft oder Muskelaufbau beeinflussen, ist nicht belegt [14]. In einer Studie mit 24 Frauen brachte Training nach Zyklusphasen keinen Vorteil für Muskelaufbau und Kraft; mit mehreren Anpassungen hing eher die Trainingsmenge zusammen [15].'],
     ['Während der Periode', 'Trainiere normal, wenn es dir gut geht. Wenn Krämpfe, Müdigkeit oder starke Blutung stören, ist ein leichterer Tag eine gute Wahl. Das entscheidest du, nicht der Kalender.'],
     ['Regelschmerzen', 'Regelmäßige Bewegung über Wochen (etwa 45 bis 60 Minuten, mindestens dreimal pro Woche) war in Studien mit weniger Regelschmerzen verbunden; die Belege sind von niedriger Qualität [17]. Das heißt nicht, dass du an einem schmerzhaften Tag trainieren musst.'],
     ['Mit Pille', 'Mit der Pille war die Leistung in Studien allenfalls minimal geringer [16]. Phasen-Hinweise passen dann nicht, weil die Hormone gleichmäßig zugeführt werden.'],
     ['Was die App bewusst nicht tut', 'Keine Trainingspläne nach Phase, keine Warnung vor schwerem Training an bestimmten Tagen, keine Aussagen zum Verletzungsrisiko. Dafür ist die Datenlage zu schwach.']]],
   doctor: ['Wann abklären lassen', [
-    ['Periode bleibt aus', 'Keine Periode seit 3 Monaten bei vorher regelmäßigem Zyklus oder seit 6 Monaten bei unregelmäßigem (ohne Schwangerschaft, Stillzeit oder Hormone) [18]. Die App zeigt den Hinweis immer schon nach 90 Tagen.'],
+    ['Periode bleibt aus', 'Keine Periode seit 3 Monaten bei vorher regelmäßigem Zyklus oder seit 6 Monaten bei unregelmäßigem (ohne Schwangerschaft, Stillzeit oder Hormone) [18]. Die App zeigt den Hinweis immer schon, wenn seit über 90 Tagen keine Periode eingetragen ist.'],
     ['Länge und Schwankung', 'Zyklen regelmäßig kürzer als 24 oder länger als 38 Tage, oder sie schwanken um mehr als 7 bis 9 Tage; eine Blutung länger als 8 Tage [12]. Die App weist schon bei drei Zyklen über 35 Tagen hin (Grenze aus dem IOC-Leitfaden REDs CAT2 für Sportlerinnen).'],
-    ['Starke Blutung', 'Eine Blutung, die deinen Alltag stark einschränkt. Die Ärztin prüft dann meist auch das Blutbild auf Eisenmangel [19].'],
+    ['Starke Blutung', 'Eine Blutung, die deinen Alltag spürbar beeinträchtigt. Die Leitlinie empfiehlt dann ein Blutbild [19].'],
     ['Zwischenblutung', 'Blutung zwischen den Perioden oder nach dem Sex [20].'],
     ['Schmerzen', 'Regelschmerzen, die trotz üblicher Behandlung nicht besser werden, oder Schmerzen außerhalb der Periode oder beim Sex.'],
-    ['Rasch', 'Periode ausgeblieben und dazu eine ungewöhnliche Blutung mit Bauchschmerzen: noch am selben Tag ärztlich abklären, weil es eine Schwangerschaft außerhalb der Gebärmutter sein kann [20].']]]
+    ['Rasch', 'Periode ausgeblieben und dazu eine ungewöhnliche Blutung mit Bauchschmerzen: dringend ärztlich abklären, weil es eine Schwangerschaft außerhalb der Gebärmutter sein kann [20].']]]
 };
 const NOTES = {
-  hormone: 'Schema für einen 28-Tage-Zyklus. Jede Kurve ist auf ihren eigenen Höchstwert skaliert, die Höhen sind nicht vergleichbar. Form nach [1], [2] und [3].',
-  mucus: 'Schema für einen 28-Tage-Zyklus nach [7] bis [9]. Bei dir können Länge und Reihenfolge abweichen.',
-  cervix: 'Schema für einen 28-Tage-Zyklus nach [11]. Lage, Festigkeit und Öffnung sind zu einer Kurve zusammengefasst.'
+  hormone: 'Schema für einen 28-Tage-Zyklus, am LH-Gipfel ausgerichtet. Die Höhen der Kurven sind nicht vergleichbar. Form nach [1], [2] und [3].',
+  mucus: 'Vereinfachtes Schema für einen 28-Tage-Zyklus nach [7] bis [9]; die Tageswerte sind eine Skizze. Bei dir können Länge und Reihenfolge abweichen.',
+  cervix: 'Vereinfachtes Schema für einen 28-Tage-Zyklus nach [11]. Lage, Festigkeit und Öffnung sind zu einer Kurve zusammengefasst.'
 };
 const HORMONES = [
   { key: 'fsh', short: 'FSH', pts: [[-14, .62], [-11, .55], [-7, .42], [-3, .3], [-1, .45], [0, .7], [1, .45], [3, .28], [8, .22], [12, .32], [14, .6]] },

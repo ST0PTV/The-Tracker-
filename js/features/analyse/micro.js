@@ -35,7 +35,7 @@ export function microDay(entries, lookup) {
   return { vals, kcalAll, kcalKnown };
 }
 
-/** Durchschnitt pro Tag über die Tage mit Einträgen; pct = Anteil am Bezugswert (refOf, Standard NRV; seit 0.3.0
+/** Durchschnitt pro Tag über die Tage mit Einträgen; pct = Anteil am Bezugswert (refOf; die App übergibt immer den DGE-Wert, der NRV-Standard dient nur Tests; seit 0.3.0
  *  in der App die DGE-Werte der Person); cov = Anteil der kcal mit BLS-Werten. */
 export function microAvg(dayLists, lookup, refOf = (k) => MICRO_META[k][2]) {
   const days = dayLists.filter((l) => l.some((e) => !e.link));

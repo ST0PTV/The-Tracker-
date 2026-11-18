@@ -19,7 +19,7 @@ export const GLOSSARY = [
   ['Supersatz', 'Übungen abwechselnd, je ein Satz. Pause erst nach der Runde.'],
   ['Max-Kraft (Schätzung)', 'Geschätztes Gewicht für eine Wiederholung (e1RM, Epley-Formel) aus deinem besten Satz mit 1–10 Wiederholungen. Kein Messwert.'],
   ['Bester Satz', 'Dein schwerster Arbeitssatz (bei gleichem Gewicht: mehr Wiederholungen). Gemessen, kein Schätzwert.'],
-  ['Tagesform', 'Änderungen unter etwa ±5 % sind normale Schwankung, kein echter Fortschritt oder Rückschritt.'],
+  ['Tagesform', 'Änderungen unter etwa ±5 % lassen sich nicht von normaler Schwankung trennen (Annahme der App; ein gemessenes Maximum schwankt typisch um etwa 4 %).'],
   ['Leicht · Passend · Schwer', 'Deine Einschätzung nach der Übung: Wie viele Wiederholungen wären noch gegangen? 4+ · 1–3 · keine.'],
   ['Wiederholungsbereich', 'Zum Beispiel 8–12: erst Wiederholungen steigern, am oberen Ende kommt mehr Gewicht.'],
   ['Volumen', 'Hier: Zahl der Arbeitssätze je Muskelgruppe.'],

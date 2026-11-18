@@ -75,8 +75,14 @@ export function expenditure({ today, kcalOf, loggedOf, log }) {
   const reg = regression(weighs.map((x) => [dayDiff(start, x.iso), x.kg]));
   if (!reg) return { ...base, ok: false };
   const tdee = intake - reg.slope * INS_KCAL_KG;
-  const half = 1.96 * reg.se * INS_KCAL_KG;
+  const half = tCrit95(weighs.length - 2) * reg.se * INS_KCAL_KG;
   return { ...base, ok: true, intake, slopeWeek: reg.slope * 7, tdee, lo: tdee - half, hi: tdee + half };
+}
+
+/** Zweiseitiges 95-%-Quantil der t-Verteilung (df Freiheitsgrade); ab 30 nahe 1,96. */
+export function tCrit95(df) {
+  const T = [12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042];
+  return df >= 1 && df <= 30 ? T[df - 1] : 1.96;
 }
 
 /** Tag gegen das damals gültige Ziel: 'ok' (±10 %), 'over', 'low' (deutlich darunter) oder null ohne Ziel. */

@@ -21,7 +21,7 @@ export function snackInfo() {
     title: 'Snack-Rahmen',
     body: ['Der Rahmen ist ein Teil deines Tagesziels: 10 % für Snacks, bei zwei Hauptmahlzeiten zweimal 15 %. Hauptmahlzeiten über ihrem Rahmen nehmen davon etwas weg, Mahlzeiten darunter geben Platz dazu.',
       'Je Lebensmittel zeigt die App eine übliche Portion – oder so viel, wie noch in den Rahmen passt und im Vorrat ist. Gesund oder nicht spielt dabei keine Rolle.',
-      'Portionen sind Richtwerte (italienische Referenzportionen SINU/LARN 2024, wie im Rezeptbuch); bei Packungen gilt die Portion der Packung, wenn sie kleiner ist.'],
+      'Portionen sind Richtwerte, angelehnt an italienische Standardportionen (SINU/LARN 2024, wie im Rezeptbuch); einige sind kleiner oder eigene Schätzungen. Bei Packungen gilt die Portion der Packung, wenn sie kleiner ist.'],
     src: [['SINU (2024). LARN – Livelli di assunzione di riferimento di nutrienti ed energia, V revisione: Porzioni standard', null],
       ['Rezeptbuch (JuliaKelp) – Snack-Rahmen und Portionen, MIT', 'https://github.com/juliakelp/Rezeptbuch']]
   });

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { weightTrend, regression, expenditure, goalState, daysBack, INS_ALPHA, INS_KCAL_KG } from '../js/features/analyse/insights.js';
+import { weightTrend, regression, expenditure, goalState, daysBack, tCrit95, INS_ALPHA, INS_KCAL_KG } from '../js/features/analyse/insights.js';
 import { microDay, microAvg, MICRO_META } from '../js/features/analyse/micro.js';
 import { stomachEvents, halfLife, remain, stomachAt, emptyAt, sexFactor } from '../js/features/analyse/stomach.js';
 import { addDays } from '../js/core/format.js';
@@ -95,4 +95,11 @@ test('Trend pro Woche aus Trendpunkten', async () => {
   assert.equal(trendPerWeek([{ d: '2026-10-01', t: 80 }]), null);
   near(trendPerWeek([{ d: '2026-10-01', t: 80 }, { d: '2026-10-08', t: 79.5 }]), -0.5, 1e-12);
   near(trendPerWeek([{ d: '2026-10-01', t: 80 }, { d: '2026-10-15', t: 79 }]), -0.5, 1e-12);
+});
+
+test('Energiebedarf: 95-%-Spanne nutzt den t-Wert (wenige Wiegewerte = breiter)', () => {
+  assert.equal(tCrit95(4), 2.776);
+  assert.equal(tCrit95(30), 2.042);
+  assert.equal(tCrit95(60), 1.96);
+  assert.equal(tCrit95(0), 1.96);
 });

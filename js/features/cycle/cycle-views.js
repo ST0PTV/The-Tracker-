@@ -101,7 +101,7 @@ export function flagsCard(a) {
   return h('section', { class: 'card cy-flags' },
     h('div', { class: 'card-head' }, h('h2', {}, 'Zum Ansprechen'), icon('info', { size: 18 })),
     h('ul', {}, ...list.map((f) => h('li', {}, f.text))),
-    h('p', { class: 'small muted' }, 'Das kann viele harmlose Gründe haben (Stress, Reisen, Krankheit, Gewichtsänderung, viel Training). Wenn es öfter vorkommt oder dich beunruhigt, sprich es bei deiner Frauenärztin an. Rasch abklären: Periode ausgeblieben und dazu ungewöhnliche Blutung mit Bauchschmerzen.'),
+    h('p', { class: 'small muted' }, (list.some((f) => f.id === 'between') ? 'Blutung zwischen den Perioden lässt du am besten immer ärztlich abklären. ' : '') + 'Das kann viele Gründe haben, zum Beispiel Stress, Krankheit, Gewichtsänderung oder viel Training. Wenn es öfter vorkommt oder dich beunruhigt, sprich es bei deiner Frauenärztin an. Rasch abklären: Periode ausgeblieben und dazu ungewöhnliche Blutung mit Bauchschmerzen.'),
     h('a', { class: 'link small', href: '#/zyklus/bericht' }, 'Bericht für die Ärztin'));
 }
 
@@ -113,8 +113,8 @@ export function calendarView(rerender) {
   return h('div', { class: 'cy' },
     ...cycleHead('/zyklus'),
     a.last ? h('p', { class: 'cy-sub' }, h('b', {}, `Zyklustag ${a.dayNo}`), ` · ${M.nextText(a, today, { phase: c.phase })}`) : h('p', { class: 'small muted' }, 'Tipp auf den ersten Tag deiner letzten Periode und trag die Blutung ein.'),
-    kind === 'kombi' ? h('p', { class: 'hint small' }, 'Mit Pille, Ring oder Pflaster ist die Blutung eine Entzugsblutung. Fruchtbare Tage und Phasen zeigt die App deshalb nicht.') : null,
-    kind === 'gestagen' ? h('p', { class: 'hint small' }, 'Mit Minipille, Spritze, Implantat oder Hormonspirale ist der Zyklus oft unregelmäßig. Vorhersagen sind unzuverlässig, fruchtbare Tage blendet die App aus.') : null,
+    kind === 'kombi' ? h('p', { class: 'hint small' }, 'Mit Pille, Ring oder Pflaster ist die Blutung in der Pause meist eine Entzugsblutung, kein natürlicher Zyklus. Fruchtbare Tage und Phasen zeigt die App deshalb nicht.') : null,
+    kind === 'gestagen' ? h('p', { class: 'hint small' }, 'Mit Minipille, Spritze, Implantat oder Hormonspirale können Blutungen unregelmäßig sein. Vorhersagen sind unzuverlässig, fruchtbare Tage blendet die App aus.') : null,
     calendarCard(a, rerender),
     h('a', { class: 'btn primary block', href: `#/zyklus/tag?d=${today}` }, 'Heute eintragen'),
     flagsCard(a),
@@ -237,7 +237,7 @@ function tempChart(a) {
   s.append(el('text', { x: L, y: B + 18, class: 'ax' }, 'Tag 1'));
   s.append(el('text', { x: X(a.dayNo).toFixed(1), y: B + 18, 'text-anchor': 'middle', class: 'ax' }, 'heute'));
   return h('section', { class: 'card' }, h('h3', {}, 'Basaltemperatur'), s,
-    h('p', { class: 'small muted' }, 'Leere Punkte: Messung mit Störung, nicht verbunden. Nach dem Eisprung liegt die Körpertemperatur im Mittel 0,3 bis 0,7 °C höher, am deutlichsten im Schlaf oder direkt nach dem Aufwachen (Baker 2020). Das zeigt einen Eisprung im Nachhinein, nicht vorher.'));
+    h('p', { class: 'small muted' }, 'Leere Punkte: Messung mit Störung, nicht verbunden. Nach dem Eisprung liegt die Körpertemperatur etwa 0,3 bis 0,7 °C höher (Kerntemperatur, Baker 2020); für die Basaltemperatur nennt Bull 2019 0,2 bis 0,3 °C. Das zeigt einen Eisprung im Nachhinein, nicht vorher.'));
 }
 
 // 0.5.0: Beschwerden und Stimmung über die letzten Zyklen (Häufigkeit und Lage zur Periode, ohne Deutung)

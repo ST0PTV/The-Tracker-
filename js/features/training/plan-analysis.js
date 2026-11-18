@@ -5,8 +5,8 @@
 //
 // Maßstab (Nutzerwahl 2026-10-25: „Relativ + Spannen als Schätzung“; ändert Entscheidung 2.23.0):
 // - Relativ: Balance Beine vorn/hinten und Drücken/Ziehen (Schwellen = Konvention, siehe Unverified 290).
-// - Frequenz: große Muskeln mind. 2× pro Woche (Schoenfeld et al. 2016, Sports Med 46:1689; Abstract).
-// - Spanne: ≥ 10 Sätze pro Woche fürs Muskelwachstum (ACSM 2026, Currier et al.; Schoenfeld et al. 2017; Abstract) –
+// - Frequenz: große Muskeln mind. 2× pro Woche (Schoenfeld et al. 2016, Sports Med 46:1689; Volltext: höher vs. niedriger bei meist gleichem Volumen, „2×“ ist Folgerung der Autoren).
+// - Spanne: ≥ 10 Sätze pro Woche fürs Muskelwachstum (ACSM 2026, Currier et al., Abstract; Schoenfeld et al. 2017 J Sports Sci: 10+ nur Trend, Volltext) –
 //   nur als Orientierung, niedrigste Priorität.
 // - Dauer: Schätzung wie im Plan-Assistenten (40 s je Satz + Pause, 5 min Aufwärmen); Hinweis ab 75 min (Konvention).
 // Zählweise wie in der Muskelkarte: direkt 1, indirekt 0,5 (week.js, Pelland et al. 2026).
@@ -152,7 +152,7 @@ export function analysePlans({ plans, exercises, settings, sessions, now = new D
       const pick = target && pickFor(muscles, slots, target, exercises, settings);
       if (!pick) continue;
       add({ id: `freq-${g}`, kind: 'frequency', priority: 3, muscles, title: `${BIG_LABELS[g]} nur 1× pro Woche`,
-        detail: `Große Muskeln wuchsen in Studien mit 2× pro Woche besser als mit 1×. Eine Übung in „${target.name}“ ergänzt das.`,
+        detail: `Große Muskeln wuchsen in einer Meta-Analyse mit 2× pro Woche besser als mit 1×; neuere Übersichten fanden keinen klaren Unterschied (ACSM 2026: bei gleichem Volumen). Eine Übung in „${target.name}“ ergänzt das.`,
         changes: [{ type: 'add', planId: target.id, ...pick, sets: 2, gain: `${BIG_LABELS[g]} 2× pro Woche` }] });
       used.add(g);
     }

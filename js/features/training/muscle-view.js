@@ -29,7 +29,7 @@ export const WEEK_INFO = {
     'So liest du die Liste: Die Zahl rechts ist die Summe. Der volle Teil des Balkens sind direkte Sätze, der gestreifte Teil indirekte Sätze, die nur halb zählen. Beispiel: 6 direkte und 11 indirekte Sätze ergeben 6 + 5,5 = 11,5. Der Balken ist am höchsten Wert der Woche ausgerichtet und kein Ziel.',
     'Gezählt werden harte Sätze aus abgeschlossenen Trainings: Arbeits-, Drop- und Rest-Pause-Sätze (je 1). Aufwärmsätze und Cardio zählen nicht.',
     `Für den primären Muskel zählt ein Satz 1, für sekundär beteiligte Muskeln ${String(INDIRECT_FACTOR).replace('.', ',')} („indirekt“). Diese Zählweise sagte in einer großen Meta-Regression Muskelzuwachs und Kraft am besten vorher.`,
-    'Die 0,5 sind eine Konvention: Eine explorative Auswertung kam eher auf 16–32 %. Deshalb stehen direkte und indirekte Sätze getrennt da.',
+    'Die 0,5 sind eine Näherung: Von drei geprüften Zählweisen passte sie in einer Meta-Regression am besten. Eine spätere explorative, nicht begutachtete Auswertung kam eher auf etwa 16 % (Kraft) bis 32 % (Muskelwachstum). Deshalb stehen direkte und indirekte Sätze getrennt da.',
     'Welcher Muskel primär oder sekundär ist, stammt aus der Recherche zum Übungspool (überwiegend EMG-Studien) bzw. aus deinen eigenen Angaben.',
     'Die Farben sind nur Darstellungsstufen, keine Empfehlung. Die App gibt bewusst keine Zielwerte vor.'
   ],

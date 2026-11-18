@@ -10,7 +10,7 @@
 // - Untergrenze ohne fachliche Begleitung: Frauen 1.200, Männer 1.500 kcal (Harvard Health), aus profile.kcalFloor.
 // - Grundumsatz-Schätzung nach DGE/Verbraucherzentrale (Müller et al. 2004): Mittelwert vieler Menschen,
 //   im Einzelfall oft 10 % und mehr daneben. Ohne Geschlecht Mittel beider Formeln.
-// - Erhaltungsbedarf von der Uhr wird von Hand eingetragen (kein Apple Health); Uhren schätzen den Verbrauch oft zu hoch.
+// - Erhaltungsbedarf von der Uhr wird von Hand eingetragen (kein Apple Health); Uhren schätzen den Verbrauch oft ungenau (Fuller et al. 2020).
 import { kcalFloor } from '../../core/profile.js';
 import { addDays } from '../../core/format.js';
 
@@ -78,8 +78,8 @@ export function wgPlan(w, o, ctx) {
     earliest = addDays(ctx.today, Math.ceil(Math.abs(dkg) / kgw * 7));
     perDay = Math.sign(dkg) * kgw * WG_KCAL_PER_KG / 7;
     warn.push(dir === 'lose'
-      ? `Zu schnell: Bis ${wgDateFmt(o.date)} wären es ${pct2(weekPct)} % des Körpergewichts pro Woche. Gesund sind höchstens 1 % (NHS: 0,5–1 kg pro Woche) – sonst geht mehr Muskulatur verloren. Frühestens realistisch: ${wgDateFmt(earliest)}.`
-      : `Zu schnell: Bis ${wgDateFmt(o.date)} wären es ${pct2(weekPct)} % des Körpergewichts pro Woche. Sinnvoll sind höchstens 0,5 % – mehr Zunahme ist überwiegend Fett. Frühestens realistisch: ${wgDateFmt(earliest)}.`);
+      ? `Zu schnell: Bis ${wgDateFmt(o.date)} wären es ${pct2(weekPct)} % des Körpergewichts pro Woche. Empfohlen sind höchstens 1 % (NHS: 0,5–1 kg pro Woche). Bei schnellerem Tempo geht eher mehr Muskulatur verloren – das zeigen Studien an Kraftsportlern. Frühestens realistisch: ${wgDateFmt(earliest)}.`
+      : `Zu schnell: Bis ${wgDateFmt(o.date)} wären es ${pct2(weekPct)} % des Körpergewichts pro Woche. Sinnvoll sind höchstens 0,5 % (mit viel Trainingserfahrung eher 0,25 %). Bei schnellerer Zunahme steigt eher der Fettanteil. Frühestens realistisch: ${wgDateFmt(earliest)}.`);
   }
   let goal = maint + perDay;
   if (dir === 'lose' && goal < floor) {
@@ -116,12 +116,16 @@ export function weeklyTrend(log, today) {
   return { avg, prev: prev.length ? mean(prev) : null, diff: prev.length ? avg - mean(prev) : null };
 }
 
-// Quellen wie im Calorie-Tracker angegeben (nur Autor/Jahr; nicht neu geprüft, keine Links aus dem Gedächtnis)
+// Quellen geprüft im App-Text-Audit (16.11.2026, Volltext bzw. Webseite). Reihenfolge: 0–5 Gewichtsziel, 6–9 Tagesbedarf, 7 PAL.
 export const WG_REFS = [
-  ['NHS – Abnehmen: 0,5–1 kg pro Woche', null],
-  ['Harvard Health – Untergrenze 1.200 / 1.500 kcal ohne fachliche Begleitung', null],
-  ['Thomas et al. (2013) – 3.500-kcal-Regel überschätzt die Abnahme', null],
-  ['Helms et al. (2014) – Abnahmetempo 0,5–1 % pro Woche', null],
-  ['Iraki et al. (2019) – Zunahmetempo bei Krafttraining', null],
-  ['DGE · Verbraucherzentrale · Müller et al. (2004) – Grundumsatz-Formel, PAL', null]
+  ['NHS – Overweight and obesity: 0,5–1 kg pro Woche (abgerufen 16.11.2026)', 'https://www.nhs.uk/conditions/overweight-and-obesity/'],
+  ['Harvard Health (2024). Calorie counting made easy – Untergrenze 1.200 / 1.500 kcal', 'https://www.health.harvard.edu/staying-healthy/calorie-counting-made-easy'],
+  ['Thomas DM et al. (2013). Can a weight loss of one pound a week be achieved with a 3500-kcal deficit? Int J Obes 37:1611–1613', 'https://doi.org/10.1038/ijo.2013.51'],
+  ['Hall KD, Chow CC (2013). Why is the 3500 kcal per pound weight loss rule wrong? Int J Obes 37:1614', 'https://doi.org/10.1038/ijo.2013.112'],
+  ['Helms ER, Aragon AA, Fitschen PJ (2014). Evidence-based recommendations for natural bodybuilding contest preparation: nutrition and supplementation. J Int Soc Sports Nutr 11:20', 'https://doi.org/10.1186/1550-2783-11-20'],
+  ['Iraki J et al. (2019). Nutrition recommendations for bodybuilders in the off-season: a narrative review. Sports 7(7):154', 'https://doi.org/10.3390/sports7070154'],
+  ['Fuller D et al. (2020). Reliability and validity of commercially available wearable devices for measuring steps, energy expenditure, and heart rate. JMIR Mhealth Uhealth 8(9):e18694', 'https://doi.org/10.2196/18694'],
+  ['DGE (2015). Ausgewählte Fragen und Antworten zur Energiezufuhr – Formel für den Ruheenergieverbrauch, PAL-Werte', 'https://www.dge.de/fileadmin/dok/gesunde-ernaehrung/faq/DGE-FAQ-Energie-2015.pdf'],
+  ['Müller MJ et al. (2004). World Health Organization equations have shortcomings for predicting resting energy expenditure in persons from a modern, affluent population. Am J Clin Nutr 80:1379–1390 (Tab. 7, Modell 1)', 'https://doi.org/10.1093/ajcn/80.5.1379'],
+  ['Verbraucherzentrale NRW – Wie viel Energie benötigt der Körper? (abgerufen 16.11.2026)', 'https://www.verbraucherzentrale.nrw/wissen/lebensmittel/gesund-ernaehren/ernaehrung-umsatz-kalorien-wie-viel-energie-benoetigt-der-koerper-102519']
 ];

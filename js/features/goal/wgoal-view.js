@@ -17,21 +17,21 @@ const signedK = (v) => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${fmt(Math.abs(v))}
 export const wgInfo = () => openInfo({
   title: 'Gewichtsziel',
   body: ['Kalorienziel = Erhaltungsbedarf ± Energie für die gewünschte Gewichtsänderung. Gerechnet wird mit der Faustregel 7.700 kcal pro kg.',
-    'Die Faustregel überschätzt die Änderung über längere Zeit, weil sich der Verbrauch mitverändert. Deshalb rechnet die App mit jedem neuen Gewicht neu, wenn „automatisch anpassen“ an ist. Datum und kcal sind Schätzungen; am verlässlichsten ist der Abgleich mit dem echten Verlauf über einige Wochen.'],
-  points: [['Abnehmen', 'höchstens 1 % des Gewichts pro Woche (NHS: 0,5–1 kg); „Empfohlen“ = 0,75 %'], ['Zunehmen', 'höchstens 0,5 % pro Woche; „Empfohlen“ = 0,35 %'], ['Untergrenze', 'Frauen 1.200, Männer 1.500 kcal pro Tag – darunter nur mit fachlicher Begleitung']],
-  src: WG_REFS.slice(0, 5)
+    'Die Faustregel überschätzt die Änderung über längere Zeit, weil sich der Verbrauch mitverändert. Deshalb rechnet die App neu, sobald du das Gewicht für heute einträgst und „automatisch anpassen“ an ist. Datum und kcal sind Schätzungen; gleiche sie regelmäßig mit deinem echten Verlauf ab.'],
+  points: [['Abnehmen', 'höchstens 1 % des Gewichts pro Woche (eigene Grenze nach Helms: 0,5–1 % bei Kraftsportlern; NHS: 0,5–1 kg); „Empfohlen“ = 0,75 % (Mitte, eigene Wahl)'], ['Zunehmen', 'höchstens 0,5 % pro Woche (Iraki: 0,25–0,5 %, mit viel Trainingserfahrung eher 0,25 %); „Empfohlen“ = 0,35 % (eigene Wahl)'], ['Untergrenze', 'Frauen 1.200, Männer 1.500 kcal pro Tag – darunter nur mit fachlicher Begleitung']],
+  src: WG_REFS.slice(0, 6)
 });
 const srcInfo = () => openInfo({
   title: 'Tagesbedarf',
   body: ['Der Erhaltungsbedarf ist, was du an einem Tag verbrauchst. Drei Wege:'],
-  points: [['Von der Uhr', 'Ø „Kalorien gesamt“ (Ruhe + aktiv) über einige Wochen, von Hand eingetragen. Uhren schätzen den Verbrauch oft zu hoch.'], ['Grundumsatz', 'Ruhekalorien der Uhr mal Aktivitätsfaktor (PAL).'], ['Schätzen', 'Grundumsatz aus Gewicht, Alter und Geschlecht (DGE-Formel) mal PAL. Ein Mittelwert für viele Menschen – im Einzelfall oft 10 % und mehr daneben.']],
-  src: WG_REFS.slice(5)
+  points: [['Von der Uhr', 'Ø „Kalorien gesamt“ (Ruhe + aktiv) über einige Wochen, von Hand eingetragen. Uhren schätzen den Verbrauch oft ungenau – je nach Marke zu hoch oder zu niedrig, insgesamt eher zu niedrig.'], ['Grundumsatz', 'Ruhekalorien der Uhr mal Aktivitätsfaktor (PAL).'], ['Schätzen', 'Grundumsatz aus Gewicht, Alter und Geschlecht (Formel der DGE) mal PAL – genau genommen der Ruheumsatz, etwa 10 % über dem Grundumsatz. Ein Mittelwert für viele Menschen; im Einzelfall nicht selten 200 kcal und mehr daneben.']],
+  src: WG_REFS.slice(6)
 });
 const palInfo = () => openInfo({
   title: 'Aktivität (PAL)',
   body: ['Der PAL-Wert (physical activity level) beschreibt die Alltagsaktivität: Gesamtbedarf = Grundumsatz × PAL.'],
   points: [['1,4', 'überwiegend sitzend, z. B. Büro'], ['1,6', 'sitzend, zeitweise gehend oder stehend'], ['1,8', 'überwiegend gehend oder stehend'], ['2,0+', 'körperlich anstrengende Arbeit'], ['+0,3', 'Sport 4–5× pro Woche je 30–60 min']],
-  src: [['DGE', null]]
+  src: WG_REFS.slice(7, 8)
 });
 
 // Sport-Zuschlag: Teil des Rechners (Entwurf), darum Schalter ohne Speichern
@@ -59,7 +59,7 @@ export function wgoalView(rerender) {
   // und die Rechnung neu zeichnen (nicht die ganze Quelle), damit der Griff nicht abreißt.
   const PAL_MIN = 1.2, PAL_MAX = 2.2;
   const palFmt = (v) => v.toFixed(2).replace(/0$/, '').replace('.', ',');
-  const palLabel = (v) => (v < 1.5 ? 'sitzend' : v < 1.7 ? 'gemischt' : v < 1.9 ? 'viel auf den Beinen' : 'körperlich schwer');
+  const palLabel = (v) => (v < 1.55 ? 'sitzend' : v < 1.75 ? 'gemischt' : v < 1.95 ? 'viel auf den Beinen' : 'körperlich schwer');
   function palSlider() {
     const val = h('b', { class: 'pal-val' });
     const txt = h('span', { class: 'pal-txt' });

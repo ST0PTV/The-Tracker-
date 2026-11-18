@@ -15,10 +15,10 @@ import { enterWeight } from './weight.js';
 export function weightInfo() {
   openInfo({
     title: 'Gewicht',
-    body: ['Das Tagesgewicht schwankt durch Wasser, Salz und Essen oft um 1–2 kg. Aussagekräftiger ist der Trend: Die Karte vergleicht das Mittel der letzten 7 Tage mit den 7 Tagen davor.',
-      'Am besten morgens, nach dem Aufstehen und vor dem Frühstück wiegen – immer unter ähnlichen Bedingungen.',
-      'Mit Gewichtsziel und „automatisch anpassen“ rechnet die App bei jedem neuen Gewicht für heute das Kalorienziel neu.'],
-    src: WG_REFS.slice(2, 3)
+    body: ['Das Tagesgewicht schwankt durch Salz, Kohlenhydratspeicher und Darminhalt von Tag zu Tag. Aussagekräftiger ist der Trend: Die Karte vergleicht das Mittel der letzten 7 Tage mit den 7 Tagen davor.',
+      'Am besten immer unter ähnlichen Bedingungen wiegen, z. B. morgens nach dem Aufstehen.',
+      'Mit Gewichtsziel und „automatisch anpassen“ rechnet die App das Kalorienziel neu, sobald du das Gewicht für heute einträgst.'],
+    src: [...WG_REFS.slice(2, 3), ['MacroFactor – Algorithms and Core Philosophy (Gewicht schwankt von Tag zu Tag)', 'https://macrofactor.com/macrofactors-algorithms-and-core-philosophy/']]
   });
 }
 

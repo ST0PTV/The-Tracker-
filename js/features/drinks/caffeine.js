@@ -29,27 +29,27 @@ export function setCaffSettings(patch) { store.update('caffeine', (c) => Object.
 export const CAFF_CATS = [['coffee', 'Kaffee'], ['energy', 'Energy'], ['tea', 'Tee'], ['cola', 'Cola'], ['custom', 'Eigene']];
 export const CAFF_DRINKS = [
   { c: 'coffee', n: 'Filterkaffee', size: '200 ml', ml: 200, k100: 1, kq: 'bls', mg: 90, s: 'bfr' },
-  { c: 'coffee', n: 'Espresso', size: '30 ml', ml: 30, k100: 2, kq: 'bls', mg: 60, s: 'typ' },
-  { c: 'coffee', n: 'Doppelter Espresso', size: '60 ml', ml: 60, k100: 2, kq: 'bls', mg: 120, s: 'typ' },
+  { c: 'coffee', n: 'Espresso', size: '30 ml', ml: 30, k100: 2, kq: 'bls', mg: 40, s: 'bfr' },
+  { c: 'coffee', n: 'Doppelter Espresso', size: '60 ml', ml: 60, k100: 2, kq: 'bls', mg: 80, s: 'bfr' },
   { c: 'energy', n: 'Energy Drink', size: '250 ml', ml: 250, k100: 45, kq: 'web', mg: 80, s: 'bfr' },
   { c: 'energy', n: 'Energy Drink', size: '330 ml', ml: 330, k100: 45, kq: 'web', mg: 105, s: 'bfr' },
   { c: 'energy', n: 'Energy Drink', size: '500 ml', ml: 500, k100: 45, kq: 'web', mg: 160, s: 'bfr' },
-  { c: 'tea', n: 'Schwarztee', size: '200 ml', ml: 200, k100: 0, kq: 'bls', mg: 50, s: 'bfr' },
-  { c: 'tea', n: 'Grüntee', size: '200 ml', ml: 200, k100: 0, kq: 'bls', mg: 30, s: 'typ' },
-  { c: 'cola', n: 'Cola', size: '330 ml', ml: 330, k100: 41, kq: 'bls', mg: 33, s: 'bfr' },
-  { c: 'cola', n: 'Cola', size: '500 ml', ml: 500, k100: 41, kq: 'bls', mg: 50, s: 'bfr' }
+  { c: 'tea', n: 'Schwarztee', size: '200 ml', ml: 200, k100: 0, kq: 'bls', mg: 45, s: 'bfr' },
+  { c: 'tea', n: 'Grüntee', size: '200 ml', ml: 200, k100: 0, kq: 'bls', mg: 30, s: 'bfr' },
+  { c: 'cola', n: 'Cola', size: '330 ml', ml: 330, k100: 41, kq: 'bls', mg: 35, s: 'bfr' },
+  { c: 'cola', n: 'Cola', size: '500 ml', ml: 500, k100: 41, kq: 'bls', mg: 53, s: 'bfr' }
 ];
 export const drinkKcal = (d) => Math.round((d.ml * d.k100) / 100);
 
 // Vorschläge (mg pro 100 ml) nur für Flüssigkeiten, Werte wie in CAFF_DRINKS (aus dem Calorie-Tracker)
 const GUESS = [
   [/red\s?bull|monster|rockstar|relentless|energy|28\s?black|booster/i, 32, 'Energy Drinks (80 mg je 250 ml, BfR)'],
-  [/espresso|ristretto/i, 200, 'Espresso (ca. 60 mg je 30 ml, üblicher Wert, nicht belegt)'],
+  [/espresso|ristretto/i, 133, 'Espresso (80 mg je 60 ml, BfR)'],
   [/club-?\s?mate|\bmate\b/i, 20, 'Mate-Limonaden (ca. 20 mg/100 ml, üblicher Wert, nicht belegt)'],
   [/kaffee|coffee|cappuccino|latte|cold brew|americano/i, 45, 'Filterkaffee (90 mg je 200 ml, BfR) – Milchkaffee enthält oft weniger'],
-  [/(^|[^a-zäöü])(cola|coke|pepsi)/i, 10, 'Cola (33 mg je 330 ml, BfR)'],
-  [/schwarztee|schwarzer tee|black tea|earl grey|assam|darjeeling/i, 25, 'Schwarztee (50 mg je 200 ml, BfR)'],
-  [/grüntee|grüner tee|green tea|matcha/i, 15, 'Grüntee (ca. 30 mg je 200 ml, üblicher Wert, nicht belegt)']
+  [/(^|[^a-zäöü])(cola|coke|pepsi)/i, 11, 'Cola (35 mg je 330 ml, BfR)'],
+  [/schwarztee|schwarzer tee|black tea|earl grey|assam|darjeeling/i, 22, 'Schwarztee (45 mg je 200 ml, BfR)'],
+  [/grüntee|grüner tee|green tea|matcha/i, 15, 'Grüntee (30 mg je 200 ml, BfR)']
 ];
 const NO_GUESS = /koffeinfrei|entkoffeiniert|decaf|caffeine.?free|ohne koffein|sahne|weißer|weisser|malzkaffee|getreidekaffee|zichorie|likör|likoer|bohnen|pulver|instant/i;
 
@@ -176,12 +176,12 @@ export function loadDemoCaffeine(map) {
   changed();
 }
 
-// Quellen (in „Ich → Quellen & Lizenzen“ und im ⓘ); aus dem Rezeptbuch, nicht neu per Websuche geprüft
+// Quellen (in „Ich → Quellen & Lizenzen“ und im ⓘ); geprüft im App-Text-Audit 16.11.2026 (Volltext bzw. Webseite)
 export const CAFF_REFS = [
   ['EFSA NDA Panel (2015). Scientific Opinion on the safety of caffeine. EFSA Journal 13(5):4102.', 'https://doi.org/10.2903/j.efsa.2015.4102'],
   ['Drake C et al. (2013). Caffeine effects on sleep taken 0, 3, or 6 hours before going to bed. J Clin Sleep Med 9(11):1195–1200.', 'https://doi.org/10.5664/jcsm.3170'],
-  ['Seng KY et al. (2009). Population pharmacokinetics of caffeine in healthy male adults. J Clin Pharm Ther 34(1):103–114.', 'https://doi.org/10.1111/j.1365-2710.2008.00976.x'],
-  ['Blanchard J (1983). The absolute bioavailability of caffeine in man. Eur J Clin Pharmacol.', null],
-  ['Abernethy DR, Todd EL (1985). Impairment of caffeine clearance by chronic use of low-dose oestrogen-containing oral contraceptives.', null],
-  ['Bundesregierung (nach BfR/EFSA): „Koffein: Die Dosis macht’s“ – Energy Drink ca. 80 mg je 250 ml, Gleichwerte für Kaffee, Tee und Cola.', 'https://www.bundesregierung.de/breg-de/aktuelles/koffein-die-dosis-machts-1649340']
+  ['Seng KY et al. (2009). Population pharmacokinetics of caffeine in healthy male adults using mixed-effects models. J Clin Pharm Ther 34:103–114.', 'https://doi.org/10.1111/j.1365-2710.2008.00976.x'],
+  ['Blanchard J, Sawers SJA (1983). The absolute bioavailability of caffeine in man. Eur J Clin Pharmacol 24:93–98.', 'https://doi.org/10.1007/BF00613933'],
+  ['Abernethy DR, Todd EL (1985). Impairment of caffeine clearance by chronic use of low-dose oestrogen-containing oral contraceptives. Eur J Clin Pharmacol 28:425–428.', 'https://doi.org/10.1007/BF00544361'],
+  ['Bundesregierung (2019, nach BfR/EFSA): „Koffein: Die Dosis macht’s“ – Tabelle Koffein pro Portion (Filterkaffee, Espresso, Tee, Cola, Energy Drink).', 'https://www.bundesregierung.de/breg-de/aktuelles/koffein-die-dosis-machts-1649340']
 ];

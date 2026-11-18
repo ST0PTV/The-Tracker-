@@ -25,12 +25,12 @@ function microInfo() {
     title: 'Mikronährstoffe',
     note: 'Keine Empfehlung und keine Aussage über eine Unterversorgung.',
     body: ['Durchschnitt pro Tag über die Tage mit Einträgen im gewählten Zeitraum, berechnet aus den Nährwerten des Bundeslebensmittelschlüssels (BLS 4.0).',
-      'Der Balken zeigt den Anteil am DGE-Referenzwert für dein Alter und Geschlecht (ohne Angabe: 30 Jahre). Referenzwerte gelten für Gesunde und sind eine Orientierung, kein persönlich gemessener Bedarf.'],
+      'Der Balken zeigt den Anteil am DGE-Referenzwert für dein Alter und Geschlecht (ohne Angabe: 30 Jahre; bei Eisen zählt auch die Regelblutung). Referenzwerte sind eine Orientierung für die Zufuhr, kein persönlich gemessener Bedarf.'],
     points: [['Nur BLS-Lebensmittel', 'Gescannte, eigene und „nur kcal“-Einträge haben keine Werte; „Abdeckung“ zeigt, welcher Anteil der Kalorien eingerechnet ist.'],
-      ['Angereicherte Produkte', 'Mit B12, Calcium, Jod oder Vitamin D angereicherte Pflanzendrinks, Salze usw. stehen meist nicht im BLS – gerade bei veganer Ernährung wird dann zu wenig angezeigt.'],
+      ['Angereicherte Produkte', 'Angereicherte Pflanzendrinks und Jodsalz stehen als eigene Einträge im BLS. Wer die nicht angereicherte Sorte wählt oder scannt, sieht zu wenig – gerade bei veganer Ernährung.'],
       ['Supplements', 'Tabletten aus dem Supplement-Tracker sind nicht eingerechnet.'],
-      ['Vitamin D', 'Wird hauptsächlich über die Haut gebildet; die Zufuhr über Essen sagt wenig über die Versorgung.'],
-      ['Blutwerte', 'Ob ein Nährstoff fehlt, zeigt nur eine ärztliche Untersuchung.']],
+      ['Vitamin D', 'Wird hauptsächlich in der Haut gebildet (Sonne). Essen liefert meist nur 2–4 µg am Tag; der Balken zeigt nur diesen Teil.'],
+      ['Blutwerte', 'Ob ein Nährstoff fehlt, klärt eine ärztliche Untersuchung (z. B. Blutwerte).']],
     src: [['Max Rubner-Institut (2025). Bundeslebensmittelschlüssel (BLS) 4.0, CC BY 4.0', 'https://doi.org/10.25826/Data20251217-134202-0'],
       ['DGE/ÖGE-Referenzwerte für die Nährstoffzufuhr (je Nährstoff)', 'https://www.dge.de/wissenschaft/referenzwerte/']]
   });
@@ -113,7 +113,7 @@ export function monthView(rerender) {
       aP != null ? h('div', { class: 'an-macro' },
         ...[['Eiweiß', aP, 4, 'p'], ['Kohlenhydrate', aC, 4, 'c'], ['Fett', aF, 9, 'f']].map(([l, g, f, k]) => h('div', { class: `am-row am-${k}x` },
           h('span', { class: 'am-l' }, l), h('span', { class: 'am-bar' }, h('i', { style: `width:${share(g, f)}%` })), h('span', { class: 'am-v' }, `${fmt(g)} g`), h('span', { class: 'am-p' }, `${share(g, f)} %`))),
-        h('p', { class: 'small muted' }, `Ballaststoffe Ø ${fmt(aFi)} g. Anteile an der Energie aus Eiweiß, Kohlenhydraten und Fett (4/4/9 kcal pro g). Tag antippen öffnet ihn auf „Heute“.`))
+        h('p', { class: 'small muted' }, `Ballaststoffe Ø ${fmt(aFi)} g. Anteile an der Energie aus Eiweiß, Kohlenhydraten und Fett (4/4/9 kcal pro g, Umrechnung nach LMIV Anhang XIV). Tag antippen öffnet ihn auf „Heute“.`))
         : h('p', { class: 'small muted' }, 'In diesem Monat gibt es noch keine abgeschlossenen Tage mit Einträgen.')));
 }
 
