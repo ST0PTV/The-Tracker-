@@ -2,7 +2,7 @@
 // Kontrast und Tippflächen übernommen aus QRate/tests/browser/a11y.mjs (MIT, ST0PTV), Selektoren an The Tracker angepasst.
 // Regeln (WCAG 2.2, Workout Tracker 3.10.0):
 // - Kontrast: Text ≥ 4,5:1, großer Text (≥ 24 px oder ≥ 18,7 px fett) ≥ 3:1. Deaktivierte Bedienelemente zählen nicht.
-// - Tippflächen: unter 24 × 24 px ist ein Fehler (WCAG 2.2 AA), unter 44 px nur ein Hinweis (Apple-Empfehlung).
+// - Tippflächen: unter 24 × 24 px ist ein Fehler (WCAG 2.2 AA); seit 0.5.4 auch unter 44 px (Apple), außer begründete Ausnahmen (ALLOW).
 //   Echter Treffertest: elementFromPoint in der Mitte und 3 px innerhalb jeder Kante muss das Element selbst treffen.
 // - Wortbrüche: Ein Wort darf nicht ohne Trennstrich auf zwei Zeilen stehen (eigene Ergänzung 0.5.3).
 // - Breite: Die Seite darf nicht breiter als der Bildschirm werden.
@@ -84,13 +84,18 @@ export async function auditContrast(p, where) {
   }, { where, SKIP });
 }
 
-export async function auditTargets(p, where) {
-  return p.evaluate(({ where, SKIP, FIXED }) => {
-    const errors = [], hints = [];
+/** under = unter 44 px und nicht in ALLOW (Fehler ab 0.5.4); hints = unter 44 px, aber begründete Ausnahme. */
+export async function auditTargets(p, where, ALLOW = '') {
+  return p.evaluate(({ where, SKIP, FIXED, ALLOW }) => {
+    const errors = [], hints = [], under = [];
     const sel = 'button, a[href], input:not([type="hidden"]), select, textarea, [role="button"], [role="switch"], [role="tab"], summary';
     const name = (e) => e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : '') + (e.getAttribute('aria-label') ? `[${e.getAttribute('aria-label').slice(0, 24)}]` : '') + (e.textContent.trim() ? ` „${e.textContent.trim().slice(0, 20)}“` : '');
     const y0 = scrollY;
+    // Offenes Sheet (oberstes): nur dessen Ziele prüfen, der Rest liegt unter dem Overlay
+    const sheets = document.querySelectorAll('.sheet[role="dialog"]');
+    const modal = sheets.length ? sheets[sheets.length - 1] : null;
     const els = [...document.querySelectorAll(sel)].filter((e) => {
+      if (modal && !modal.contains(e)) return false;
       if (e.closest(SKIP) || e.disabled) return false;
       if (e.parentElement?.closest(sel)) return false; // Teil eines größeren Ziels
       if (e.matches('a') && e.closest('p, li')) return false; // Link im Fließtext (WCAG-Ausnahme)
@@ -103,15 +108,26 @@ export async function auditTargets(p, where) {
       if (!fixed) e.scrollIntoView({ block: 'center', inline: 'nearest' });
       const r = e.getBoundingClientRect();
       // Tippfläche: eigene Box, vergrößert um ein unsichtbares ::after (Muster aus 0.4.3)
+      // 0.5.4: aufgelöste Breite/Höhe des ::after (deckt left/top/transform und inset ab); mittig um die sichtbare Box
       const af = getComputedStyle(e, '::after');
       let w = r.width, hgt = r.height;
       if (af.content !== 'none' && af.position === 'absolute') {
-        const ins = ['top', 'right', 'bottom', 'left'].map((k) => parseFloat(af[k]) || 0);
-        w = Math.max(w, r.width - ins[1] - ins[3]); hgt = Math.max(hgt, r.height - ins[0] - ins[2]);
+        w = Math.max(w, parseFloat(af.width) || 0); hgt = Math.max(hgt, parseFloat(af.height) || 0);
       }
       w = Math.round(w); hgt = Math.round(hgt);
+      // Vergrößerte Fläche wirklich erreichbar? 2 px vor jeder Kante antippen (findet Abschneiden durch overflow und Überdecken)
+      if (w > r.width + 1 || hgt > r.height + 1) {
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        // Kantenmitten und Ecken (2 px nach innen). Annahme: ::after liegt mittig (gilt für alle Regeln in app.css/training.css)
+        const L = cx - w / 2 + 2, R = cx + w / 2 - 2, T = cy - hgt / 2 + 2, B = cy + hgt / 2 - 2;
+        const ext = [[L, cy], [R, cy], [cx, T], [cx, B], [L, T], [R, T], [L, B], [R, B]]
+          .filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight);
+        const lost = ext.filter(([x, y]) => { const hit = document.elementFromPoint(x, y); return !hit || (!(hit === e || e.contains(hit)) && !hit.closest(FIXED)); });
+        if (lost.length) { const hit = document.elementFromPoint(lost[0][0], lost[0][1]); errors.push(`${where}: Trefferfläche ${w} × ${hgt} nur teilweise erreichbar bei ${name(e)} (am Rand getroffen: ${hit ? name(hit) : 'nichts'})`); }
+      }
+      const small = `${where}\t${e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).join('.') : ''}\t${w}×${hgt}\t${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 30)}`;
       if (w < 24 || hgt < 24) errors.push(`${where}: Tippfläche ${w} × ${hgt} px (< 24) bei ${name(e)}`);
-      else if (w < 44 || hgt < 44) hints.push(`${Math.min(w, hgt)} px bei ${name(e)}`);
+      else if (w < 44 || hgt < 44) (ALLOW && e.matches(ALLOW) ? hints : under).push(small);
       // Treffertest: Mitte und 3 px innerhalb jeder Kante der sichtbaren Box
       const pts = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 3, r.top + r.height / 2], [r.right - 3, r.top + r.height / 2], [r.left + r.width / 2, r.top + 3], [r.left + r.width / 2, r.bottom - 3]]
         .filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight);
@@ -127,8 +143,8 @@ export async function auditTargets(p, where) {
       }
     }
     scrollTo(0, y0);
-    return { errors, hints };
-  }, { where, SKIP, FIXED });
+    return { errors, hints, under };
+  }, { where, SKIP, FIXED, ALLOW });
 }
 
 /** Wörter, die ohne Trennstrich über zwei Zeilen laufen (z. B. „Kniebeu|ge“). */

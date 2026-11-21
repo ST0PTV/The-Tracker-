@@ -68,6 +68,25 @@ idle(() => loadFoods());
 if (!boot.ok) toast('Gespeicherte Daten stammen aus einer neueren Version. Bitte App neu laden.', { error: true });
 
 if ('serviceWorker' in navigator) {
+  // 0.5.4 (aus QRate/js/app.js, MIT, ST0PTV): Übernimmt eine neue Version, einmal neu laden, damit Seite, Skripte und
+  // nachgeladene Module zusammenpassen. Nicht beim allerersten Besuch (noch kein Service Worker) und nie, solange
+  // getippter Text in einem Feld steht – dann beim nächsten Wechsel in den Hintergrund oder auf eine andere Seite,
+  // sobald kein Feld mehr Text hat (sonst ginge ein Entwurf verloren, wenn man nur kurz die App wechselt).
+  let hadWorker = !!navigator.serviceWorker.controller;
+  let reloading = false, pending = false;
+  const typing = () => [...document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea')]
+    .some((f) => f.value !== f.defaultValue);
+  const reload = () => { if (!reloading) { reloading = true; location.reload(); } };
+  const tryReload = () => { if (pending && !typing()) reload(); };
+  document.addEventListener('visibilitychange', () => { if (document.hidden) tryReload(); });
+  window.addEventListener('hashchange', () => setTimeout(tryReload, 0));
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // Erster Besuch: Der erste Wechsel ist nur die Übernahme durch clients.claim; ein späteres Update in derselben
+    // Sitzung (Home-Bildschirm-Apps laufen oft tagelang) lädt dann neu.
+    if (!hadWorker) { hadWorker = true; return; }
+    pending = true;
+    tryReload();
+  });
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(() => { /* Offline-Betrieb ist optional */ });
   });

@@ -39,6 +39,8 @@ for (const appearance of ['dark', 'light']) {
   await p.click('.sheet .seg button:has-text("Scannen")'); await p.waitForFunction(() => { const v = document.querySelector('.scanner video'); return !!v && v.readyState >= 2 && !!v.srcObject; }, null, { timeout: 1500 }).catch(() => {}); // 0.4.0: bis die Kamera läuft (vorher feste 1500 ms)
   const camOk = await p.evaluate(() => { const v = document.querySelector('.scanner video'); return !!v && v.readyState >= 2 && !!v.srcObject; });
   ok(camOk, `${appearance}: Kamera läuft im Scanner (Test-Kamera)`);
+  // 0.5.4: „Licht an“ liegt absolut im Kamerabild (eine Tippflächen-Regel hatte es aus dem sichtbaren Bereich geschoben)
+  ok(await p.evaluate(() => { const t = document.querySelector('.scanner .torch'); if (!t) return false; t.hidden = false; const pos = getComputedStyle(t).position; const r = t.getBoundingClientRect(), s = t.closest('.scanner').getBoundingClientRect(); t.hidden = true; return pos === 'absolute' && r.bottom <= s.bottom && r.right <= s.right; }), `${appearance}: „Licht an“ sitzt im Kamerabild`);
   ok(!/Kein Kamerazugriff|nicht verfügbar/.test(await text()), `${appearance}: keine Kamera-Fehlermeldung`);
   await shot('1-scanner');
 

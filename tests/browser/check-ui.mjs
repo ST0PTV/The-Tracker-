@@ -1,6 +1,6 @@
 // UI-Wächter (0.5.3, Vorbild QRate 0.2.0): alle Seiten mit Beispieldaten
 // - Kontrast in jedem Theme hell und dunkel (Text ≥ 4,5:1, groß ≥ 3:1)
-// - Tippflächen ≥ 24 px mit echtem Treffertest (unter 44 px nur Hinweis), Wörter ohne Bruch mitten im Wort,
+// - Tippflächen ≥ 44 px (Ausnahmen in ALLOW, dort ≥ 24 px) mit echtem Treffertest, Wörter ohne Bruch mitten im Wort,
 //   keine Seite breiter als der Bildschirm – bei 390 px und 320 px (iPhone SE 1), hell und dunkel.
 // Aufruf: node tests/browser/check-ui.mjs [kontrast|flaechen]   (ohne Teil: beides)
 import { launch, startServer, checker, outDir, settle } from './lib.mjs';
@@ -17,7 +17,24 @@ const ROUTES = ['/', '/analyse', '/analyse/monat', '/analyse/jahr', '/analyse/ma
   '/ich/sperre', '/ich/daten', '/ich/einfuehrung', '/ich/quellen',
   '/training', '/training/plaene', '/training/routine'];
 const TRAIN_TABS = ['Übungen', 'Fortschritt'];
+// Sheets, die auf einer Route geöffnet und mitgeprüft werden: [Name, Selektor des Auslösers]
+const SHEETS = {
+  '/': [['Plus-Menü', '.tab-plus']],
+  '/analyse': [['Info', '#view .info-btn']],
+};
 const PALETTES = ['nativ', 'glas', 'sand', 'see'];
+// 0.5.4: Unter 44 px ist ein Fehler, außer hier (je mit Grund). Alles darunter bleibt ≥ 24 px (WCAG 2.2 AA).
+// Je Bildschirmbreite, damit eine Ausnahme bei 320 px keinen Rückschritt bei 390 px verdeckt.
+const ALLOW = {
+  390: [
+    '.wk-d', // Wochenstreifen: 7 Tage in einer Reihe, 43 px breit; daneben der Kalender-Knopf mit 44-px-Tagen
+  ].join(', '),
+  320: [
+    '.wk-d',
+    '.cal-d', // Monat in der Analyse: 7 Spalten, bei 320 px höchstens 39 px (Fläche bis zur Lückenmitte), 48 px hoch
+    '.cy-d', // Zyklus-Kalender: 7 Spalten, 37 px breit, 44 px hoch
+  ].join(', '),
+};
 
 const srv = await startServer();
 const b = await launch();
@@ -53,6 +70,16 @@ async function visit(p, tag, fn) {
       const tab = p.locator(`button:has-text("${t}")`).first();
       if (await tab.count()) { await tab.click(); await settle(p, 400); await fn(`${tag} /training ${t}`); }
     }
+    // 0.5.4: häufige Sheets – „+“-Menü und das erste Info-Sheet der Seite
+    for (const [name, opener] of SHEETS[r] || []) {
+      const o = p.locator(opener).first();
+      // Fehlt der Auslöser, ist das ein Fehler im Check (sonst würde still nichts geprüft)
+      if (!(await o.count())) { errs.push(`Sheet-Auslöser fehlt: ${r} ${name} (${opener})`); continue; }
+      await o.click(); await settle(p, 400);
+      if (!(await p.locator('.sheet[role="dialog"]').count())) { errs.push(`Sheet öffnet nicht: ${r} ${name}`); continue; }
+      await fn(`${tag} ${r} [${name}]`);
+      await p.keyboard.press('Escape'); await settle(p, 300);
+    }
   }
 }
 
@@ -70,22 +97,25 @@ if (part === 'alle' || part === 'kontrast') {
 if (part === 'alle' || part === 'flaechen') {
   for (const width of [390, 320]) for (const mode of ['light', 'dark']) {
     const { p, ctx } = await page(width, mode, 'nativ');
-    const tgt = [], brk = [], wid = [];
+    const tgt = [], brk = [], wid = [], u44 = [];
     await visit(p, `${width}-${mode}`, async (where) => {
-      const t = await auditTargets(p, where);
+      const t = await auditTargets(p, where, ALLOW[width]);
       tgt.push(...t.errors);
+      u44.push(...t.under);
       for (const h of t.hints) hints.set(h, (hints.get(h) || 0) + 1);
       brk.push(...await auditWordBreaks(p, where));
       wid.push(...await auditWidth(p, where));
       if (width === 320 && mode === 'light') await p.screenshot({ path: join(out, `320-${where.split(' ').slice(1).join('_').replace(/\//g, '_') || 'heute'}.png`) });
     });
-    writeFileSync(join(out, `flaechen-${width}-${mode}.txt`), [...tgt, ...brk, ...wid].join('\n'));
+    writeFileSync(join(out, `flaechen-${width}-${mode}.txt`), [...tgt, ...u44, ...brk, ...wid].join('\n'));
     ok(tgt.length === 0, `Tippflächen ${width} px ${mode}: ${tgt.length ? tgt.length + ' Fehler\n    ' + [...new Set(tgt)].slice(0, 12).join('\n    ') : 'alle ≥ 24 px und treffbar'}`);
+    ok(u44.length === 0, `Tippflächen ≥ 44 px ${width} px ${mode}: ${u44.length ? u44.length + ' darunter\n    ' + [...new Set(u44)].slice(0, 12).join('\n    ') : 'alle (außer begründeten Ausnahmen)'}`);
     ok(brk.length === 0, `Wortbrüche ${width} px ${mode}: ${brk.length ? brk.length + '\n    ' + [...new Set(brk)].slice(0, 12).join('\n    ') : 'keine'}`);
     ok(wid.length === 0, `Breite ${width} px ${mode}: ${wid.length ? wid.join('; ') : 'keine Seite zu breit'}`);
     await ctx.close();
   }
-  if (hints.size) console.log(`Hinweis (unter 44 px, kein Fehler): ${hints.size} Arten, z. B. ${[...hints.keys()].slice(0, 5).join(' | ')}`);
+  writeFileSync(join(out, 'hinweise-44.tsv'), [...hints.keys()].join('\n'));
+  if (hints.size) console.log(`Ausnahmen unter 44 px (ALLOW): ${hints.size} Arten, z. B. ${[...hints.keys()].slice(0, 5).join(' | ')}`);
 }
 
 ok(errs.length === 0, `keine Konsolenfehler ${errs.slice(0, 3).join(' | ')}`);

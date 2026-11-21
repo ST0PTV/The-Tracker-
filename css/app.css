@@ -687,7 +687,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .qa-badge { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); }
 .qa-row.k-food .qa-badge { background: var(--fill); color: var(--text); }
 .qa-chev { color: var(--muted); display: inline-flex; }
-.qa-quick { border: 0; border-radius: 999px; padding: 8px 12px; font: 600 14px var(--font); background: color-mix(in srgb, var(--c) 16%, transparent); color: var(--c); cursor: pointer; white-space: nowrap; }
+.qa-quick { border: 0; border-radius: 999px; padding: 8px 12px; font: 600 14px var(--font); background: color-mix(in srgb, var(--c) 16%, transparent); color: color-mix(in srgb, var(--c) 80%, var(--text)); cursor: pointer; white-space: nowrap; }
 .qa-supp { display: flex; align-items: center; gap: 12px; }
 .qa-supp.taken .t b { color: var(--muted); }
 .qa-tick { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--muted); display: grid; place-items: center; flex: none; box-sizing: border-box; }
@@ -732,7 +732,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .cfg-row > .t small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; line-height: 1.3; }
 .cfg-row .qa-badge { width: 30px; height: 30px; border-radius: 8px; }
 .cfg-val { flex: none; display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 17px; }
-.cfg-in { width: 84px; padding: 8px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; text-align: right; font-variant-numeric: tabular-nums; }
+.cfg-in { width: 84px; padding: 11px 0; margin: -3px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; text-align: right; font-variant-numeric: tabular-nums; }
 .cfg-in:focus { color: var(--text); outline: none; }
 .cfg-in.cfg-time { width: auto; min-width: 70px; -webkit-appearance: none; appearance: none; }
 .cfg-in::placeholder { color: var(--faint); }
@@ -965,7 +965,7 @@ a.icon-btn { text-decoration: none; }
 :root:not([data-theme="light"]) .rz-th, :root:not([data-theme="light"]) .rp-hero { background: color-mix(in srgb, var(--t) 55%, var(--surface-2)); }
 .ginger { display: block; line-height: 0; }
 .rz-search { margin: 0 0 10px; }
-.rz-chips { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px 12px; padding: 0 16px; scrollbar-width: none; touch-action: pan-x; }
+.rz-chips { flex-wrap: nowrap; overflow-x: auto; margin: -2px -16px 10px; padding: 2px 16px; scrollbar-width: none; touch-action: pan-x; }
 .rz-chips::-webkit-scrollbar { display: none; }
 .rz-chips .chip { flex: none; }
 .rz-count { margin: 0 4px 8px; }
@@ -1159,7 +1159,7 @@ body.tt-locked #tabbar { display: none; }
 .icon-btn.ghost { visibility: hidden; }
 .cy-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px; text-align: center; }
 .cy-wd span { font-size: 12px; color: var(--muted); padding-bottom: 4px; }
-.cy-d { position: relative; height: 42px; display: grid; place-items: center; color: var(--text); text-decoration: none; font-size: 16px; font-variant-numeric: tabular-nums; }
+.cy-d { position: relative; height: 44px; display: grid; place-items: center; color: var(--text); text-decoration: none; font-size: 16px; font-variant-numeric: tabular-nums; }
 .cy-d > span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
 .cy-d.fut { color: var(--muted); }
 .cy-d.e::after { content: ''; position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--muted); }
@@ -1483,3 +1483,13 @@ body.tour-trial .view { padding-top: calc(var(--safe-top) + 72px); }
 .tip-box p { margin: 0; flex: 1; font-size: 15px; line-height: 1.4; }
 .tip-ok { flex: none; min-height: 44px; padding: 0 14px; border: 0; border-radius: 10px; background: color-mix(in srgb, var(--on-accent) 16%, transparent); color: inherit; font: inherit; font-weight: 700; cursor: pointer; }
 .tip-arrow { position: fixed; width: 16px; height: 16px; transform: rotate(45deg); background: var(--accent); }
+/* 0.5.4: Trefferfläche ≥ 44 px auch für Segmente, Chips, Zurück, Links in Listen und Tage im Raster; das Aussehen bleibt.
+   Wie 0.4.3: unsichtbares ::after, mittig, mindestens 44 × 44. Training hat eigene Regeln (css/training.css). */
+/* :where() = ohne Gewicht, damit bestehende Positionen gewinnen (z. B. .scanner .torch absolut im Kamerabild).
+   a.link nur, wenn er allein steht: im Fließtext (p, li) würde die Fläche in Nachbarzeilen und -links ragen. */
+:where(body:not(.tt-train)) :where(.seg > button, .seg > a, .chip, .back, a.link, .cal-d, .wk-d, .sheet-close) { position: relative; }
+body:not(.tt-train) :is(.seg > button, .seg > a, .chip, .back, a.link:not(:is(p, li) a), .sheet-close)::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+/* Tage in 7-Spalten-Rastern: nur bis zur Mitte der Lücke, damit sich Nachbarn nicht überdecken (bei 320 px < 44 px, Ausnahme in check-ui) */
+body:not(.tt-train) .cal-d::after { content: ''; position: absolute; inset: -2px; }
+body:not(.tt-train) .wk-d::after { content: ''; position: absolute; inset: 0 -1px; }
