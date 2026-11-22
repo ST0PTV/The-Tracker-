@@ -1,0 +1,591 @@
+/* Herkunft: ST0PTV/Calorie-Tracker, Branch wip/level-ui (Stand e170f25, 19.10.2026), MIT. Unverändert übernommen. */
+/* Level-System „Gemüsemonster“ – Berechnung (Schritt 1, noch ohne Oberfläche).
+   Grundsatz: belohnt wird nur das Dranbleiben und die Datenpflege, nie weniger Essen.
+   Kalorien, Defizit und Gewichtsverlauf fließen NICHT in XP, Level, Formen oder Stärke ein.
+   Alles wird deterministisch aus dem State abgeleitet; gespeichert werden nur Auswahl-Entscheidungen
+   (Start, Starter, Thema, Arenen) und Zähler für Aktionen ohne eigenes Datum (state.level.ev).
+   Ausgelassene Tage kosten nie etwas: Level, Formen und Monster gehen nicht verloren. */
+'use strict';
+
+const LV_CFG = {
+  monthDays: 20,        // vollständiger Monat (Monat 2–12): gezählte Tage
+  quarterDays: 60,      // vollständiges Quartal (ab Jahr 2)
+  yearDays: 240,        // volles Jahr für das legendäre Monster (12 × 20) – Vorschlag
+  pausePerWeek: 1,      // pro Kalenderwoche zählt der erste ausgelassene Tag automatisch mit
+  fullDayMeals: ['breakfast', 'lunch', 'dinner'], // „Tag vollständig“ – Snacks sind kein Muss
+  formDays: [1, 10, 20], // Monatsmonster: Baby ab 1, Normalform ab 10, Superform ab 20 Tagen
+  maxEntryXpPerDay: 10,
+  weekGoalDays: 7,      // Wochenziel: alle 7 Tage gezählt (inkl. Pausetag), also mind. 6 echte
+  xp: { day: 10, full: 15, entry: 2, scan: 15, own: 20, fill: 10, share: 25, water: 5, weight: 5, week: 35 },
+  thresholds: [0, 30, 80, 150, 240, 350, 480, 630, 800, 990], // L1 … L10 (Gesamt-XP)
+};
+
+const LV_TYPES = ['Frucht', 'Blatt', 'Wurzel', 'Pilz', 'Zwiebel', 'Spross', 'Hülse']; // Typenrad-Reihenfolge
+const LV_STARTERS = [
+  { id: 'moehri', type: 'Wurzel', forms: ['Möhri', 'Möhrax', 'Möhrgon'], tpl: 0 },
+  { id: 'erbsi', type: 'Hülse', forms: ['Erbsi', 'Schotti', 'Schotador'], tpl: 3 },
+  { id: 'tomi', type: 'Frucht', forms: ['Tomi', 'Tomatz', 'Tomagma'], tpl: 6 },
+];
+const LV_MONTHLY = [
+  ['brokki', 'Blatt', ['Brokki', 'Brokko', 'Brokkolos']],
+  ['kuerbi', 'Frucht', ['Kürbi', 'Kürbo', 'Kürbrock']],
+  ['pepi', 'Frucht', ['Pepi', 'Papri', 'Paprisma']],
+  ['radl', 'Wurzel', ['Radl', 'Radi', 'Radirex']],
+  ['zwibbel', 'Zwiebel', ['Zwibbel', 'Zwiebi', 'Zwiebolon']],
+  ['gurki', 'Frucht', ['Gurki', 'Gurkon', 'Gurkodil']],
+  ['aubi', 'Frucht', ['Aubi', 'Aubaron', 'Aubzar']],
+  ['sprossi', 'Spross', ['Sprossi', 'Sparx', 'Sparxion']],
+  ['spori', 'Pilz', ['Spori', 'Pilzo', 'Myzelor']],
+  ['beti', 'Wurzel', ['Beti', 'Betti', 'Bettrix']],
+  ['lauchling', 'Blatt', ['Lauchling', 'Lauchi', 'Merlauch']],
+].map(([id, type, forms], i) => ({ id, type, forms, tpl: 9 + 3 * i })).concat([
+  // Gemüsemonster 2.0 (19.10.2026): neue Familien aus den Bereichen Ernährung, Workout, Rezeptbuch – vorerst im Monatsei
+  ['romanix', 'Blatt', ['Romanix', 'Spiranix', 'Fraktalon'], 58],
+  ['fenni', 'Spross', ['Fenni', 'Fenchelo', 'Fennarch'], 61],
+  ['kohlix', 'Spross', ['Kohlix', 'Kohlhops', 'Kohlrobat'], 67],
+  ['rhabix', 'Blatt', ['Rhabix', 'Rhabiega', 'Rhabanza'], 70],
+  ['shiimi', 'Pilz', ['Shiimi', 'Shiitako', 'Shiitakai'], 76],
+  ['okki', 'Frucht', ['Okki', 'Okkro', 'Okkastra'], 79],
+].map(([id, type, forms, tpl]) => ({ id, type, forms, tpl, area: true })));
+const LV_EGG_MONTHS = LV_MONTHLY.length; // Monatsei in Monat 2 … 1 + Anzahl Monatsmonster (Level zählt weiter nur bis Monat 12, dann Quartale)
+const LV_LEGENDS = [
+  { id: 'erntor', name: 'Erntor', tpl: 57 }, // 13.10.2026: nachgeschärfte Zeichnung
+  { id: 'rhizowal', name: 'Rhizowal', tpl: 43 },
+  { id: 'solarion', name: 'Solarion', tpl: 44 },
+];
+const LV_ARENAS = [
+  ['Glasdom', ['Blatt', 'Spross'], 4], ['Wurzelgrotte', ['Wurzel', 'Pilz'], 4], ['Kompostkrater', ['Frucht'], 4],
+  ['Wolkenbeet', ['Spross', 'Hülse'], 4], ['Salatsee', ['Blatt', 'Frucht'], 4], ['Frostkeller', ['Zwiebel', 'Wurzel'], 4],
+  ['Markthalle', LV_TYPES, 4], ['Sternenacker', ['legendär'], 3],
+].map(([name, fav, slots], i) => ({ name, fav, slots, after: 3 * (i + 1) }));
+// Stufen im ersten Monat (Starter): L1–L10
+const LV_STEPS = ['Ei', 'Ei wackelt', 'schlüpft', 'Baby', 'übt', 'entwickelt sich', 'trainiert', 'volle Kraft', 'leuchtet', 'entwickelt sich'];
+
+// Bonus-Monster (nur über Besuche/Beet, Etappe 2) – je Typ eins, 2 Formen
+const LV_BONUS = [
+  ['ingi', 'Wurzel', ['Ingi', 'Ingwar'], 45], ['knobi', 'Zwiebel', ['Knobi', 'Graf Knobula'], 47], ['kichi', 'Hülse', ['Kichi', 'Kicheron'], 49],
+  ['maisi', 'Spross', ['Maisi', 'Kolbrix'], 51], ['kohli', 'Blatt', ['Kohli', 'Kohlossus'], 53], ['morchi', 'Pilz', ['Morchi', 'Morchelor'], 55],
+  // selten (Gemüsemonster 2.0): drei Formen, wachsen im Beet zweimal
+  ['mizzi', 'Blatt', ['Mizzi', 'Mizzara', 'Mizzuna'], 64, true],
+  ['topin', 'Wurzel', ['Topin', 'Topinello', 'Topinambo'], 73, true],
+  ['porlo', 'Zwiebel', ['Porlo', 'Porrlix', 'Porromagus'], 82, true],
+].map(([id, type, forms, tpl, rare]) => ({ id, type, forms, tpl, rare: !!rare }));
+const LV_SHINY = { p: 1 / 15, pity: 6 }; // Schillernd: 1 zu 15, spätestens beim 6. Schlüpfen
+
+/* ---------- Zufall (deterministisch aus state.level.seed) ---------- */
+function lvRand(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+// Reihenfolge der Monatsmonster je Installation (seit 2.0: 17, Monatsei bis Monat 18)
+function lvMonthOrder(seed) {
+  const r = lvRand((seed || 1) ^ 0x51ED), o = LV_MONTHLY.map((_, i) => i);
+  for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+  return o;
+}
+// Schillernd je Schlüpfen (0 = Starter, 1.. = Monatsmonster) mit Garantie
+function lvShinyList(seed, n) {
+  const r = lvRand((seed || 1) ^ 0xC0FFEE), out = []; let since = 0;
+  for (let k = 0; k < n; k++) { since++; const sh = r() < LV_SHINY.p || since >= LV_SHINY.pity; out.push(sh); if (sh) since = 0; }
+  return out;
+}
+
+/* ---------- Datumshilfen (unabhängig von app.js, damit testbar) ---------- */
+const lvIsoAdd = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const lvDow = (iso) => (new Date(iso + 'T12:00:00Z').getUTCDay() + 6) % 7; // Mo = 0 … So = 6
+const lvMonday = (iso) => lvIsoAdd(iso, -lvDow(iso));
+// Monatsnummer relativ zum Startmonat (Startmonat = 1, Kalendermonate)
+const lvMonthIdx = (start, iso) => (+iso.slice(0, 4) - +start.slice(0, 4)) * 12 + (+iso.slice(5, 7) - +start.slice(5, 7)) + 1;
+const lvMonthKey = (start, k) => { const y = +start.slice(0, 4), m = +start.slice(5, 7) - 1 + (k - 1); return `${y + Math.floor(m / 12)}-${String((m % 12) + 1).padStart(2, '0')}`; };
+function lvRange(a, b) { const out = []; for (let d = a; d <= b; d = lvIsoAdd(d, 1)) out.push(d); return out; }
+
+/* ---------- Eingaben aus dem State ----------
+   src = { days, weightLog, ev, waterOn, waterOf(iso), waterGoalFor(iso) } – in der App aus state gebaut,
+   in Tests direkt übergeben. */
+function lvSrcFromState(s) {
+  return {
+    days: s.days || {}, weightLog: s.weightLog || {}, ev: (s.level && s.level.ev) || {}, fx: (s.level && s.level.fx) || {},
+    waterOn: !!(s.water && s.water.enabled),
+    waterOf: typeof waterOf === 'function' ? waterOf : () => 0,
+    waterGoalFor: typeof waterGoalFor === 'function' ? waterGoalFor : () => Infinity,
+  };
+}
+const lvTracked = (src, iso) => (src.days[iso] || []).length > 0;
+
+// Gezählte Tage = getrackte Tage + automatische Pausetage (je Kalenderwoche der erste ausgelassene, bereits vergangene Tag)
+function lvCountedDays(src, start, today) {
+  const counted = new Set(), pause = new Set();
+  if (!start || start > today) return { counted, pause };
+  let week = null, used = 0;
+  for (const d of lvRange(start, today)) {
+    const w = lvMonday(d); if (w !== week) { week = w; used = 0; }
+    if (lvTracked(src, d)) counted.add(d);
+    else if (d < today && used < LV_CFG.pausePerWeek) { used++; pause.add(d); counted.add(d); }
+  }
+  return { counted, pause };
+}
+
+/* ---------- XP (zählt ab Start bis Level 10 erreicht ist; danach keine Bedeutung mehr) ---------- */
+function lvXp(src, start, today, cd) {
+  const X = LV_CFG.xp, rows = [];
+  let total = 0, l10 = null;
+  const add = (d, k, n) => { if (!n) return; rows.push({ d, k, xp: n }); total += n; };
+  const weeksShare = new Set(), weeksWeight = new Set();
+  for (const d of lvRange(start, today)) {
+    const e = src.days[d] || [];
+    if (e.length) {
+      add(d, 'day', X.day);
+      if (LV_CFG.fullDayMeals.every((m) => e.some((x) => x.meal === m))) add(d, 'full', X.full);
+      add(d, 'entry', Math.min(e.length, LV_CFG.maxEntryXpPerDay) * X.entry);
+    }
+    const ev = src.ev[d] || {};
+    add(d, 'scan', (ev.scan || 0) * X.scan);
+    add(d, 'own', (ev.own || 0) * X.own);
+    add(d, 'fill', (ev.fill || 0) * X.fill);
+    const wk = lvMonday(d);
+    if (ev.share && !weeksShare.has(wk)) { weeksShare.add(wk); add(d, 'share', X.share); }
+    if (src.weightLog[d] != null && !weeksWeight.has(wk)) { weeksWeight.add(wk); add(d, 'weight', X.weight); }
+    if (src.waterOn) { const ml = src.waterOf(d); if (ml > 0 && ml >= src.waterGoalFor(d)) add(d, 'water', X.water); }
+    // Wochenziel am Sonntag: ganze Woche ab Start, alle Tage gezählt (Pausetag inklusive)
+    if (lvDow(d) === 6 && lvIsoAdd(d, -6) >= start && lvRange(lvIsoAdd(d, -6), d).filter((x) => cd.counted.has(x)).length >= LV_CFG.weekGoalDays) add(d, 'week', X.week);
+    if (l10 == null && total >= LV_CFG.thresholds[9]) { l10 = d; break; }
+  }
+  return { total, rows, l10 };
+}
+function lvXpLevel(xp) { let l = 1; LV_CFG.thresholds.forEach((t, i) => { if (xp >= t) l = i + 1; }); return l; }
+
+function lvMonsterForm(n) { let f = -1; LV_CFG.formDays.forEach((t, i) => { if (n >= t) f = i; }); return f; } // −1 = noch nicht entdeckt
+
+/* ---------- Gesamtauswertung ----------
+   lv = state.level ({ startDate, starter, … }); today = 'JJJJ-MM-TT' */
+function levelCompute(src, lv, today) {
+  const start = lv && lv.startDate;
+  if (!start || start > today) return null;
+  const cd = lvCountedDays(src, start, today);
+  const xp = lvXp(src, start, today, cd);
+  const xpLevel = lvXpLevel(xp.total);
+  const curMonth = lvMonthIdx(start, today);
+  const inMonth = (k) => { const key = lvMonthKey(start, k); let n = 0, t = 0; cd.counted.forEach((d) => { if (d.slice(0, 7) === key) n++; }); Object.keys(src.days).forEach((d) => { if (d >= start && d <= today && d.slice(0, 7) === key && lvTracked(src, d)) t++; }); return { n, t }; };
+
+  // Monatsei ab Monat 2 (zufällige Reihenfolge je Installation); Monatslevel nur in Monat 2–12
+  const order = lvMonthOrder(lv.seed), shinies = lvShinyList(lv.seed, LV_EGG_MONTHS + 1);
+  const months = [];
+  for (let k = 2; k <= Math.min(LV_EGG_MONTHS + 1, curMonth); k++) {
+    const c = inMonth(k), m = LV_MONTHLY[order[k - 2]], form = c.t > 0 ? lvMonsterForm(c.n) : -1; // Ei schlüpft erst mit echtem Eintrag, nicht durch Pausetage
+    months.push({ k, key: lvMonthKey(start, k), counted: c.n, tracked: c.t, done: c.n >= LV_CFG.monthDays, form, monster: m, shiny: shinies[k - 1] && form >= 0 });
+  }
+  const monthLevels = months.filter((m) => m.done && m.k <= 12).length;
+
+  // Ab Monat 13: Quartale
+  const quarters = [];
+  for (let q = 0; 13 + 3 * q <= curMonth; q++) {
+    let n = 0; for (let k = 13 + 3 * q; k < 16 + 3 * q; k++) n += inMonth(k).n;
+    quarters.push({ q: q + 1, year: 2 + Math.floor(q / 4), counted: n, done: n >= LV_CFG.quarterDays });
+  }
+  const quarterLevels = quarters.filter((q) => q.done).length;
+
+  // Volle Jahre: Jahr vorbei und genug gezählte Tage
+  const years = [];
+  for (let y = 1; 12 * y < curMonth; y++) {
+    let n = 0; for (let k = 12 * (y - 1) + 1; k <= 12 * y; k++) n += inMonth(k).n;
+    const L = LV_LEGENDS[(y - 1) % 3];
+    years.push({ y, counted: n, done: n >= LV_CFG.yearDays, legend: L, gold: y >= 4 });
+  }
+
+  const level = xpLevel + monthLevels + quarterLevels;
+  const starter = LV_STARTERS.find((s) => s.id === (lv && lv.starter)) || null;
+  const starterStage = xpLevel >= 10 ? 2 : xpLevel >= 6 ? 1 : 0;
+  const next = xpLevel < 10 ? { kind: 'xp', have: xp.total, need: LV_CFG.thresholds[xpLevel] } : null;
+  const arenas = LV_ARENAS.map((a, i) => Object.assign({ i, open: curMonth - 1 >= a.after }, a));
+
+  return {
+    start, today, level, xp: xp.total, xpRows: xp.rows, xpLevel, l10: xp.l10, step: LV_STEPS[xpLevel - 1], next,
+    starter, starterStage, starterTpl: starter ? starter.tpl + starterStage : null, starterShiny: !!(starter && shinies[0]),
+    order, nextMonthly: curMonth < LV_EGG_MONTHS + 1 ? LV_MONTHLY[order[Math.max(0, curMonth - 1)]] : null,
+    curMonth, months, monthLevels, quarters, quarterLevels, years, arenas,
+    counted: cd.counted.size, pauseDays: [...cd.pause],
+  };
+}
+
+// Sammlung: erreichte Formen (für Album/Zähler „Monster x/17 · Formen x/45 · Orden x/8“)
+function levelCollection(r) {
+  const out = [];
+  if (r.starter) out.push({ id: r.starter.id, forms: r.starterStage + 1, tpl: r.starter.tpl, shiny: r.starterShiny });
+  r.months.forEach((m) => { if (m.form >= 0) out.push({ id: m.monster.id, forms: m.form + 1, tpl: m.monster.tpl, month: m.key, counted: m.counted, shiny: m.shiny }); });
+  const seen = new Set();
+  r.years.filter((y) => y.done).forEach((y) => { if (!seen.has(y.legend.id)) { seen.add(y.legend.id); out.push({ id: y.legend.id, forms: 1, tpl: y.legend.tpl, year: y.y, gold: y.gold }); } });
+  return { list: out, monsters: out.length, forms: out.reduce((a, b) => a + b.forms, 0), totalMonsters: LV_STARTERS.length + LV_MONTHLY.length + LV_BONUS.length + LV_LEGENDS.length,
+    totalForms: [].concat(LV_STARTERS, LV_MONTHLY, LV_BONUS).reduce((a, m) => a + m.forms.length, 0) + LV_LEGENDS.length, totalBadges: LV_ARENAS.length };
+}
+
+// Aktion ohne eigenes Datum zählen (Scan, eigenes Lebensmittel, Werte ergänzt, geteilt). Nur Zähler, keine Lebensmitteldaten.
+function levelEvent(s, kind, iso) {
+  if (!s.level) return;
+  const ev = (s.level.ev = s.level.ev || {});
+  const d = (ev[iso] = ev[iso] || {});
+  d[kind] = (d[kind] || 0) + 1;
+}
+
+/* ---------- Garten: Samen, Entdecker-Rang, Besucher, Beet, Mitbringsel (Regel E, Entwurf SIM1/BM1–BM4) ----------
+   Gespeichert werden nur Entscheidungen (lv.garden.acts) und abgeholte Mitbringsel (lv.garden.gifts);
+   alles andere wird Tag für Tag aus dem Journal nachgerechnet. Belohnt wird nur, OB ein Gemüse-Typ vorkam, nie wie viel. */
+const LV_GARDEN = { invite: 40, sow: 60, visitP: 0.4, hatchDays: 3, growDays: 3, plots: 6, plot6: 700, giftP: 0.2, friendShiny: 8, dayCap: 60 };
+const LV_SAMEN = { scan: 15, own: 15, fill: 10, slice: 10, share: 25, task: 50 }; // je Aktion; Tagesgrenze LV_GARDEN.dayCap, Teilen 1×/Woche, Forschungsauftrag 1×/Woche
+const LV_RANKS = [['Sammler', 0], ['Spurenleser', 200], ['Kartograf', 700], ['Botaniker', 1800], ['Archivar', 3500], ['Meister-Entdecker', 7000]];
+// Bonus-Monster frei ab Samen-Summe ODER Monat seit Start (FS1): 1–2 sofort, 3–4 ab Kartograf/Monat 4, 5–6 ab Botaniker/Monat 8
+const LV_UNLOCK = { ingi: [0, 1], knobi: [0, 1], kichi: [700, 4], maisi: [700, 4], kohli: [1800, 8], morchi: [1800, 8], mizzi: [3500, 10], topin: [3500, 10], porlo: [3500, 10] }; // [Samen gesamt, oder ab Monat]
+const LV_DEKO = [
+  ['blumen', 'Blumenbeet', 80], ['pilzring', 'Pilzring', 80], ['laterne', 'Laterne', 100], ['vogelhaus', 'Vogelhaus', 120],
+  ['windrad', 'Windrad', 150], ['bank', 'Bank', 200], ['teich', 'Teich', 250],
+  ['giesskanne', 'Gießkanne', 0, true], ['gluehwuermchen', 'Glühwürmchen', 0, true], // nur als seltenes Mitbringsel
+].map(([id, name, cost, gift]) => ({ id, name, cost, gift: !!gift }));
+// Saisonkalender (BM6, grob nach deutschem Saisonkalender – Trainingswissen, nicht geprüft). Der Bonus verschiebt nur,
+// wer zu Besuch kommt (Typ doppelt gewichtet, Schillernd-Chance bei Freundschaftsbesuchen doppelt) – nie eine Menge.
+const LV_SEASONS = [
+  ['Kohlzeit', 'Blatt', 'Schneemann'], ['Wurzelwinter', 'Wurzel', 'Rübenschlitten'], ['Bärlauch', 'Zwiebel', 'Bärlauch-Büschel'], ['Spargelzeit', 'Spross', 'Spargelbund'],
+  ['Radieschen', 'Wurzel', 'Radieschen-Topf'], ['Erbsenzeit', 'Hülse', 'Erbsen-Rankgitter'], ['Beerensommer', 'Frucht', 'Beerenstrauch'], ['Tomatenzeit', 'Frucht', 'Tomatenstab'],
+  ['Pilzsaison', 'Pilz', 'Fliegenpilz'], ['Kürbiszeit', 'Frucht', 'Kürbislaterne'], ['Lauch & Kohl', 'Zwiebel', 'Vogelscheuche'], ['Linsenwinter', 'Hülse', 'Lichterkette'],
+].map(([name, type, deko], i) => ({ m: i + 1, name, type, deko: { id: 's' + String(i + 1).padStart(2, '0'), name: deko, cost: 150 } }));
+const lvSeasonOf = (iso) => LV_SEASONS[+iso.slice(5, 7) - 1];
+// Gemüse-Typ eines Lebensmittels über Stichwörter im Namen (BM8). Grob und bewusst einfach; unklare bleiben ohne Typ.
+const LV_FOOD_RX = [
+  ['Blatt', /spinat|salat|grünkohl|(?<!blumen)kohl(?!rabi|enhydrat)|brokkoli|broccoli|mangold|rucola|rauke|wirsing|pak.?choi|kresse/],
+  ['Frucht', /tomat|paprika|gurke|zucchini|kürbis|aubergine|apfel|äpfel|birne|banane|beere|kirsch|pflaume|orange|mandarine|zitrone|traube|mango|ananas|melone|pfirsich|aprikose|kiwi|obst|avocado/],
+  ['Wurzel', /möhre|karotte|rote bete|rote rübe|radieschen|rettich|kartoffel|ingwer|pastinake|sellerie|topinambur|schwarzwurzel|petersilienwurzel/],
+  ['Zwiebel', /zwiebel|knoblauch|lauch|porree|schalotte/],
+  ['Hülse', /linse|kichererbse|bohne|erbse|tofu|tempeh|edamame|hummus|lupine|falafel/],
+  ['Spross', /spargel|mais|sprossen|keimling|bambus|kohlrabi|fenchel|artischocke|blumenkohl/],
+  ['Pilz', /pilz|champignon|shiitake|pfifferling|steinpilz|seitling|morchel/],
+];
+const LV_FOOD_NO = /chips|gummi|bonbon|limonade|sirup|kaffee|kakao|aroma|maisstärke|stärke/;
+function lvFoodTypes(name) {
+  const n = String(name || '').toLowerCase();
+  if (!n || LV_FOOD_NO.test(n)) return [];
+  return LV_FOOD_RX.filter(([, rx]) => rx.test(n)).map(([t]) => t);
+}
+function lvDayTypes(src, iso) {
+  const set = new Set();
+  (src.days[iso] || []).forEach((e) => lvFoodTypes(e.n).forEach((t) => set.add(t)));
+  return [...set];
+}
+function lvHash(seed, key) { let h = 2166136261 ^ (seed >>> 0); for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619); return lvRand(h >>> 0)(); }
+function lvRank(earned) {
+  let i = 0; LV_RANKS.forEach(([, t], k) => { if (earned >= t) i = k; });
+  return { i, name: LV_RANKS[i][0], next: LV_RANKS[i + 1] ? { name: LV_RANKS[i + 1][0], need: LV_RANKS[i + 1][1] } : null };
+}
+// Samen aus den Aktionszählern eines Tages (Teilen höchstens 1× pro Woche)
+/* Samen-Buchhaltung (Etappe 4). Aktionen mit Lebensmittel-Bezug (state.level.fx[foodId] = [[art, datum], …]) zählen erst,
+   wenn das Lebensmittel einmal im Journal steht – gutgeschrieben am späteren der beiden Tage. Ältere Zähler ohne Bezug zählen sofort.
+   Forschungsauftrag: 3 verschiedene gegessene Lebensmittel in einer Woche vervollständigt (Wert ergänzt oder Scheibe gewogen) → +50. */
+function lvFirstEaten(src) {
+  const first = {};
+  Object.keys(src.days).sort().forEach((d) => (src.days[d] || []).forEach((e) => { if (e.ref && !first[e.ref]) first[e.ref] = d; }));
+  return first;
+}
+function lvSamenLedger(src, start, today) {
+  const first = lvFirstEaten(src), byDay = {}, pending = [], weeks = {};
+  const day = (d) => (byDay[d] = byDay[d] || { raw: 0, parts: {}, task: 0, n: 0 });
+  const add = (d, k, v) => { const x = day(d); x.raw += v; x.parts[k] = (x.parts[k] || 0) + v; };
+  const linked = {}; // je Tag und Art: Anzahl Aktionen mit Lebensmittel-Bezug (für den Abzug von den Alt-Zählern)
+  Object.entries(src.fx || {}).forEach(([fid, evs]) => (evs || []).forEach(([k, d]) => {
+    if (!d || d < start || d > today || !LV_SAMEN[k]) return;
+    (linked[d] = linked[d] || {})[k] = ((linked[d] || {})[k] || 0) + 1;
+    const f = first[fid];
+    const c = f && f <= today ? (f > d ? f : d) : null;
+    if (!c) { pending.push({ id: fid, k, d }); return; }
+    add(c, k, LV_SAMEN[k]);
+    if (k === 'fill' || k === 'slice') { const w = lvMonday(c); const W = (weeks[w] = weeks[w] || { foods: [], done: null }); if (!W.foods.includes(fid)) { W.foods.push(fid); if (W.foods.length === 3) W.done = c; } }
+  }));
+  let sharedWeek = null;
+  for (const d of lvRange(start, today)) {
+    const e = src.ev[d] || {}, L = linked[d] || {};
+    ['scan', 'own', 'fill'].forEach((k) => { const n = Math.max(0, (e[k] || 0) - (L[k] || 0)); if (n) add(d, k, n * LV_SAMEN[k]); });
+    const wk = lvMonday(d);
+    if (e.share && sharedWeek !== wk) { sharedWeek = wk; add(d, 'share', LV_SAMEN.share); }
+  }
+  Object.values(weeks).forEach((W) => { if (W.done) { const x = day(W.done); x.task = LV_SAMEN.task; } });
+  Object.values(byDay).forEach((x) => { x.n = Math.min(LV_GARDEN.dayCap, x.raw) + x.task; });
+  return { byDay, pending, weeks };
+}
+function lvSamenDay(ev, iso, sharedWeek) {
+  const e = ev[iso] || {};
+  let n = (e.scan || 0) * LV_SAMEN.scan + (e.own || 0) * LV_SAMEN.own + (e.fill || 0) * LV_SAMEN.fill;
+  let share = false;
+  if (e.share && !sharedWeek) { n += LV_SAMEN.share; share = true; }
+  return { n: Math.min(LV_GARDEN.dayCap, n), share };
+}
+function levelGarden(src, lv, today, r, hook) { // hook(d, lage) → Entscheidungen für Tag d (nur für Simulation/Vorschau)
+  if (!r) return null;
+  const seed = (lv && lv.seed) || 1, g = (lv && lv.garden) || {};
+  const acts = Array.isArray(g.acts) ? (hook ? g.acts.slice() : g.acts) : [], gifts = hook ? Object.assign({}, g.gifts) : (g.gifts || {});
+  const byDay = {}; acts.forEach((a) => { if (a && a.d) (byDay[a.d] = byDay[a.d] || []).push(a); });
+  const owned = {}; // id → { forms, shiny, via }
+  (levelCollection(r).list || []).forEach((o) => { owned[o.id] = { forms: o.forms, shiny: !!o.shiny, via: 'level' }; });
+  const all = [].concat(LV_STARTERS, LV_MONTHLY, LV_BONUS);
+  const byId = (id) => all.find((m) => m.id === id);
+  let samen = 0, earned = 0;
+  const ledger = lvSamenLedger(src, r.start, today);
+  const counted = lvCountedDays(src, r.start, today).counted, monthCount = {}, visits = [];
+  const plots = [], deko = [], log = [], hist = [];
+  let visitor = null, gift = null;
+  for (const d of lvRange(r.start, today)) {
+    const types = lvDayTypes(src, d), tracked = (src.days[d] || []).length > 0;
+    hist.push(types); if (hist.length > 7) hist.shift();
+    if (counted.has(d)) monthCount[d.slice(0, 7)] = (monthCount[d.slice(0, 7)] || 0) + 1;
+    const sd = ledger.byDay[d];
+    if (sd) { samen += sd.n; earned += sd.n; }
+    const month = lvMonthIdx(r.start, d);
+    const unlocked = LV_BONUS.filter((b) => earned >= LV_UNLOCK[b.id][0] || month >= LV_UNLOCK[b.id][1]);
+    const inBeet = new Set(plots.map((p) => p.id));
+    const maxPlots = earned >= LV_GARDEN.plot6 ? LV_GARDEN.plots : LV_GARDEN.plots - 1;
+    // Mitbringsel: nur wenn schon ein Bonus-Monster geschlüpft ist, nur wenn an dem Tag abgeholt
+    const hatched = LV_BONUS.some((b) => owned[b.id] && owned[b.id].via === 'garden') || plots.some((p) => p.stage !== 'egg');
+    let gd = null;
+    if (hatched && lvHash(seed, 'g' + d) < LV_GARDEN.giftP) {
+      const rare = LV_DEKO.filter((x) => x.gift && !deko.includes(x.id));
+      gd = rare.length && lvHash(seed, 'gr' + d) < 0.1 ? { deko: rare[Math.floor(lvHash(seed, 'gd' + d) * rare.length)].id } : { n: lvHash(seed, 'gn' + d) < 0.5 ? 5 : 10 };
+      gd.from = (plots.find((p) => p.stage !== 'egg') || {}).id || LV_BONUS.find((b) => owned[b.id] && owned[b.id].via === 'garden').id;
+      if (gifts[d]) { if (gd.n) { samen += gd.n; earned += gd.n; } else deko.push(gd.deko); log.push({ d, kind: 'gift', gift: gd }); }
+    }
+    // Besuch: 40 % der Tage mit Gemüse; Typ gewichtet nach den letzten 7 Tagen
+    let vis = null;
+    if (tracked && types.length && lvHash(seed, 'v' + d) < LV_GARDEN.visitP) {
+      const sea = lvSeasonOf(d).type;
+      const w = types.map((t) => hist.reduce((a, h) => a + (h.includes(t) ? 1 : 0), 0) * (t === sea ? 2 : 1));
+      let x = lvHash(seed, 'vt' + d) * w.reduce((a, b) => a + b, 0), t = types[0];
+      for (let k = 0; k < types.length; k++) { x -= w[k]; if (x < 0) { t = types[k]; break; } }
+      const fresh = unlocked.find((b) => b.type === t && !owned[b.id] && !inBeet.has(b.id));
+      if (fresh) vis = { id: fresh.id, type: t, kind: 'new', cost: LV_GARDEN.invite };
+      else {
+        const known = Object.keys(owned).map(byId).filter((m) => m && m.type === t && !LV_STARTERS.includes(m));
+        if (known.length) { const m = known[Math.floor(lvHash(seed, 'vk' + d) * known.length)]; vis = { id: m.id, type: t, kind: 'friend', cost: 0, shiny: !owned[m.id].shiny && lvHash(seed, 'vs' + d) < (t === sea ? 2 : 1) / LV_GARDEN.friendShiny }; }
+      }
+    }
+    if (vis) visits.push({ d, id: vis.id, kind: vis.kind });
+    if (hook) { const add = hook(d, { visitor: vis, gift: gd, samen, plots, maxPlots, deko }) || []; add.forEach((x) => { const act = Object.assign({ d }, x); acts.push(act); (byDay[d] = byDay[d] || []).push(act); if (gd && x.a === 'gift' && !gifts[d]) { gifts[d] = 1; if (gd.n) { samen += gd.n; earned += gd.n; } else deko.push(gd.deko); } }); }
+    // Entscheidungen des Tages (in Reihenfolge); ungültige werden ignoriert
+    (byDay[d] || []).forEach((a) => {
+      if (a.a === 'invite' && vis && vis.kind === 'new' && a.m === vis.id && samen >= LV_GARDEN.invite && plots.length < maxPlots && !vis.done) {
+        samen -= LV_GARDEN.invite; vis.done = true; plots.push({ id: vis.id, kind: 'invite', at: d, stage: 'egg', t: 0, grow: 0 }); log.push({ d, kind: 'invite', id: vis.id });
+      } else if (a.a === 'friend' && vis && vis.kind === 'friend' && a.m === vis.id && !vis.done) {
+        vis.done = true; if (vis.shiny) { owned[vis.id].shiny = true; log.push({ d, kind: 'shiny', id: vis.id }); } else log.push({ d, kind: 'friend', id: vis.id });
+      } else if (a.a === 'sow' && samen >= LV_GARDEN.sow && plots.length < maxPlots) {
+        samen -= LV_GARDEN.sow;
+        const recent = new Set([].concat(...hist));
+        const free = unlocked.filter((b) => !owned[b.id] && !plots.some((p) => p.id === b.id));
+        const pool = free.filter((b) => recent.has(b.type)).length ? free.filter((b) => recent.has(b.type)) : free;
+        const k = plots.length + log.length;
+        if (pool.length) { const m = pool[Math.floor(lvHash(seed, 's' + d + k) * pool.length)]; plots.push({ id: m.id, kind: 'sow', at: d, stage: 'egg', t: 0, grow: 0 }); log.push({ d, kind: 'sow', id: m.id }); }
+        else plots.push({ id: null, kind: 'sow', at: d, stage: 'egg', t: 0, grow: 0, surprise: lvHash(seed, 'ss' + d + k) < 1 / LV_GARDEN.friendShiny ? 'shiny' : 'seeds' });
+      } else if (a.a === 'deko' && /^s\d\d$/.test(a.m || '')) { // Saison-Deko: nur im eigenen Monat, ab 10 gezählten Tagen, 150 Samen
+        const se = LV_SEASONS[+a.m.slice(1) - 1], key = d.slice(0, 7);
+        if (se && +d.slice(5, 7) === se.m && (monthCount[key] || 0) >= 10 && !deko.includes(a.m) && samen >= se.deko.cost) { samen -= se.deko.cost; deko.push(a.m); log.push({ d, kind: 'deko', id: a.m }); }
+      } else if (a.a === 'deko') {
+        const it = LV_DEKO.find((x) => x.id === a.m);
+        if (it && !it.gift && !deko.includes(it.id) && samen >= it.cost) { samen -= it.cost; deko.push(it.id); log.push({ d, kind: 'deko', id: it.id }); }
+      }
+    });
+    // Wachstum am Tagesende: Ei schlüpft nach 3 getrackten Tagen, Baby wächst mit 3 weiteren Tagen seines Typs
+    for (let i = plots.length - 1; i >= 0; i--) {
+      const p = plots[i]; if (d <= p.at) continue;
+      if (p.stage === 'egg' && tracked && ++p.t >= LV_GARDEN.hatchDays) {
+        p.stage = 'baby'; p.hatched = d;
+        if (!p.id) { // nichts Neues mehr frei: Überraschung (Samen zurück oder schillernder Bekannter)
+          plots.splice(i, 1);
+          const kn = LV_BONUS.filter((b) => owned[b.id] && !owned[b.id].shiny);
+          if (p.surprise === 'shiny' && kn.length) { const m = kn[Math.floor(lvHash(seed, 'sk' + d) * kn.length)]; owned[m.id].shiny = true; log.push({ d, kind: 'shiny', id: m.id }); }
+          else { samen += LV_GARDEN.sow; log.push({ d, kind: 'refund' }); }
+          continue;
+        }
+        owned[p.id] = { forms: 1, shiny: lvHash(seed, 'sh' + p.id) < LV_SHINY.p, via: 'garden' };
+        log.push({ d, kind: 'hatch', id: p.id });
+      } else if (p.stage === 'baby' && d > p.hatched && types.includes(byId(p.id).type) && ++p.grow >= LV_GARDEN.growDays) {
+        owned[p.id].forms++; log.push({ d, kind: 'grow', id: p.id });
+        if (owned[p.id].forms >= byId(p.id).forms.length) plots.splice(i, 1); else p.grow = 0; // seltene: bleiben bis zur dritten Form im Beet
+      }
+    }
+    if (d === today) { visitor = vis; gift = gd ? Object.assign({ claimed: !!gifts[d] }, gd) : null; }
+  }
+  const resident = LV_BONUS.filter((b) => owned[b.id] && owned[b.id].via === 'garden' && !plots.some((p) => p.id === b.id) && owned[b.id].forms >= 2).map((b) => b.id); // seltene erst nach der dritten Form (vorher im Beet)
+  const unlocked = LV_BONUS.filter((b) => earned >= LV_UNLOCK[b.id][0] || r.curMonth >= LV_UNLOCK[b.id][1]).map((b) => b.id);
+  return { ledger, visits, monthCount, acts: hook ? acts.filter((x) => x.a !== 'gift') : undefined, gifts: hook ? gifts : undefined, samen, earned, rank: lvRank(earned), plots, maxPlots: earned >= LV_GARDEN.plot6 ? LV_GARDEN.plots : LV_GARDEN.plots - 1, deko, owned, resident, unlocked, visitor, gift, log, todayTypes: lvDayTypes(src, today) };
+}
+/* ---------- Sammlung (Etappe 3): Monster-Verzeichnis, Begegnungen, Feldnotizen, Kostüme ---------- */
+// Reihenfolge im Album: Starter, Monatsmonster, Bonus, Legendäre. Nummern wie auf den Sammelkarten.
+function levelDex(src, lv, today, r, g) {
+  if (!r) return null;
+  const coll = levelCollection(r), have = {}; coll.list.forEach((o) => { have[o.id] = o; });
+  // Tage je Typ (für Begegnungen), einmal pro Tag und Typ
+  const typeDays = {}; Object.keys(src.days).filter((d) => d >= r.start && d <= today).sort().forEach((d) => lvDayTypes(src, d).forEach((t) => (typeDays[t] = typeDays[t] || []).push(d)));
+  const meets = (type, from) => (typeDays[type] || []).filter((d) => d >= from).length;
+  const firstIn = (key) => Object.keys(src.days).filter((d) => d.slice(0, 7) === key && d >= r.start && (src.days[d] || []).length).sort()[0] || null;
+  const own = (id) => (g && g.owned[id]) || null;
+  const out = [];
+  LV_STARTERS.forEach((m, i) => {
+    const h = have[m.id];
+    out.push({ id: m.id, kind: 'starter', no: 'S' + (i + 1), type: m.type, forms: m.forms, tpl: m.tpl, have: h ? h.forms : 0, shiny: !!((h && h.shiny) || (own(m.id) && own(m.id).shiny)), found: h ? { d: r.start, how: 'Starter' } : null });
+  });
+  LV_MONTHLY.forEach((m, i) => {
+    const mo = r.months.find((x) => x.monster.id === m.id && x.form >= 0);
+    const d = mo ? firstIn(mo.key) : null;
+    out.push({ id: m.id, kind: 'month', no: String(i + 1).padStart(2, '0'), type: m.type, forms: m.forms, tpl: m.tpl, have: mo ? mo.form + 1 : 0, shiny: !!((mo && mo.shiny) || (own(m.id) && own(m.id).shiny)), found: mo ? { d: d || mo.key + '-01', how: 'Monatsei', month: mo.key } : null });
+  });
+  LV_BONUS.forEach((m, i) => {
+    const o = own(m.id); const via = o && o.via === 'garden' ? o : null;
+    const h = g && g.log.find((x) => x.kind === 'hatch' && x.id === m.id);
+    const p = g && g.plots.find((x) => x.id === m.id);
+    out.push({ id: m.id, kind: 'bonus', no: 'B' + (i + 1), type: m.type, forms: m.forms, tpl: m.tpl, rare: m.rare, have: via ? via.forms : 0, shiny: !!(via && via.shiny), found: via && h ? { d: h.d, how: p && p.kind === 'sow' ? 'Beet · gesät' : 'Besuch' } : null, locked: g ? !g.unlocked.includes(m.id) : true });
+  });
+  LV_LEGENDS.forEach((m, i) => {
+    const y = r.years.find((x) => x.done && x.legend.id === m.id);
+    out.push({ id: m.id, kind: 'legend', no: 'L' + (i + 1), type: 'Legendär', forms: [m.name], tpl: m.tpl, have: y ? 1 : 0, shiny: !!(y && y.gold), found: y ? { d: today, how: `Jahr ${y.y} geschafft` } : null });
+  });
+  ((lv && lv.trades && lv.trades.got) || []).forEach((t) => {
+    const e = out.find((x) => x.id === t.id);
+    if (e && e.kind !== 'legend' && !e.have) { e.have = 1; e.found = { d: t.d, how: 'Tausch' }; e.traded = true; }
+  });
+  out.forEach((e) => {
+    e.meets = e.found ? (e.kind === 'legend' ? 1 : meets(e.type, e.found.d)) : 0;
+    e.notes = [e.have >= 1, e.have >= e.forms.length, e.meets >= 10];
+  });
+  return { list: out, monsters: out.filter((e) => e.have).length, forms: out.reduce((a, e) => a + e.have, 0), shinies: out.filter((e) => e.shiny).length, total: out.length, totalForms: out.reduce((a, e) => a + e.forms.length, 0) };
+}
+// Saison-Kostüme: Saison freigeschaltet, sobald ein Monat dieser Saison 10 gezählte Tage hat; Partyhut nach einem Jahr
+const LV_COSTUMES = [
+  ['kranz', 'Blumenkranz', 'Frühling', [3, 4, 5]], ['stroh', 'Strohhut', 'Sommer', [6, 7, 8]], ['kuerbis', 'Kürbishut', 'Herbst', [9, 10, 11]],
+  ['muetze', 'Mütze + Schal', 'Winter', [12, 1, 2]], ['party', 'Partyhut', '1 Jahr dabei', null],
+].map(([id, name, season, months]) => ({ id, name, season, months }));
+function levelCostumes(src, lv, today, r) {
+  if (!r) return [];
+  const cd = lvCountedDays(src, r.start, today), per = {};
+  cd.counted.forEach((d) => { per[d.slice(0, 7)] = (per[d.slice(0, 7)] || 0) + 1; });
+  return LV_COSTUMES.map((c) => {
+    let open, since = null;
+    if (c.months) { const ks = Object.keys(per).filter((k) => c.months.includes(+k.slice(5, 7)) && per[k] >= 10).sort(); open = ks.length > 0; since = ks[0] || null; }
+    else { open = lvIsoAdd(r.start, 365) <= today; since = open ? lvIsoAdd(r.start, 365) : null; }
+    return Object.assign({ open, since }, c);
+  });
+}
+/* ---------- Codes zum Vergleichen und Tauschen (EZ7/EZ8) ----------
+   Enthalten nur Monster-Nummern, Formen und „schillernd“ – keine Ess-, Gewichts- oder Zeitdaten.
+   Ohne Server nicht fälschungssicher; gedacht für Freunde. Prüfsumme fängt Tippfehler ab. */
+const LV_ALL = () => [].concat(LV_STARTERS, LV_MONTHLY, LV_BONUS, LV_LEGENDS.map((x) => ({ id: x.id, type: 'Legendär', forms: [x.name], tpl: x.tpl })));
+const LV_B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function lvBitsPush(b, v, n) { for (let i = n - 1; i >= 0; i--) b.push((v >>> i) & 1); }
+function lvBitsRead(b, pos, n) { let v = 0; for (let i = 0; i < n; i++) v = v * 2 + (b[pos + i] || 0); return v; }
+function lvCheck(b) { let h = 0x5A; b.forEach((x, i) => { h = (h * 31 + x * (i + 7)) & 0xFF; }); return h; }
+function lvEncode(b) {
+  lvBitsPush(b, lvCheck(b), 8);
+  while (b.length % 5) b.push(0);
+  let s = ''; for (let i = 0; i < b.length; i += 5) s += LV_B32[lvBitsRead(b, i, 5)];
+  return 'GM-' + s.match(/.{1,4}/g).join('-');
+}
+function lvDecodeBits(code, need) {
+  const raw = String(code || '').toUpperCase().replace(/^GM/, '').replace(/[^0-9A-Z]/g, '').replace(/[IL]/g, '1').replace(/O/g, '0');
+  const b = []; for (const ch of raw) { const v = LV_B32.indexOf(ch); if (v < 0) return null; lvBitsPush(b, v, 5); }
+  if (b.length < need + 8) return null;
+  const body = b.slice(0, need);
+  return lvBitsRead(b, need, 8) === lvCheck(body) ? body : null;
+}
+// Sammlungs-Code: Version 1, je Monster 2 Bit Formen + 1 Bit schillernd
+function levelCollectionCode(dex) {
+  const b = []; lvBitsPush(b, 1, 4);
+  lvCodeAll().forEach((m) => { const e = dex.list.find((x) => x.id === m.id) || {}; lvBitsPush(b, Math.min(3, e.have || 0), 2); lvBitsPush(b, e.shiny ? 1 : 0, 1); });
+  return lvEncode(b);
+}
+// Feste Reihenfolge für Codes: nur hinten anhängen, nie umsortieren (sonst lesen ältere Codes falsche Monster)
+const LV_CODE_ORDER = ['moehri', 'erbsi', 'tomi', 'brokki', 'kuerbi', 'pepi', 'radl', 'zwibbel', 'gurki', 'aubi', 'sprossi', 'spori', 'beti', 'lauchling',
+  'ingi', 'knobi', 'kichi', 'maisi', 'kohli', 'morchi', 'erntor', 'rhizowal', 'solarion',
+  'romanix', 'fenni', 'kohlix', 'rhabix', 'shiimi', 'okki', 'mizzi', 'topin', 'porlo'];
+const lvCodeAll = () => { const a = LV_ALL(); return LV_CODE_ORDER.map((id) => a.find((m) => m.id === id)); };
+function levelParseCode(code) {
+  const all = lvCodeAll();
+  let b = lvDecodeBits(code, 4 + all.length * 3);
+  if (b && lvBitsRead(b, 0, 4) === 1) return { kind: 'collection', list: all.map((m, i) => ({ id: m.id, have: lvBitsRead(b, 4 + i * 3, 2), shiny: !!b[4 + i * 3 + 2] })) };
+  b = lvDecodeBits(code, 4 + 7 + 24);
+  if (b && lvBitsRead(b, 0, 4) === 3) { const i = lvBitsRead(b, 4, 7), m = all[i]; if (m && m.type !== 'Legendär') return { kind: 'gift', id: m.id, nonce: lvBitsRead(b, 11, 24) }; } // Version 3: 7 Bit Index, Legendäre nie
+  return null;
+}
+// Geschenk-Code: eine Kopie (erste Form, nie schillernd) eines eigenen Monsters; das eigene bleibt
+function levelGiftCode(id, nonce) {
+  const i = LV_CODE_ORDER.indexOf(id); if (i < 0 || LV_LEGENDS.some((m) => m.id === id)) return null;
+  const b = []; lvBitsPush(b, 3, 4); lvBitsPush(b, i, 7); lvBitsPush(b, nonce >>> 0 & 0xFFFFFF, 24);
+  return lvEncode(b);
+}
+/* ---------- Monatspostkarte (BM5): nur Monster und Zähler fürs Dranbleiben, nie Kalorien, Mengen oder Gewicht ---------- */
+function levelPostcard(src, lv, key, r, g) {
+  if (!r || !g || key < r.start.slice(0, 7)) return null;
+  const inM = (d) => d.slice(0, 7) === key;
+  const m = r.months.find((x) => x.key === key && x.form >= 0);
+  const k1 = r.start.slice(0, 7) === key;
+  const lead = m ? { id: m.monster.id, tpl: m.monster.tpl + m.form, name: m.monster.forms[m.form], shiny: m.shiny, type: m.monster.type }
+    : k1 && r.starter ? { id: r.starter.id, tpl: r.starter.tpl + r.starterStage, name: r.starter.forms[r.starterStage], shiny: r.starterShiny, type: r.starter.type } : null;
+  const vis = g.visits.filter((v) => inM(v.d));
+  const guests = [...new Set(vis.map((v) => v.id))].slice(0, 2);
+  let done = 0; Object.entries(g.ledger.byDay).forEach(([d, x]) => { if (inM(d)) done += ['own', 'fill', 'slice'].reduce((a, k) => a + Math.round((x.parts[k] || 0) / LV_SAMEN[k]), 0); });
+  const shinies = g.log.filter((x) => x.kind === 'shiny' && inM(x.d)).length + (m && m.shiny ? 1 : 0);
+  return { key, lead, guests, days: g.monthCount[key] || 0, visits: vis.length, done, shinies, season: LV_SEASONS[+key.slice(5, 7) - 1] };
+}
+
+/* ---------- Arena-Duell (AD1/AD2): Stärke nur aus Form und Typ; Sieg vergoldet nur das Emblem – keine XP, keine Samen ---------- */
+// Typenrad: jeder Typ ist stark (×1,5) gegen den nächsten im Rad und schwach (×0,75) gegen den vorigen; Legendäre ohne Typ
+function lvTypeMult(att, def) {
+  const a = LV_TYPES.indexOf(att), b = LV_TYPES.indexOf(def);
+  if (a < 0 || b < 0) return 1;
+  if ((a + 1) % LV_TYPES.length === b) return 1.5;
+  if ((b + 1) % LV_TYPES.length === a) return 0.75;
+  return 1;
+}
+function lvFighter(m, f, nForms, shiny) {
+  const lvl = nForms <= 1 ? 2 : Math.round(f / (nForms - 1) * 2); // 0 Baby · 1 Normal · 2 Super
+  const hp = 60 + 25 * lvl;
+  return { id: m.id, tpl: m.tpl + f, name: m.forms ? m.forms[f] : m.name, type: m.type || 'Legendär', lvl, hp, max: hp, atk: 12 + 6 * lvl, special: true, guard: false, shiny: !!shiny, skip: false };
+}
+// Arena-Leitung: Monster der Lieblingstypen der Arena, Form wächst mit der Arena-Nummer
+function levelArenaLeader(i) {
+  const a = LV_ARENAS[i]; if (!a) return [];
+  const pool = [].concat(LV_MONTHLY, LV_BONUS).filter((m) => a.fav.includes(m.type));
+  const n = Math.min(a.slots - 1, 3), out = [];
+  const picks = pool.map((_, k) => pool[(i * 2 + k) % pool.length]).slice(0, Math.min(n, pool.length)); // Pool je Arena gedreht, keine Doppelten
+  for (let k = 0; k < picks.length; k++) {
+    const m = picks[k];
+    const f = Math.min(m.forms.length - 1, i < 2 ? 1 : 2) - (k === n - 1 && i < 4 ? 1 : 0);
+    out.push(lvFighter(m, Math.max(0, f), m.forms.length));
+  }
+  if (a.fav.includes('legendär')) return LV_LEGENDS.map((l) => lvFighter({ id: l.id, tpl: l.tpl, name: l.name, type: 'Legendär' }, 0, 1));
+  return out;
+}
+// Ein Zug: 'attack' | 'special' | 'guard'. rnd() ∈ [0,1). Gibt Text-Ereignisse zurück.
+function lvDuelHit(att, def, rnd, power = 1) {
+  const mult = lvTypeMult(att.type, def.type);
+  let dmg = Math.round(att.atk * mult * power * (0.9 + 0.2 * rnd()));
+  if (def.guard) { dmg = Math.round(dmg / 2); def.guard = false; }
+  def.hp = Math.max(0, def.hp - dmg);
+  return { dmg, mult };
+}
+function lvDuelMove(att, def, move, rnd) {
+  if (att.skip) { att.skip = false; return { who: att.name, move: 'skip' }; }
+  if (move === 'guard') { att.guard = true; return { who: att.name, move }; }
+  if (move === 'special' && att.special) { att.special = false; const h = lvDuelHit(att, def, rnd, 1.2); def.skip = true; return Object.assign({ who: att.name, move }, h); }
+  return Object.assign({ who: att.name, move: 'attack' }, lvDuelHit(att, def, rnd));
+}
+// Einfache Gegner-Taktik: Spezial bei halber Kraft, sonst angreifen, ab und zu abwehren
+function lvDuelAI(me, foe, rnd) { return me.special && me.hp <= me.max / 2 ? 'special' : rnd() < 0.15 ? 'guard' : 'attack'; }
+
+// Aktion mit Lebensmittel-Bezug merken (für Samen erst nach dem ersten Eintrag). Zählt zusätzlich wie levelEvent für die XP.
+function levelFoodEvent(s, kind, iso, foodId) {
+  if (!s.level) return;
+  if (!foodId) { levelEvent(s, kind, iso); return; }
+  const fx = (s.level.fx = s.level.fx || {});
+  const L = (fx[foodId] = fx[foodId] || []);
+  if (kind !== 'fill' && L.some(([k]) => k === kind)) return; // Scan, Anlegen, Scheibe: je Lebensmittel nur einmal
+  levelEvent(s, kind, iso);
+  L.push([kind, iso]); if (L.length > 20) L.splice(0, L.length - 20);
+}
+function levelGardenAct(s, act, iso) {
+  const g = (s.level.garden = s.level.garden || { acts: [], gifts: {} });
+  if (!Array.isArray(g.acts)) g.acts = [];
+  g.acts.push(Object.assign({ d: iso }, act));
+}
+const LEVEL_DEFAULTS = () => ({ enabled: false, startDate: null, starter: null, theme: 'veg', arenas: {}, ev: {}, toasts: true, seed: null, seen: null, lively: true, garden: { acts: [], gifts: {} }, fx: {}, trades: { given: [], got: [] }, friend: null });
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { LV_CODE_ORDER, LV_CFG, LV_STARTERS, LV_MONTHLY, LV_EGG_MONTHS, LV_LEGENDS, LV_BONUS, LV_ARENAS, levelCompute, levelCollection, levelEvent, lvCountedDays, lvMonthIdx, lvMonthOrder, lvShinyList, LEVEL_DEFAULTS, LV_GARDEN, LV_RANKS, LV_UNLOCK, LV_DEKO, lvFoodTypes, lvDayTypes, levelGarden, levelGardenAct, lvRank, levelDex, levelCostumes, LV_COSTUMES, lvSamenLedger, levelFoodEvent, LV_SAMEN, levelCollectionCode, levelParseCode, levelGiftCode, LV_SEASONS, levelPostcard, lvTypeMult, lvFighter, levelArenaLeader, lvDuelMove, lvDuelAI };
+}

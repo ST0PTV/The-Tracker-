@@ -3,11 +3,12 @@
 # 1) Generische Muster: E-Mail-Adressen, Telefonnummern, Backup-Dateien.
 # 2) Eigene Begriffe (Namen, Orte, ...) in .privacy-terms.local, ein Begriff pro Zeile.
 # vendor/ ist ausgenommen: dort liegen nur unveränderte Fremdbibliotheken (minifiziert, sonst Fehlalarme).
+# Ebenso die generierten Monster-Grafiken im Labor (nur SVG-Zahlen, sonst Fehlalarme).
 #    Diese Datei ist per .gitignore ausgeschlossen und gehört nie ins Repo.
 cd "$(dirname "$0")/.." || exit 2
 status=0
 FILES=$(find . -type f \
-  -not -path './.git/*' -not -path './node_modules/*' -not -path './icons/*' -not -path './vendor/*' \
+  -not -path './.git/*' -not -path './node_modules/*' -not -path './icons/*' -not -path './vendor/*' -not -path './labor/gemuesemonster/js/monster_art.js' \
   -not -name '.privacy-terms.local' -not -name 'privacy-scan.sh')
 
 echo "== Backup-Dateien =="
@@ -19,8 +20,8 @@ hits=$(echo "$FILES" | xargs grep -nEI '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-
 if [ -n "$hits" ]; then echo "$hits"; status=1; else echo "keine"; fi
 
 echo "== Telefonnummern =="
-# Zeilen mit DOIs (10.xxxx/...) ausnehmen, sonst Fehlalarme bei Quellenangaben
-hits=$(echo "$FILES" | xargs grep -nEI '(\+49|0049|\b0[1-9][0-9]{2,4}[ /-]?[0-9]{5,9})' 2>/dev/null | grep -vE '10\.[0-9]{4,5}/')
+# Zeilen mit DOIs (10.xxxx/...) und Ziffernfolgen-Alphabeten (0123456789…) ausnehmen, sonst Fehlalarme
+hits=$(echo "$FILES" | xargs grep -nEI '(\+49|0049|\b0[1-9][0-9]{2,4}[ /-]?[0-9]{5,9})' 2>/dev/null | grep -vE '10\.[0-9]{4,5}/' | grep -v '0123456789')
 if [ -n "$hits" ]; then echo "$hits"; status=1; else echo "keine"; fi
 
 echo "== Eigene Begriffe (.privacy-terms.local) =="
