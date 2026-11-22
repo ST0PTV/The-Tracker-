@@ -1,0 +1,192 @@
+// Tests für js/level.js – Aufruf: node tools/test_level.js (nur erfundene Testdaten)
+'use strict';
+const L = require('../js/level.js');
+let fail = 0;
+const eq = (name, got, want) => { const ok = JSON.stringify(got) === JSON.stringify(want); if (!ok) fail++; console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}: ${JSON.stringify(got)}${ok ? '' : ' ≠ ' + JSON.stringify(want)}`); };
+const ok = (name, cond) => eq(name, !!cond, true);
+const add = (iso, n) => { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const range = (a, b) => { const o = []; for (let d = a; d <= b; d = add(d, 1)) o.push(d); return o; };
+const fullDay = () => ['breakfast', 'lunch', 'dinner', 'snack'].map((meal) => ({ meal, k: 300 }));
+const src = (days, extra = {}) => Object.assign({ days, weightLog: {}, ev: {}, waterOn: false, waterOf: () => 0, waterGoalFor: () => 1500 }, extra);
+const START = '2026-10-12'; // Montag
+
+// 1) Nichts getrackt: Level 1, ein Pausetag pro Woche, nie Verlust
+let r = L.levelCompute(src({}), { startDate: START }, '2026-10-25');
+eq('leer: Level', r.level, 1);
+eq('leer: Pausetage (2 Wochen)', r.pauseDays, ['2026-10-12', '2026-10-19']);
+
+// 2) Jeden Tag voll getrackt (4 Einträge, alle Mahlzeiten): 10 + 15 + 8 = 33 XP/Tag, + 35 je voller Woche
+const days = {}; range(START, '2026-11-30').forEach((d) => { days[d] = fullDay(); });
+r = L.levelCompute(src(days), { startDate: START, starter: 'erbsi' }, '2026-10-12');
+eq('Tag 1: XP / Level', [r.xp, r.level], [33, 2]);
+r = L.levelCompute(src(days), { startDate: START, starter: 'erbsi' }, '2026-10-18');
+eq('Woche 1: XP (7×33 + 35)', r.xp, 7 * 33 + 35);
+r = L.levelCompute(src(days), { startDate: START, starter: 'erbsi' }, '2026-11-30');
+eq('L10 erreicht am (Tag 27: 27×33 + 3×35 = 996)', r.l10, '2026-11-07');
+eq('Starter-Stufe 3 (Schotador)', [r.starterStage, r.starterTpl], [2, 5]);
+eq('November (Monat 2) mit 30 Tagen → +1 Level', [r.months[0].key, r.months[0].done, r.months[0].form, r.level], ['2026-11', true, 2, 11]);
+
+// 3) Wasser- und Gewichts-XP, Teilen nur 1× pro Woche, Mahlzeiten unvollständig
+const d3 = { [START]: [{ meal: 'lunch' }] };
+r = L.levelCompute(src(d3, { waterOn: true, waterOf: () => 1600, weightLog: { [START]: 70, '2026-10-13': 70 }, ev: { [START]: { share: 1, scan: 2 }, '2026-10-13': { share: 1, own: 1, fill: 1 } } }), { startDate: START }, '2026-10-13');
+// Tag 1: 10 + 2 + scan 30 + share 25 + weight 5 + water 5 = 77; Tag 2: own 20 + fill 10 + water 5 = 35 (kein 2. Share/Gewicht in derselben Woche)
+eq('Extras: XP', r.xp, 112);
+
+// 4) Monatsmonster-Formen: 9 Tage → Baby, 10 → Normal, Lücken egal
+const d4 = Object.assign({}, days); range('2026-12-01', '2026-12-31').filter((d, i) => i % 3 === 0).forEach((d) => { d4[d] = fullDay(); });
+r = L.levelCompute(src(d4), { startDate: START }, '2026-12-31');
+const dec = r.months.find((m) => m.key === '2026-12');
+eq('Dezember: getrackt / gezählt (inkl. Pausetage) / Form', [dec.tracked, dec.counted, dec.form, dec.done], [11, 16, 1, false]);
+
+// 5) Jahre und Quartale: Start 12.10.2026 → Monat 13 = Oktober 2027
+const d5 = {}; range(START, '2027-12-31').forEach((d) => { d5[d] = fullDay(); });
+r = L.levelCompute(src(d5), { startDate: START }, '2027-12-31');
+eq('Monat 15, Level = 10 + 11 + 1 Quartal', [r.curMonth, r.level], [15, 22]);
+eq('Jahr 1 → Erntor', r.years.map((y) => [y.y, y.done, y.legend.id]), [[1, true, 'erntor']]);
+eq('Arenen offen', r.arenas.filter((a) => a.open).map((a) => a.name), ['Glasdom', 'Wurzelgrotte', 'Kompostkrater', 'Wolkenbeet']);
+const c = L.levelCollection(r);
+eq('Sammlung: Monster / Formen', [c.monsters, c.forms], [15, 42 + 1]); // ohne Starter: Monatsei läuft bis Monat 18 weiter (14 Monatsmonster) + Erntor
+
+// 6) Zufällige Reihenfolge + Schillernde: Permutation, deterministisch, Garantie
+const o1 = L.lvMonthOrder(123), o2 = L.lvMonthOrder(123), o3 = L.lvMonthOrder(999);
+eq('Reihenfolge ist Permutation aller Monatsmonster', o1.slice().sort((a, b) => a - b), [...Array(L.LV_MONTHLY.length).keys()]);
+eq('gleicher Seed → gleiche Reihenfolge', o1, o2);
+eq('anderer Seed → andere Reihenfolge', JSON.stringify(o1) !== JSON.stringify(o3), true);
+let maxGap = 0;
+for (let sd = 1; sd < 300; sd++) { let g = 0; L.lvShinyList(sd, 40).forEach((x) => { g = x ? 0 : g + 1; maxGap = Math.max(maxGap, g); }); }
+eq('Schillernd spätestens beim 6. Schlüpfen (max. 5 ohne)', maxGap <= 5, true);
+r = L.levelCompute(src(d5), { startDate: START, seed: 123 }, '2027-12-31');
+eq('Monatsmonster folgen Seed-Reihenfolge', r.months.map((m) => m.monster.id).slice(0, 3), o1.slice(0, 3).map((i) => L.LV_MONTHLY[i].id));
+
+// 6b) Monatsei schlüpft erst mit echtem Eintrag – Pausetage allein reichen nicht
+{ const d = {}; for (let i = 0; i < 31; i++) { const x = new Date(2026, 9, 1 + i, 12); const k = `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; if (k < '2026-11-01') d[k] = [{ k: 1 }]; }
+  const r6 = L.levelCompute(src(d), { startDate: '2026-10-01', seed: 5 }, '2026-11-04');
+  eq('Ei ohne Eintrag', r6.months[0].form, -1);
+  d['2026-11-04'] = [{ k: 1 }];
+  eq('Ei mit Eintrag', L.levelCompute(src(d), { startDate: '2026-10-01', seed: 5 }, '2026-11-04').months[0].form, 0); }
+
+// 8) Garten: Typen, Samen, Besuch, Beet, Mitbringsel
+eq('Typ Linsen', L.lvFoodTypes('Linsen-Dal'), ['Hülse']);
+eq('Typ Kohlrabi kein Blatt', L.lvFoodTypes('Kohlrabi roh'), ['Spross']);
+eq('Typ Kohlenhydrate nichts', L.lvFoodTypes('Kohlenhydrat-Riegel'), []);
+eq('Typ Chips nichts', L.lvFoodTypes('Kartoffelchips'), []);
+eq('Typ Tomate+Zwiebel', L.lvFoodTypes('Tomaten-Zwiebel-Salat').sort(), ['Blatt', 'Frucht', 'Zwiebel']);
+{
+  const G0 = '2026-03-02', T = '2026-05-31';
+  const days = {}; for (let d = G0; d <= T; d = new Date(new Date(d + 'T12:00:00Z').getTime() + 864e5).toISOString().slice(0, 10)) days[d] = [{ n: 'Linsen-Dal mit Möhre und Knoblauch', k: 1 }];
+  const ev = { '2026-03-02': { scan: 9 }, '2026-03-03': { scan: 2, share: 1 }, '2026-03-04': { share: 1 } };
+  const S = src(days, { ev });
+  const lv = { startDate: G0, starter: 'moehri', seed: 99, garden: { acts: [], gifts: {} } };
+  let r = L.levelCompute(S, lv, T), g = L.levelGarden(S, lv, T, r);
+  eq('Samen Tagesgrenze + Teilen 1×/Woche', g.earned, 60 + 55 + 0);
+  eq('Rang Sammler', g.rank.name, 'Sammler');
+  eq('5 Beetplätze vor Kartograf', g.maxPlots, 5);
+  // ersten neuen Besuch finden und einladen
+  const lv2 = JSON.parse(JSON.stringify(lv)); let vd = null, vid = null;
+  for (let d = G0; d <= T && !vd; d = new Date(new Date(d + 'T12:00:00Z').getTime() + 864e5).toISOString().slice(0, 10)) {
+    const gg = L.levelGarden(S, lv2, d, L.levelCompute(S, lv2, d)); if (gg.visitor && gg.visitor.kind === 'new') { vd = d; vid = gg.visitor.id; }
+  }
+  ok('Besuch kommt', !!vd);
+  ok('Besucher ist Bonus-Monster passenden Typs', ['ingi', 'knobi', 'kichi'].includes(vid));
+  L.levelGardenAct({ level: lv2 }, { a: 'invite', m: vid }, vd);
+  g = L.levelGarden(S, lv2, T, L.levelCompute(S, lv2, T));
+  eq('Einladen kostet 40', g.samen, 115 - 40 + g.log.filter((x) => x.kind === 'gift').length * 0);
+  ok('Monster geschlüpft und gewachsen', g.owned[vid] && g.owned[vid].forms === 2);
+  ok('gewachsen → Garten', g.resident.includes(vid) && !g.plots.length);
+  // zu teuer: zweites Einladen am selben Tag wird ignoriert, Säen ohne Samen auch
+  L.levelGardenAct({ level: lv2 }, { a: 'sow' }, vd); L.levelGardenAct({ level: lv2 }, { a: 'sow' }, vd);
+  const g2 = L.levelGarden(S, lv2, T, L.levelCompute(S, lv2, T));
+  eq('Säen nur mit genug Samen (1×)', g2.log.filter((x) => x.kind === 'sow' || x.kind === 'refund').length <= 1, true);
+  ok('Samen nie negativ', g2.samen >= 0);
+  // Mitbringsel nur, wenn abgeholt
+  const gd = g.log.find((x) => x.kind === 'gift');
+  eq('ohne Abholen keine Mitbringsel', gd, undefined);
+  // Deko kaufen
+  const lv3 = JSON.parse(JSON.stringify(lv)); L.levelGardenAct({ level: lv3 }, { a: 'deko', m: 'blumen' }, '2026-03-05'); L.levelGardenAct({ level: lv3 }, { a: 'deko', m: 'teich' }, '2026-03-05');
+  const g3 = L.levelGarden(S, lv3, T, L.levelCompute(S, lv3, T));
+  eq('Deko: Blumen ja, Teich zu teuer', g3.deko, ['blumen']);
+  eq('Deko kostet', g3.samen, 115 - 80);
+  // Freischaltung über Zeit: Monat 4 → Kichi/Maisi frei
+  eq('frei bis Monat 3', L.levelGarden(S, lv, T, L.levelCompute(S, lv, T)).unlocked, ['ingi', 'knobi']);
+  const T2 = '2026-06-05'; days[T2] = [{ n: 'Kichererbsen', k: 1 }];
+  eq('frei ab Monat 4', L.levelGarden(S, lv, T2, L.levelCompute(S, lv, T2)).unlocked, ['ingi', 'knobi', 'kichi', 'maisi']);
+}
+
+// 9) Sammlung und Kostüme
+{
+  const days = {}; let d = '2026-07-14';
+  while (d <= '2026-10-13') { days[d] = [{ n: 'Tomate roh', k: 1 }]; d = new Date(new Date(d + 'T12:00:00Z').getTime() + 864e5).toISOString().slice(0, 10); }
+  const S = src(days), lv = { startDate: '2026-07-14', starter: 'tomi', seed: 3, garden: { acts: [], gifts: {} } };
+  const r = L.levelCompute(S, lv, '2026-10-13'), g = L.levelGarden(S, lv, '2026-10-13', r), dex = L.levelDex(S, lv, '2026-10-13', r, g);
+  eq('Album: 32 Monster, 84 Formen', [dex.total, dex.totalForms], [32, 84]);
+  const tomi = dex.list.find((e) => e.id === 'tomi');
+  eq('Starter: 3 Formen, alle Notizen', [tomi.have, tomi.notes], [3, [true, true, true]]);
+  eq('Begegnungen = Tage mit Frucht seit Start', tomi.meets, 92);
+  eq('Monster: Starter + 3 Monate', dex.monsters, 4);
+  const cos = L.levelCostumes(S, lv, '2026-10-13', r);
+  eq('Kostüme: Sommer + Herbst offen', cos.filter((c) => c.open).map((c) => c.id), ['stroh', 'kuerbis']);
+  eq('Partyhut erst nach 1 Jahr', cos.find((c) => c.id === 'party').open, false);
+}
+
+// 10) Samen-Buchhaltung mit Lebensmittel-Bezug, Forschungsauftrag, Codes
+{
+  const days = { '2026-10-05': [{ n: 'Brot', ref: 'custom:a', k: 1 }], '2026-10-06': [{ n: 'X', ref: 'custom:b', k: 1 }, { n: 'Y', ref: 'custom:c', k: 1 }], '2026-10-08': [{ n: 'Z', ref: 'off:1', k: 1 }] };
+  const st = { days, level: { ev: {}, fx: {} } };
+  L.levelFoodEvent(st, 'own', '2026-10-05', 'custom:z');            // nie gegessen → wartet
+  L.levelFoodEvent(st, 'scan', '2026-10-06', 'off:1');              // gegessen am 8. → Gutschrift am 8.
+  L.levelFoodEvent(st, 'scan', '2026-10-06', 'off:1');              // doppelt → zählt nicht
+  ['custom:a', 'custom:b', 'custom:c'].forEach((f) => L.levelFoodEvent(st, 'fill', '2026-10-07', f));
+  const S = src(days, { ev: st.level.ev, fx: st.level.fx });
+  const led = L.lvSamenLedger(S, '2026-10-01', '2026-10-11');
+  eq('wartet auf ersten Eintrag', led.pending.map((x) => x.id), ['custom:z']);
+  eq('Scan am Tag des Essens', led.byDay['2026-10-08'].parts, { scan: 15 });
+  eq('3 ergänzt → Auftrag +50', [led.byDay['2026-10-07'].raw, led.byDay['2026-10-07'].task, led.byDay['2026-10-07'].n], [30, 50, 80]);
+  eq('kein doppeltes Zählen mit Alt-Zählern', Object.values(led.byDay).reduce((a, x) => a + x.n, 0), 15 + 80);
+  const dex = { list: [{ id: 'erbsi', have: 3, shiny: true }, { id: 'pepi', have: 2 }, { id: 'kichi', have: 1 }] };
+  const code = L.levelCollectionCode(dex), back = L.levelParseCode(code);
+  eq('Sammlungs-Code rund', back.list.filter((x) => x.have).map((x) => [x.id, x.have, x.shiny]), [['erbsi', 3, true], ['pepi', 2, false], ['kichi', 1, false]]);
+  eq('Tippfehler erkannt', L.levelParseCode(code.slice(0, -1) + (code.slice(-1) === 'A' ? 'B' : 'A')), null);
+  const gc = L.levelGiftCode('tomi', 123456);
+  eq('Geschenk-Code', L.levelParseCode(gc), { kind: 'gift', id: 'tomi', nonce: 123456 });
+  eq('Kleinbuchstaben ok', L.levelParseCode(gc.toLowerCase()).id, 'tomi');
+}
+
+// 11) Saison, Postkarte, Duell
+{
+  eq('Typenrad Frucht→Blatt', [L.lvTypeMult('Frucht', 'Blatt'), L.lvTypeMult('Blatt', 'Frucht'), L.lvTypeMult('Hülse', 'Frucht'), L.lvTypeMult('Frucht', 'Pilz')], [1.5, 0.75, 1.5, 1]);
+  eq('Saison Oktober', L.LV_SEASONS[9].name, 'Kürbiszeit');
+  const lead = L.levelArenaLeader(0);
+  ok('Arena 0: Leitung aus Blatt/Spross', lead.length >= 2 && lead.every((f) => ['Blatt', 'Spross'].includes(f.type)));
+  ok('Leitung ohne doppelte Monster', [0, 1, 2, 3, 4, 5, 6].every((i) => { const l = L.levelArenaLeader(i).map((f) => f.id); return new Set(l).size === l.length; }));
+  const a = L.lvFighter(L.LV_MONTHLY[1], 2, 3), b = L.lvFighter(L.LV_MONTHLY[0], 2, 3); // Kürbrock (Frucht) gegen Brokkolos (Blatt)
+  const e = L.lvDuelMove(a, b, 'attack', () => 0.5);
+  eq('Treffer sehr effektiv', [e.mult, e.dmg, b.hp], [1.5, 36, 74]);
+  b.guard = true; const e2 = L.lvDuelMove(a, b, 'special', () => 0.5);
+  eq('Spezial halbiert durch Abwehr, Gegner setzt aus', [e2.dmg, b.skip, a.special], [22, true, false]);
+  eq('Aussetzen', L.lvDuelMove(b, a, 'attack', () => 0.5).move, 'skip');
+  const days = {}; let d = '2026-09-01'; while (d <= '2026-10-13') { days[d] = [{ n: 'Kürbis', k: 1 }]; d = new Date(new Date(d + 'T12:00:00Z').getTime() + 864e5).toISOString().slice(0, 10); }
+  const S = src(days), lv = { startDate: '2026-09-01', starter: 'tomi', seed: 5, garden: { acts: [{ d: '2026-10-05', a: 'deko', m: 's10' }, { d: '2026-10-05', a: 'deko', m: 's09' }], gifts: {} } };
+  const S2 = src(days, { ev: { '2026-10-01': { scan: 4 }, '2026-10-02': { scan: 4 }, '2026-10-03': { scan: 4 } } });
+  const r = L.levelCompute(S2, lv, '2026-10-13'), g = L.levelGarden(S2, lv, '2026-10-13', r);
+  eq('Saison-Deko nur im eigenen Monat ab 10 Tagen', g.deko, []);
+  lv.garden.acts = [{ d: '2026-10-12', a: 'deko', m: 's10' }];
+  eq('Saison-Deko Oktober nach 10 Tagen', L.levelGarden(S2, lv, '2026-10-13', r).deko, ['s10']);
+  const pc = L.levelPostcard(S2, lv, '2026-09', r, g);
+  eq('Postkarte September: Starter, 30 Tage', [pc.lead.id, pc.days], ['tomi', 30]);
+}
+
+// 7) Start in der Zukunft oder fehlend
+eq('ohne Start', L.levelCompute(src({}), {}, '2026-10-12'), null);
+
+// 8) Codes (Gemüsemonster 2.0): feste Reihenfolge, Geschenk v3, nie Legendäre
+{
+  const all = [].concat(L.LV_STARTERS, L.LV_MONTHLY, L.LV_BONUS, L.LV_LEGENDS);
+  eq('Code-Reihenfolge deckt alle Monster genau einmal ab', [L.LV_CODE_ORDER.length, new Set(L.LV_CODE_ORDER).size, all.every((m) => L.LV_CODE_ORDER.includes(m.id))], [all.length, all.length, true]);
+  const gc = L.levelGiftCode('porlo', 4242);
+  eq('Geschenk-Code hin und zurück', L.levelParseCode(gc), { kind: 'gift', id: 'porlo', nonce: 4242 });
+  eq('Legendäre lassen sich nicht verschenken', L.levelGiftCode('solarion', 1), null);
+  eq('kaputte Codes', ['', 'GM-XXXX', null, '<b>'].map((x) => L.levelParseCode(x)), [null, null, null, null]);
+}
+
+console.log(fail ? `\n${fail} Test(s) fehlgeschlagen` : '\nAlle Tests bestanden');
+process.exit(fail ? 1 : 0);

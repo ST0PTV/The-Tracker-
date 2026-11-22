@@ -20,4 +20,4 @@ Schrittweises Zusammenführen. Die Ursprungs-Apps bleiben in ihren Repos; einget
 4. **Training** – Workout-Tracker als eigener Bereich; Körpergewicht aus dem Profil; große Daten erst beim Öffnen laden. ✅ (0.3.1–0.3.3)
 5. **Aufräumen** – Themes und ein Muster für alle Einstellungen (0.4.2), Feinschliff (0.4.3); Abschluss 0.5.0: ein Backup für alles mit Content-Security-Policy, Einführung (Rundgang, Probetraining), gespeicherte Mahlzeiten, Plan-Vorschlag zum Magen-Modell, Snack-Rahmen und Mangel-Hinweise im Vorrat, Mineralstoffe auf der Rezeptseite, Zyklus-Statistik und abschaltbare Hinweise. ✅ (0.5.0)
 6. **Weitere Lücken aus den Ursprungs-Apps** – Wochenstreifen und Monat, Wischen, Uhrzeit je Mahlzeit, Wochenrückblick, Tagesabschluss, „Geplant für heute“, Ziel-Editor mit Historie, „Meine Lebensmittel“ mit Teilen und Rezept je 100 g, Kochen mit dem Vorrat, Vorrat- und Einkaufslisten-Extras, Tipps im Training. ✅ (0.5.1)
-6. **Level-System** – erst nach Phase 5.
+7. **Level-System** – erst nach Phase 5. Bis dahin liegt es als eigenständiges Labor in `labor/gemuesemonster/` (aus dem Calorie Tracker übernommen, nicht mit der App verbunden) und wird dort getestet.

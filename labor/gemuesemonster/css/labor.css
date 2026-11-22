@@ -1,0 +1,7 @@
+/* Nur fürs Labor: Hinweiskarte und Szenario-Liste. Farben aus den Tokens in wirt.css. */
+#view { padding-bottom: 40px; }
+.lab-note { border-color: rgba(var(--c-rgb), 0.45); }
+.lab-sc { display: flex; flex-direction: column; gap: 2px; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.lab-sc small { color: var(--muted); }
+.lab-sc.on { border-color: var(--accent); }
+.lab-open { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
