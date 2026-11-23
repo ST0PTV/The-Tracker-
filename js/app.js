@@ -73,11 +73,11 @@ if ('serviceWorker' in navigator) {
   // getippter Text in einem Feld steht – dann beim nächsten Wechsel in den Hintergrund oder auf eine andere Seite,
   // sobald kein Feld mehr Text hat (sonst ginge ein Entwurf verloren, wenn man nur kurz die App wechselt).
   let hadWorker = !!navigator.serviceWorker.controller;
-  let reloading = false, pending = false;
+  let pending = false;
   const typing = () => [...document.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea')]
     .some((f) => f.value !== f.defaultValue);
-  const reload = () => { if (!reloading) { reloading = true; location.reload(); } };
-  const tryReload = () => { if (pending && !typing()) reload(); };
+  // pending zurücksetzen = höchstens ein Neuladen
+  const tryReload = () => { if (pending && !typing()) { pending = false; location.reload(); } };
   document.addEventListener('visibilitychange', () => { if (document.hidden) tryReload(); });
   window.addEventListener('hashchange', () => setTimeout(tryReload, 0));
   navigator.serviceWorker.addEventListener('controllerchange', () => {

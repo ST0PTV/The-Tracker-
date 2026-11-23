@@ -125,9 +125,12 @@ export async function auditTargets(p, where, ALLOW = '') {
         const lost = ext.filter(([x, y]) => { const hit = document.elementFromPoint(x, y); return !hit || (!(hit === e || e.contains(hit)) && !hit.closest(FIXED)); });
         if (lost.length) { const hit = document.elementFromPoint(lost[0][0], lost[0][1]); errors.push(`${where}: Trefferfläche ${w} × ${hgt} nur teilweise erreichbar bei ${name(e)} (am Rand getroffen: ${hit ? name(hit) : 'nichts'})`); }
       }
-      const small = `${where}\t${e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).join('.') : ''}\t${w}×${hgt}\t${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 30)}`;
       if (w < 24 || hgt < 24) errors.push(`${where}: Tippfläche ${w} × ${hgt} px (< 24) bei ${name(e)}`);
-      else if (w < 44 || hgt < 44) (ALLOW && e.matches(ALLOW) ? hints : under).push(small);
+      else if (w < 44 || hgt < 44) {
+        // Zeile für hinweise-44.tsv / flaechen-*.txt: nur bauen, wenn sie gebraucht wird
+        const cls = typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).join('.') : '';
+        (ALLOW && e.matches(ALLOW) ? hints : under).push(`${where}\t${e.tagName.toLowerCase()}${cls}\t${w}×${hgt}\t${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 30)}`);
+      }
       // Treffertest: Mitte und 3 px innerhalb jeder Kante der sichtbaren Box
       const pts = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 3, r.top + r.height / 2], [r.right - 3, r.top + r.height / 2], [r.left + r.width / 2, r.top + 3], [r.left + r.width / 2, r.bottom - 3]]
         .filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight);

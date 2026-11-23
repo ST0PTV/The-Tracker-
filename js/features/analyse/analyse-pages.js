@@ -121,7 +121,7 @@ export function monthView(rerender) {
 let year = null;
 
 export function yearView(rerender) {
-  const today = isoDate(), Y0 = Number(today.slice(0, 4));
+  const today = isoDate(), cur = today.slice(0, 7), Y0 = Number(today.slice(0, 4));
   if (!year || year > Y0) year = Y0;
   let logged = 0, first = null;
   const blocks = MON3.map((mn, mi) => {
@@ -135,8 +135,8 @@ export function yearView(rerender) {
       if (food) { logged++; n++; if (!first) first = d; }
       cells.push(h('i', { class: `yd${d > today ? ' fut' : food ? ' on' : ''}${d === today ? ' today' : ''}` }));
     }
-    const key = `${year}-${pad(mi + 1)}`, fut = key > today.slice(0, 7);
-    return h('button', { class: 'ym', type: 'button', disabled: fut, 'aria-label': `${MON[mi]}: ${n} ${n === 1 ? 'Tag' : 'Tage'} eingetragen${key === today.slice(0, 7) ? ', heute' : ''}`,
+    const key = `${year}-${pad(mi + 1)}`, fut = key > cur;
+    return h('button', { class: 'ym', type: 'button', disabled: fut, 'aria-label': `${MON[mi]}: ${n} ${n === 1 ? 'Tag' : 'Tage'} eingetragen${key === cur ? ', heute' : ''}`,
       onclick: () => { month = key; location.hash = '#/analyse/monat'; } },
       h('span', { class: 'ym-n' }, mn), h('span', { class: 'ym-g', 'aria-hidden': 'true' }, ...cells));
   });
