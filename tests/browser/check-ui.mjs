@@ -41,7 +41,7 @@ const b = await launch();
 const { ok, done } = checker();
 const out = outDir('ui');
 const errs = [];
-const hints = new Map();
+const hints = new Set();
 
 async function page(width, mode, palette) {
   const ctx = await b.newContext({ viewport: { width, height: 760 }, deviceScaleFactor: 1, serviceWorkers: 'block', colorScheme: mode });
@@ -102,7 +102,7 @@ if (part === 'alle' || part === 'flaechen') {
       const t = await auditTargets(p, where, ALLOW[width]);
       tgt.push(...t.errors);
       u44.push(...t.under);
-      for (const h of t.hints) hints.set(h, (hints.get(h) || 0) + 1);
+      for (const h of t.hints) hints.add(h);
       brk.push(...await auditWordBreaks(p, where));
       wid.push(...await auditWidth(p, where));
       if (width === 320 && mode === 'light') await p.screenshot({ path: join(out, `320-${where.split(' ').slice(1).join('_').replace(/\//g, '_') || 'heute'}.png`) });
@@ -114,8 +114,8 @@ if (part === 'alle' || part === 'flaechen') {
     ok(wid.length === 0, `Breite ${width} px ${mode}: ${wid.length ? wid.join('; ') : 'keine Seite zu breit'}`);
     await ctx.close();
   }
-  writeFileSync(join(out, 'hinweise-44.tsv'), [...hints.keys()].join('\n'));
-  if (hints.size) console.log(`Ausnahmen unter 44 px (ALLOW): ${hints.size} Arten, z. B. ${[...hints.keys()].slice(0, 5).join(' | ')}`);
+  writeFileSync(join(out, 'hinweise-44.tsv'), [...hints].join('\n'));
+  if (hints.size) console.log(`Ausnahmen unter 44 px (ALLOW): ${hints.size} Arten, z. B. ${[...hints].slice(0, 5).join(' | ')}`);
 }
 
 ok(errs.length === 0, `keine Konsolenfehler ${errs.slice(0, 3).join(' | ')}`);

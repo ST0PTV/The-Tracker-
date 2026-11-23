@@ -94,12 +94,12 @@ export function smallFakeCamera(dir) {
   return ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', `--use-file-for-fake-video-capture=${file}`];
 }
 
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2' };
 
 const SERVED = new Set(); // Ursprünge von startServer(), die launch() per Route bedient
 
 /** Eine Repo-Datei wie der Server ausliefern: { status, body, headers }. */
-async function serveFile(pathname) {
+export async function serveFile(pathname) {
   let p = decodeURIComponent(pathname);
   if (p.endsWith('/')) p += 'index.html';
   const f = normalize(join(ROOT, p));

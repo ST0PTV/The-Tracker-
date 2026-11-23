@@ -1026,6 +1026,8 @@ body.tt-train :is(.info-btn, .sheet-close, .dots)::after {inset: -4px;}
 body.tt-train .info-btn.small::after, body.tt-train .chip-pair .info-btn::after, body.tt-train .label-row .info-btn::after, body.tt-train .ctitle .info-btn::after {inset: -7px;}
 body.tt-train :is(.link, .note-btn, .hist-link)::after {inset: -6px 0;}
 body.tt-train :where(.sheet, #view) a[href]:not(.dots)::after {inset: -8px 0;}
+/* 0.5.4: Zurück-Pfeil (auch unter „Ich → Training“) 44 px breit, Aussehen bleibt */
+body.tt-train :where(.sheet, #view) a.back[href]::after {inset: -8px -2px;}
 body.tt-train :is(.qbtn, .pill, .tt-tip-ok)::after {inset: -2px 0;}
 body.tt-train .setrow .sn::after {inset: 0 -6px;}
 body.tt-train .anim-badge::after {inset: -7px 0;}
@@ -1079,6 +1081,4 @@ body.tt-train #view .page-head:has(> .head-btns) h1 { margin: 4px 0; }
 /* Schalter des Workout-Trackers sind das <input> selbst; in app.css ist .switch ein Rahmen um input + .slider. */
 body.tt-train input.switch { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 51px; height: 31px; margin: 0; border-radius: 999px; cursor: pointer;
   background: var(--fill); transition: background 0.2s; }
-/* 0.5.4: Zurück-Pfeil (auch unter „Ich → Training“) 44 px breit, Aussehen bleibt */
 body.tt-train .back {position: relative;}
-body.tt-train :where(.sheet, #view) a.back[href]::after {content: ''; position: absolute; inset: -8px -2px;}

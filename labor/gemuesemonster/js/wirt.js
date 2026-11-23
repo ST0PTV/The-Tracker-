@@ -15,7 +15,6 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 function isoDate(d) { const z = new Date(d.getTime() - d.getTimezoneOffset() * 60000); return z.toISOString().slice(0, 10); }
 function addDays(iso, n) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return isoDate(d); }
 const setOpen = new Set(); // in der Wirts-App: aufgeklappte Einstellungen
-var INFO = globalThis.INFO || {}; globalThis.INFO = INFO;
 
 let toastTimer;
 function toast(msg) {
@@ -66,7 +65,8 @@ const waterOf = (iso) => ((state.water && state.water.log && state.water.log[iso
 const waterGoalFor = () => (state.water && state.water.goal) || 1500;
 
 /* ---------- Testdaten (nur erfunden) ---------- */
-let ra = 20260714;
+const LAB_SEED = 20260714;
+let ra = LAB_SEED;
 const rnd = () => { ra = (ra + 0x6D2B79F5) | 0; let t = Math.imul(ra ^ (ra >>> 15), 1 | ra); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 const LAB_TODAY = isoDate(new Date());
 const LAB_START = addDays(LAB_TODAY, -130); // gut vier Monate Verlauf
@@ -84,7 +84,6 @@ const LAB_F = {
 const labEnt = (meal, k, g) => { const f = LAB_F[k]; return { id: Math.random().toString(36).slice(2, 10), meal, grams: g, ref: 'bls:' + f[0], src: 'bls', n: f[1], k: f[2], p: f[3], c: f[4], f: f[5], fi: f[6], su: f[7] }; };
 const LAB_LUNCH = [['reis', 'tofu', 'brokkoli'], ['kartoffel', 'spinat', 'zwiebel'], ['reis', 'champ', 'paprika'], ['kartoffel', 'tofu', 'moehre'], ['reis', 'mais', 'tomate']];
 const labDay = (i) => { const l = LAB_LUNCH[i % LAB_LUNCH.length]; return [labEnt('breakfast', i % 3 ? 'hafer' : 'brot', 70), labEnt('breakfast', i % 2 ? 'apfel' : 'banane', 130), labEnt('lunch', l[0], 90), labEnt('lunch', l[1], 150), labEnt('lunch', l[2], 120), labEnt('dinner', 'tomate', 150), labEnt('dinner', 'zwiebel', 40)]; };
-const labSrc = (s) => ({ days: s.days, weightLog: {}, ev: s.level.ev || {}, waterOn: false, waterOf: () => 0, waterGoalFor: () => Infinity });
 
 function labBase(from, to, skip) {
   const s = { days: {}, weightLog: {}, water: { enabled: false, goal: 1500, log: {} }, slices: {}, level: { ev: {}, fx: {} } };
@@ -95,7 +94,7 @@ function labBase(from, to, skip) {
 // Garten-Verlauf nachspielen: Besucher einladen, Freunde begrüßen, Mitbringsel abholen, ab und zu säen und Deko kaufen
 function labPlay(s, until, keep) {
   s.level.garden = { acts: [], gifts: {} };
-  const S = labSrc(s), r = levelCompute(S, s.level, until);
+  const S = lvSrcFromState(s), r = levelCompute(S, s.level, until);
   const g = levelGarden(S, s.level, addDays(until, -1), r, (d, x) => {
     const out = [];
     if (x.gift) out.push({ a: 'gift' });
@@ -110,12 +109,13 @@ function labPlay(s, until, keep) {
 }
 function labGarden(want, keep) {
   for (let seed = 1; seed < 400; seed++) {
-    ra = 20260714;
+    ra = LAB_SEED;
     const s = labBase(LAB_START, LAB_TODAY, (d) => d !== LAB_TODAY && rnd() < 0.1);
     s.level = Object.assign(s.level, { enabled: true, starter: 'erbsi', startDate: LAB_START, seed });
     s.days[LAB_TODAY] = labDay(4); // heute mit Mais (Spross)
     labPlay(s, LAB_TODAY, keep);
-    const g = levelGarden(labSrc(s), s.level, LAB_TODAY, levelCompute(labSrc(s), s.level, LAB_TODAY));
+    const src = lvSrcFromState(s);
+    const g = levelGarden(src, s.level, LAB_TODAY, levelCompute(src, s.level, LAB_TODAY));
     if (want(g)) { s.level.costume = 'kuerbis'; s.level.gseen = g.log.filter((x) => x.kind === 'hatch' || x.kind === 'grow').length; return s; }
   }
   return labBase(LAB_START, LAB_TODAY, () => false);
@@ -130,7 +130,7 @@ const LAB_SC = {
       const mStart = LAB_TODAY.slice(0, 8) + '01';
       const s = labBase(LAB_START, addDays(mStart, -1), () => rnd() < 0.12);
       Object.assign(s.level, { enabled: true, starter: 'moehri', startDate: LAB_START, seed: 4242 });
-      const yest = addDays(LAB_TODAY, -1), src = labSrc(s);
+      const yest = addDays(LAB_TODAY, -1), src = lvSrcFromState(s);
       for (let n = 1; n <= 31; n++) {
         for (let d = mStart; d <= yest; d = addDays(d, 1)) delete s.days[d];
         for (let k = 0; k < n && addDays(yest, -k) >= mStart; k++) s.days[addDays(yest, -k)] = labDay(k);
@@ -151,15 +151,12 @@ function labNormalize(data) {
   const s = Object.assign({ days: {}, weightLog: {}, slices: {}, water: { enabled: false, goal: 1500, log: {} } }, data || {});
   s.level = Object.assign(LEVEL_DEFAULTS(), s.level || {});
   const L = s.level;
-  if (!L.ev || typeof L.ev !== 'object') L.ev = {};
-  if (!L.arenas || typeof L.arenas !== 'object') L.arenas = {};
-  if (!L.fx || typeof L.fx !== 'object') L.fx = {};
-  if (!L.garden || typeof L.garden !== 'object') L.garden = {};
-  if (!Array.isArray(L.garden.acts)) L.garden.acts = [];
-  if (!L.garden.gifts || typeof L.garden.gifts !== 'object') L.garden.gifts = {};
-  if (!L.trades || typeof L.trades !== 'object') L.trades = {};
-  if (!Array.isArray(L.trades.got)) L.trades.got = [];
-  if (!Array.isArray(L.trades.given)) L.trades.given = [];
+  // Fehlende oder kaputte Teile durch leere ersetzen
+  const obj = (o, k) => { if (!o[k] || typeof o[k] !== 'object') o[k] = {}; return o[k]; };
+  const arr = (o, k) => { if (!Array.isArray(o[k])) o[k] = []; };
+  ['ev', 'arenas', 'fx'].forEach((k) => obj(L, k));
+  const g = obj(L, 'garden'); arr(g, 'acts'); obj(g, 'gifts');
+  const t = obj(L, 'trades'); arr(t, 'got'); arr(t, 'given');
   if (L.starter && !LV_STARTERS.some((m) => m.id === L.starter)) L.starter = null;
   return s;
 }
@@ -170,25 +167,23 @@ function labLoad() {
 let labScenario = localStorage.getItem(LAB_SKEY) || 'visit';
 if (!LAB_SC[labScenario]) labScenario = 'visit';
 let state = labLoad();
-if (!state) { state = labNormalize(LAB_SC[labScenario].make()); localStorage.setItem(LAB_KEY, JSON.stringify(state)); localStorage.setItem(LAB_SKEY, labScenario); }
+if (!state) { state = labMake(labScenario); localStorage.setItem(LAB_SKEY, labScenario); save(); }
 
+// Szenario frisch erzeugen, immer mit demselben Zufallsstart
+function labMake(k) { ra = LAB_SEED; return labNormalize(LAB_SC[k].make()); }
 function save() {
-  if (typeof lvInvalidate === 'function') lvInvalidate();
+  lvInvalidate();
   try { localStorage.setItem(LAB_KEY, JSON.stringify(state)); } catch (e) { toast('Speichern fehlgeschlagen.'); }
 }
 function labSetScenario(k) {
-  labScenario = k; ra = 20260714;
-  state = labNormalize(LAB_SC[k].make());
+  labScenario = k;
+  state = labMake(k);
   localStorage.setItem(LAB_SKEY, k); save();
   closeSheet();
   toast(`Szenario: ${LAB_SC[k].t}`);
 }
 
 /* ---------- Seite: Journal-Kopf, Karten, Einstellungen, Testknöpfe ---------- */
-function labDayRow(iso) {
-  const e = state.days[iso] || [];
-  return `${e.length} Einträge`;
-}
 function render() {
   const v = $('#view'), today = LAB_TODAY;
   const sub = new Date(today + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -196,21 +191,20 @@ function render() {
       <div><div class="sub">${esc(sub)}</div><div class="day">Heute</div></div>
       <div class="nav">${state.level.enabled ? lvChipHtml() : ''}</div>
     </div>`;
-  html += `<div class="card lab-note"><b>Labor · erfundene Testdaten</b><p class="small muted" style="margin:4px 0 0">Nur in diesem Browser gespeichert (eigener Speicher, getrennt von allen Apps). Szenario: ${esc(LAB_SC[labScenario].t)}. Heute: ${labDayRow(today)}.</p>
+  html += `<div class="card lab-note"><b>Labor · erfundene Testdaten</b><p class="small muted" style="margin:4px 0 0">Nur in diesem Browser gespeichert (eigener Speicher, getrennt von allen Apps). Szenario: ${esc(LAB_SC[labScenario].t)}. Heute: ${(state.days[today] || []).length} Einträge.</p>
     <div class="lab-open" style="margin-top:10px"><button class="btn" id="labAdd">Heute eintragen</button><button class="btn secondary" id="labSc">Szenario wählen</button><button class="btn ghost" id="labScan">Scan zählen</button></div></div>`;
-  if (typeof lvVisitorHtml === 'function') html += lvVisitorHtml(today);
-  if (typeof lvIntroCardHtml === 'function') html += lvIntroCardHtml(today);
+  html += lvVisitorHtml(today) + lvIntroCardHtml(today);
   if (state.level.enabled && state.level.starter) {
     html += `<div class="card"><h2>Direkt öffnen</h2><div class="lab-open">${[
       ['lvOpenProgress', 'Fortschritt'], ['lvOpenGarden', 'Garten'], ['lvOpenCollection', 'Sammlung'], ['lvOpenExplorer', 'Entdecker'],
       ['lvOpenWardrobe', 'Kleiderschrank'], ['lvOpenSeason', 'Saison'], ['lvOpenArenas', 'Arenen'], ['lvOpenIntro', 'Einführung'],
-    ].filter(([f]) => typeof globalThis[f] === 'function').map(([f, l]) => `<button class="btn secondary" data-open="${f}">${l}</button>`).join('')}</div></div>`;
+    ].map(([f, l]) => `<button class="btn secondary" data-open="${f}">${l}</button>`).join('')}</div></div>`;
   }
   html += lvSettingsCard();
   v.innerHTML = html;
   lvBindChip(); setTimeout(lvAfterRender, 0);
-  if (typeof lvBindVisitor === 'function' && v.querySelector('#lvgVisCard')) lvBindVisitor(null, render, v);
-  if (typeof lvBindIntroCard === 'function') lvBindIntroCard(render);
+  if (v.querySelector('#lvgVisCard')) lvBindVisitor(null, render, v);
+  lvBindIntroCard(render);
   lvBindSettings();
   v.querySelectorAll('[data-open]').forEach((b) => b.onclick = () => globalThis[b.dataset.open]());
   $('#labAdd').onclick = () => {

@@ -1159,7 +1159,7 @@ body.tt-locked #tabbar { display: none; }
 .icon-btn.ghost { visibility: hidden; }
 .cy-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px; text-align: center; }
 .cy-wd span { font-size: 12px; color: var(--muted); padding-bottom: 4px; }
-.cy-d { position: relative; height: 44px; display: grid; place-items: center; color: var(--text); text-decoration: none; font-size: 16px; font-variant-numeric: tabular-nums; }
+.cy-d { position: relative; height: var(--tap-s); display: grid; place-items: center; color: var(--text); text-decoration: none; font-size: 16px; font-variant-numeric: tabular-nums; }
 .cy-d > span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
 .cy-d.fut { color: var(--muted); }
 .cy-d.e::after { content: ''; position: absolute; bottom: 1px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--muted); }
@@ -1286,7 +1286,7 @@ body.tt-locked #tabbar { display: none; }
    (css/training.css), daher hier nur außerhalb von body.tt-train. */
 body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .link, .cfg-pad .link) { position: relative; }
 body:not(.tt-train) :is(.info-btn, .icon-btn.sm, .trk.on .trk-plus, .cy-top .link, .cfg-pad .link)::after {
-  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, var(--tap-s)); height: max(100%, var(--tap-s)); transform: translate(-50%, -50%); }
 
 /* 0.5.0: Daten & Backup */
 .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
@@ -1489,7 +1489,7 @@ body.tour-trial .view { padding-top: calc(var(--safe-top) + 72px); }
    a.link nur, wenn er allein steht: im Fließtext (p, li) würde die Fläche in Nachbarzeilen und -links ragen. */
 :where(body:not(.tt-train)) :where(.seg > button, .seg > a, .chip, .back, a.link, .cal-d, .wk-d, .sheet-close) { position: relative; }
 body:not(.tt-train) :is(.seg > button, .seg > a, .chip, .back, a.link:not(:is(p, li) a), .sheet-close)::after {
-  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: max(100%, 44px); transform: translate(-50%, -50%); }
+  content: ''; position: absolute; left: 50%; top: 50%; width: max(100%, var(--tap-s)); height: max(100%, var(--tap-s)); transform: translate(-50%, -50%); }
 /* Tage in 7-Spalten-Rastern: nur bis zur Mitte der Lücke, damit sich Nachbarn nicht überdecken (bei 320 px < 44 px, Ausnahme in check-ui) */
 body:not(.tt-train) .cal-d::after { content: ''; position: absolute; inset: -2px; }
 body:not(.tt-train) .wk-d::after { content: ''; position: absolute; inset: 0 -1px; }

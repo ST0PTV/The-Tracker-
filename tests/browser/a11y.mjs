@@ -103,6 +103,7 @@ export async function auditTargets(p, where, ALLOW = '') {
       const r = e.getBoundingClientRect(), cs = getComputedStyle(e);
       return r.width > 0 && r.height > 0 && cs.visibility !== 'hidden' && cs.pointerEvents !== 'none' && Number(cs.opacity) > 0.05;
     });
+    const inView = ([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight;
     for (const e of els) {
       const fixed = e.closest(FIXED);
       if (!fixed) e.scrollIntoView({ block: 'center', inline: 'nearest' });
@@ -120,17 +121,17 @@ export async function auditTargets(p, where, ALLOW = '') {
         const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
         // Kantenmitten und Ecken (2 px nach innen). Annahme: ::after liegt mittig (gilt für alle Regeln in app.css/training.css)
         const L = cx - w / 2 + 2, R = cx + w / 2 - 2, T = cy - hgt / 2 + 2, B = cy + hgt / 2 - 2;
-        const ext = [[L, cy], [R, cy], [cx, T], [cx, B], [L, T], [R, T], [L, B], [R, B]]
-          .filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight);
-        const lost = ext.filter(([x, y]) => { const hit = document.elementFromPoint(x, y); return !hit || (!(hit === e || e.contains(hit)) && !hit.closest(FIXED)); });
-        if (lost.length) { const hit = document.elementFromPoint(lost[0][0], lost[0][1]); errors.push(`${where}: Trefferfläche ${w} × ${hgt} nur teilweise erreichbar bei ${name(e)} (am Rand getroffen: ${hit ? name(hit) : 'nichts'})`); }
+        const lost = [[L, cy], [R, cy], [cx, T], [cx, B], [L, T], [R, T], [L, B], [R, B]].filter(inView)
+          .map(([x, y]) => document.elementFromPoint(x, y))
+          .filter((hit) => !hit || (!(hit === e || e.contains(hit)) && !hit.closest(FIXED)));
+        if (lost.length) errors.push(`${where}: Trefferfläche ${w} × ${hgt} nur teilweise erreichbar bei ${name(e)} (am Rand getroffen: ${lost[0] ? name(lost[0]) : 'nichts'})`);
       }
-      const small = `${where}\t${e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).join('.') : ''}\t${w}×${hgt}\t${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 30)}`;
+      const small = () => `${where}\t${e.tagName.toLowerCase()}${typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/).join('.') : ''}\t${w}×${hgt}\t${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 30)}`;
       if (w < 24 || hgt < 24) errors.push(`${where}: Tippfläche ${w} × ${hgt} px (< 24) bei ${name(e)}`);
-      else if (w < 44 || hgt < 44) (ALLOW && e.matches(ALLOW) ? hints : under).push(small);
+      else if (w < 44 || hgt < 44) (ALLOW && e.matches(ALLOW) ? hints : under).push(small());
       // Treffertest: Mitte und 3 px innerhalb jeder Kante der sichtbaren Box
       const pts = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 3, r.top + r.height / 2], [r.right - 3, r.top + r.height / 2], [r.left + r.width / 2, r.top + 3], [r.left + r.width / 2, r.bottom - 3]]
-        .filter(([x, y]) => x >= 0 && y >= 0 && x < innerWidth && y < innerHeight);
+        .filter(inView);
       if (!pts.length) continue;
       const centre = document.elementFromPoint(pts[0][0], pts[0][1]);
       if (!centre) continue;
