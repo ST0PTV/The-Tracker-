@@ -20,10 +20,14 @@ const shot = (n) => p.screenshot({ path: join(out, n + '.png') });
 await p.goto(srv.url + '/index.html'); await p.evaluate(() => localStorage.clear()); await p.reload(); await settle(p, 300);
 ok(/Neu hier\?/.test(await text()), 'Heute: Willkommenskarte für neue Nutzer');
 await shot('willkommen');
-await p.click('.intro-card .btn.primary'); await settle(p, 400);
+// Der Rundgang wartet vor jedem Schritt 160 ms (Seitenwechsel). settle() hält das für Ruhe (QUIET = 100 ms)
+// und kehrt zu früh zurück. Darum auf den neuen Text der Sprechblase warten.
+const bubText = () => p.locator('.tour-bub').innerText().catch(() => '');
+const nextBub = (prev) => p.waitForFunction((t) => { const b = document.querySelector('.tour-bub'); return !b || (b.innerText.trim() && b.innerText !== t); }, prev, { timeout: 3000 }).catch(() => {});
+await p.click('.intro-card .btn.primary'); await settle(p, 400); await nextBub('');
 let steps = 0;
 for (let i = 0; i < 12; i++) {
-  const bub = await p.locator('.tour-bub').innerText().catch(() => '');
+  const bub = await bubText();
   if (!bub) break;
   const m = bub.match(/Schritt (\d+) von (\d+)/);
   if (m) {
@@ -33,7 +37,7 @@ for (let i = 0; i < 12; i++) {
     if (+m[1] === 1 || +m[1] === 6) await shot(`rundgang-${m[1]}`);
   }
   if (/Fertig/.test(bub) && !m) break;
-  await p.click('.tour-bub .btn.primary'); await settle(p, 700);
+  await p.click('.tour-bub .btn.primary'); await settle(p, 700); await nextBub(bub);
 }
 ok(steps === 8, `Rundgang: 8 Schritte mit Ziel (${steps})`);
 ok(/Probetraining/.test(await p.locator('.tour-bub').innerText()), 'Ende fragt nach dem Probetraining');

@@ -28,7 +28,7 @@ export function stomachInfo() {
   openInfo({
     title: 'Magen-Modell',
     note: 'Grobe Schätzung, keine Messung und keine Diagnose.',
-    body: ['Die Kurve schätzt, wie viel vom Gegessenen (in kcal) noch im Magen ist. Jede Mahlzeit entleert sich nach einem vereinfachten Muster: Restanteil = 2^(−(t/T½)²). Die Kurvenform ist eine Annahme.',
+    body: ['Die Kurve schätzt, wie viel vom Gegessenen (in kcal) noch im Magen ist. Jede Mahlzeit entleert sich nach einem vereinfachten Muster: Restanteil = 2^(−\u2060(t/T½)²). Die Kurvenform ist eine Annahme.',
       'Für eine kleine, fettarme Mahlzeit (~250 kcal) setzt die App T½ = 1,75 h. Das ergibt nach 1/2/4 h etwa 80/40/3 % – das liegt innerhalb der Normalwerte der Magen-Szintigrafie mit fettarmer Standardmahlzeit (37–90 / 30–60 / 0–10 % Rest im Magen).'],
     points: [['Größe und Fett', 'Größere und fettreichere Mahlzeiten bekommen ein längeres T½ (0,75–4,5 h). Die Größenordnung ist eine Annahme, nicht belegt.'],
       ['Getränke', 'T½ ≈ 0,4 h (Annahme). In zwei Studien wurden je nach Mahlzeit etwa 0,3–0,9 h gemessen.'],
