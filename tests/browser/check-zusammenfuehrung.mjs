@@ -49,6 +49,8 @@ ok(await p.evaluate(() => JSON.parse(localStorage.getItem('tt_intro')).tour) ===
 await go('/ich');
 await p.click('button:has-text("Beispieldaten laden")');
 await p.waitForFunction(() => /Beispiel-Einträge vorhanden/.test(document.body.innerText), null, { timeout: 15000 });
+// Der Text erscheint schon nach dem ersten Neuzeichnen. Das Training lädt danach (eigenes Modul); erst die Meldung kommt am Ende.
+await p.waitForFunction(() => /Trainings.*geladen/.test(document.getElementById('toast')?.innerText || ''), null, { timeout: 15000 });
 const realBefore = await p.evaluate(() => localStorage.getItem('tt_training_sessions'));
 
 // ---------- Probetraining ----------
