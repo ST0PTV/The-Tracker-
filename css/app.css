@@ -40,6 +40,7 @@
   --c-app: #AEB4C0;
   /* Zyklus (0.2.6): Periode, fruchtbares Fenster (Schätzung), Hormon-Schema; geprüft ≥ 4,5:1 gegen die Karte */
   --c-cyc: #FF7B7B;
+  --on-cyc: var(--surface); /* Ziffer auf Periodentag; Themes mit durchsichtiger Karte setzen eine feste Farbe */
   --c-fert: #5CCFC4;
   --c-fsh: #AEB4C0;
   --c-lh: #E6B566;
@@ -126,6 +127,7 @@
   --fig-base: #3A3F5A; --fig-body: #2F3450; --fig-rest: #40466A; --fig-edge: #8088AA; --fig-gap: #0B0E1A;
   --fig3d-base: #3A3F5A; --fig3d-rest: #454B6E; --stage-bg: #0B0E1A;
   --c-water: #C9D4FF; /* 0.4.3: Wasser in der Theme-Farbe */
+  --on-cyc: #0B0E1A; /* --surface ist hier durchsichtig */
 }
 :root[data-palette="glas"][data-theme="light"], :root[data-theme="light"] [data-pv="glas"] {
   --bg: #EEF1F8; --strip: rgba(246, 248, 253, 0.75);
@@ -138,6 +140,7 @@
   --fig-base: #D3D8EA; --fig-body: #FFFFFF; --fig-rest: #E4E8F4; --fig-edge: #9AA2BC; --fig-gap: #FFFFFF;
   --fig3d-base: #E6E9F4; --fig3d-rest: #D8DCEB; --stage-bg: #EEF1F8;
   --c-water: #2A3A8C; /* 0.4.3: Wasser in der Theme-Farbe */
+  --on-cyc: #FFFFFF;
 }
 :root[data-palette="sand"], [data-pv="sand"] {
   --bg: #14110E; --strip: #14110E; --surface: #211C17; --surface-2: #2E2720; --surface-3: #3B332A;
@@ -380,7 +383,7 @@ a.btn { text-decoration: none; }
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
 .icon-btn .icon, .add-btn .icon, .search .icon, .entry .icon { stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .icon-btn[aria-pressed="true"] .icon { fill: currentColor; }
-.small-btn { min-height: 36px; padding: 0 14px; font-size: 15px; }
+.small-btn { min-height: var(--tap-s); padding: 0 14px; font-size: 15px; }
 .danger-text { background: transparent; color: var(--danger); margin-top: 8px; }
 
 .day-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
@@ -732,7 +735,7 @@ input[type="time"].input::-webkit-datetime-edit, input[type="date"].input::-webk
 .cfg-row > .t small { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; line-height: 1.3; }
 .cfg-row .qa-badge { width: 30px; height: 30px; border-radius: 8px; }
 .cfg-val { flex: none; display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 17px; }
-.cfg-in { width: 84px; padding: 11px 0; margin: -3px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; text-align: right; font-variant-numeric: tabular-nums; }
+.cfg-in { box-sizing: border-box; width: 84px; min-height: var(--tap-s); padding: 11px 0; margin: -4px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 17px; text-align: right; font-variant-numeric: tabular-nums; }
 .cfg-in:focus { color: var(--text); outline: none; }
 .cfg-in.cfg-time { width: auto; min-width: 70px; -webkit-appearance: none; appearance: none; }
 .cfg-in::placeholder { color: var(--faint); }
@@ -1166,7 +1169,7 @@ body.tt-locked #tabbar { display: none; }
 /* 0.5.3: künftige fruchtbare Tage auf dem Tint dunkler als --muted (≥ 4,5:1) */
 .cy-d.fut.f, .cy-d.fut.f > span { color: color-mix(in srgb, var(--text) 70%, var(--muted)); }
 .circles .cy-d.s > span { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--c-cyc) 60%, transparent); }
-.circles .cy-d.b > span { background: var(--c-cyc); color: var(--surface); font-weight: 600; }
+.circles .cy-d.b > span { background: var(--c-cyc); color: var(--on-cyc); font-weight: 600; }
 .circles .cy-d.p > span { outline: 1.5px dashed var(--c-cyc); outline-offset: -2px; color: var(--c-cyc); }
 .circles .cy-d.now > span { box-shadow: inset 0 0 0 2px var(--text); }
 .band .cy-d.f { background: color-mix(in srgb, var(--c-fert) 18%, transparent); }
